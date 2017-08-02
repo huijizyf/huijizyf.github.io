@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="UTF-8">
+  <title>java 两种json解析耗时对比</title>
+  <meta name="viewport" content="width=device-width">
+
+  <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="/assets/css/style.css" rel="stylesheet" />
+  <link href="/assets/css/colors-dark.css" rel="stylesheet" />
+
+</head>
+
+<body>
+
+
+
+  <header id="header">
+    <h1><a href="/"><i class="icon-sun"></i> Solar Theme</a></h1>
+    <p>A stylish blog using the Solarized color palette</p>
+  </header>
+
+
+
+  <div id="page">
+
+
+
+    <div id="sidebar">
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/archives">Archive</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="http://twitter.com/redwall_hp">Twitter</a></li>
+          <li><a href="/feed.xml">RSS Feed</a></li>
+        </ul>
+      </nav>
+    </div>
+
+
+
+    <div id="content">
+      <article class="post">
+
+	
+		<h1><a href="/2016/11/01/java-%E4%B8%A4%E7%A7%8Djson%E8%A7%A3%E6%9E%90%E8%80%97%E6%97%B6%E5%AF%B9%E6%AF%94/">java 两种json解析耗时对比</a></h1>
+	
+
+	<div class="post-content"><p>粗略的比较了一下，使用org.json与com.google.code.gson解析json数据时所花时间。可以看到在json数组元素个数为20时，gson解析所花时间几乎为org.json的30倍。但是gson有自己的优势，就是代码编写更加简单，使用更加方便。</p>
+<div><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102vu3o&amp;url=http://album.sina.com.cn/pic/002o3oc9gy6U5n932yI48" target="_blank"><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="java &lt;wbr&gt;两种json解析耗时对比" src="http://s9.sinaimg.cn/mw690/002o3oc9gy6U5n932yI48&amp;690" alt="java &lt;wbr&gt;两种json解析耗时对比" width="395" height="55" name="image_operate_99441437717763466" /></a><br />
+代码量对比：</div>
+<div>
+<pre>public static void orgJsonParse(String str,ArrayList jokeList)
+{
+long start=System.currentTimeMillis();
+try {
+JSONArray array=new JSONArray(str);
+JokeBean jb;
+for(int i=0;i;i++)
+{
+JSONObject jobj=array.getJSONObject(i);
+jb=new JokeBean();
+jb.setTitle(jobj.getString("title"));
+jb.setContent(jobj.getString("content"));
+jb.setPoster(jobj.getString("poster"));
+jb.setUrl(jobj.getString("url"));
+jokeList.add(jb);
+}
+} catch (JSONException e) {
+e.printStackTrace();
+}
+long all=System.currentTimeMillis()-start;
+Log.d("org.json解析json耗时：",all+"");
+}</pre>
+<pre></pre>
+<pre></pre>
+<pre>public static void gsonPase(String str,ArrayList jokeList)
+{
+long start=System.currentTimeMillis();
+Gson gson=new Gson();
+List jokeBeanList=gson.fromJson(str,new TypeToken&gt;(){}.getType());
+long all=System.currentTimeMillis()-start;
+Log.d("gson解析json耗时：",all+"");
+
+}</pre>
+</div>
+</div>
+
+	<p class="meta">Posted on <span class="postdate">Nov 01, 2016</span></p>
+
+</article>
+    </div>
+
+
+
+  </div>
+
+
+
+  <footer id="footer">
+    <p class="copyright">Copyright &copy; 2017 Solar Theme. Powered by <a href="http://jekyllrb.com">Jekyll</a>, theme by <a href="http://www.webmaster-source.com">Matt Harzewski</a></p>
+  </footer>
+
+
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script src="/assets/js/jquery.mobilemenu.min.js"></script>
+
+  <script>
+    $(document).ready(function(){
+      $('#sidebar nav ul').mobileMenu({'topOptionText': 'Menu', 'prependTo': '#sidebar nav'});
+    });
+  </script>
+
+
+
+</body>
+</html>

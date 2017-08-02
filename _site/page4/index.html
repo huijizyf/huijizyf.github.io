@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="UTF-8">
+  <title>Solar Theme</title>
+  <meta name="viewport" content="width=device-width">
+
+  <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="/assets/css/style.css" rel="stylesheet" />
+  <link href="/assets/css/colors-dark.css" rel="stylesheet" />
+
+</head>
+
+<body>
+
+
+
+  <header id="header">
+    <h1><a href="/"><i class="icon-sun"></i> Solar Theme</a></h1>
+    <p>A stylish blog using the Solarized color palette</p>
+  </header>
+
+
+
+  <div id="page">
+
+
+
+    <div id="sidebar">
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/archives">Archive</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="http://twitter.com/redwall_hp">Twitter</a></li>
+          <li><a href="/feed.xml">RSS Feed</a></li>
+        </ul>
+      </nav>
+    </div>
+
+
+
+    <div id="content">
+      
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/14/%E5%AE%89%E5%8D%93-SeekBar%E4%B8%8EMatrix%E7%BB%93%E5%90%88%E5%AF%B9%E5%9B%BE%E7%89%87%E8%BF%9B%E8%A1%8C%E6%97%8B%E8%BD%AC-%E6%96%9C%E5%88%87%E6%93%8D%E4%BD%9C/">安卓 SeekBar与Matrix结合对图片进行旋转、斜切操作</a></h1>
+		
+
+		<div class="post-content"><p><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102vj2n&amp;url=http://album.sina.com.cn/pic/002o3oc9gy6Rgeu9SoM30" target="_blank"><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="安卓 &lt;wbr&gt;SeekBar与Matrix结合对图片进行旋转、斜切操作" src="http://s1.sinaimg.cn/mw690/002o3oc9gy6Rgeu9SoM30&amp;690" alt="安卓 &lt;wbr&gt;SeekBar与Matrix结合对图片进行旋转、斜切操作" width="690" height="333" name="image_operate_90951428230593972" /></a><br />
+关键代码：</p>
+<div>
+<pre>Matrix matrix = new Matrix();
+switch (seekBar.getId())
+{
+case R.id.x_seekBar:
+matrix.reset();
+matrix.postRotate(seekBar.getProgress()); //设置旋转
+break;
+case R.id.y_seekBar:
+matrix.reset();
+matrix.setSkew((float) (seekBar.getProgress() / 100), (float) (seekBar.getProgress() / 100)); //设置斜切
+break;
+}
+System.gc();
+bp=Bitmap.createBitmap(bitmap,0,0,w,h,matrix,true);
+iv.setImageBitmap(bp);</pre>
+</div>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/14/%E5%AE%89%E5%8D%93%E4%BD%BF%E7%94%A8Volly%E6%A1%86%E6%9E%B6%E5%8A%A0%E8%BD%BD%E5%9B%BE%E7%89%87/">安卓使用Volly框架加载图片，GridView使用LayoutAnimation</a></h1>
+		
+
+		<div class="post-content"><pre>package com.fabian.testvolly;
+
+import android.graphics.Bitmap;
+import android.support.v7.app.ActionBarActivity;
+import android.os.Bundle;
+import android.util.LruCache;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.LayoutAnimationControlle<wbr />r;
+import android.view.animation.ScaleAnimation;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
+import android.widget.ImageView;
+
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.Volley;
+
+import java.util.ArrayList;
+
+
+public class MainActivity extends ActionBarActivity {
+
+ArrayList list=new ArrayList&lt;&gt;();
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+for(int i=0;i&lt;&lt;span style="color:#6897bb;"&gt;20;i++)
+{
+list.add("http://s0.hao123img.com/res/ecom/wph-715.jpg");
+}
+AnimationSet aset=new AnimationSet(false);
+ScaleAnimation sa=new ScaleAnimation(0f,1f,0f,1f,0.5f,0.5f);
+sa.setDuration(2000);
+AlphaAnimation aa=new AlphaAnimation(0f,1f);
+aa.setDuration(2000);
+aset.addAnimation(sa);
+aset.addAnimation(aa);
+LayoutAnimationControlle<wbr />r controller = new LayoutAnimationControlle<wbr />r(aset, 0.5f);
+controller.setOrder(LayoutAnimationControlle<wbr />r.ORDER_NORMAL);
+GridView gv= (GridView) findViewById(R.id.gridView);
+gv.setLayoutAnimation(controller);
+RequestQueue mQueue = Volley.newRequestQueue(getApplicationContext());
+final ImageLoader mImageLoader=new ImageLoader(mQueue,new BitmapCache());
+gv.setAdapter(new BaseAdapter() {
+@Override
+public int getCount() {
+return list.size();
+}
+@Override
+public Object getItem(int position) {
+return list.get(position);
+}
+@Override
+public long getItemId(int position) {
+return position;
+}
+@Override
+public View getView(int position, View convertView, ViewGroup parent) {
+LayoutInflater inflater=LayoutInflater.from(MainActivity.this);
+convertView=inflater.inflate(R.layout.item_layout,null);
+ImageLoader.ImageListener listener = ImageLoader.getImageListener((ImageView) convertView.findViewById(R.id.imageView), android.R.drawable.ic_menu_rotate, android.R.drawable.ic_delete);
+mImageLoader.get(list.get(position), listener);
+return convertView;
+}
+});
+mQueue.start();
+}
+class BitmapCache implements ImageLoader.ImageCache {
+
+private LruCache, Bitmap&gt; cache;
+
+public BitmapCache() {
+cache = new LruCache, Bitmap&gt;(8 * 1024 * 1024) {
+@Override
+protected int sizeOf(String key, Bitmap bitmap) {
+return bitmap.getRowBytes() * bitmap.getHeight();
+}
+};
+}
+@Override
+public Bitmap getBitmap(String url) {
+return cache.get(url);
+}
+@Override
+public void putBitmap(String url, Bitmap bitmap) {
+cache.put(url, bitmap);
+}
+}
+}<a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102vtlh&amp;url=http://album.sina.com.cn/pic/002o3oc9gy6TUt91iEH8b" target="_blank"><img title="安卓使用Volly框架加载图片，GridView使用LayoutAnimation" src="http://s12.sinaimg.cn/mw690/002o3oc9gy6TUt91iEH8b&amp;690" alt="安卓使用Volly框架加载图片，GridView使用LayoutAnimation" width="540" height="960" name="image_operate_48241437127052319" /></a></pre>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/14/%E5%AE%89%E5%8D%93%E5%BC%80%E5%8F%91%E7%BC%96%E7%A0%81%E8%A7%84%E8%8C%83%E5%8F%8A%E5%B8%B8%E7%94%A8%E6%A1%86%E6%9E%B6%E6%95%B4%E7%90%86/">安卓开发编码规范及常用框架整理</a></h1>
+		
+
+		<div class="post-content"><p>一、Android编码规范</p>
+<p><b>1.java</b><b>代码中不出现中文，安卓中中文最好放在strings.xml文件中，在代码中通过id引用中文。</b></p>
+<p><b>2.</b><b>局部变量命名、静态成员变量命名</b></p>
+<p>只能包含字母，单词首字母出第一个外，都为大写，其他字母都为小写，最好能通过变量名表达一定的意义。</p>
+<p><b>3.</b><b>常量命名</b></p>
+<p>只能包含字母和_，字母全部大写，单词之间用_隔开</p>
+<p><b>4.layout</b><b>中的id命名</b></p>
+<p>命名模式为：view缩写_模块名称_view的逻辑名称</p>
+<p>view的缩写详情如下</p>
+<p>LayoutView：lv</p>
+<p>RelativeView:rv</p>
+<p>TextView:tv</p>
+<p>ImageView:iv</p>
+<p>ImageButton:im</p>
+<p>Button:btn</p>
+<p><b>5.activity</b><b>中的view变量命名</b></p>
+<p>命名模式为：逻辑名称+view缩写</p>
+<p>建议：如果layout文件很复杂，建议将layout分成多个模块，每个模块定义一个moduleViewHolder，其成员变量包含所属view</p>
+<p><b>6.strings.xml</b><b>中的id命名</b></p>
+<p>命名模式：activity名称_功能模块名称_逻辑名称/activity名称_逻辑名称/common_逻辑名称</p>
+<p>strings.xml中，使用activity名称注释，将文件内容区分开来</p>
+<p><b>7.drawable</b><b>中的图片命名</b></p>
+<p>命名模式：activity名称_逻辑名称/common_逻辑名称</p>
+<p><b>8.styles.xml</b><b>：将layout中不断重现的style提炼出通用的style通用组件，放到styles.xml中；</b></p>
+<p><b>9.</b><b>避免应用大容量的第三方库，导致客户端包非常大</b></p>
+<p><b>10.Log(</b><b>系统名称 模块名称 接口名称，详细描述)</b></p>
+<p><b>11.activity</b><b>中在一个View.OnClickListener中处理所有的逻辑</b></p>
+<p><b>12.strings.xml</b><b>中使用%1$s实现字符串的通配</b></p>
+<p><b>13.</b><b>如果多个Activity中包含共同的UI处理，那么可以提炼一个CommonActivity，把通用部分叫由它来处理，其他activity只要继承它即可</b></p>
+<p><b>14.</b><b>如果所开发的为通用组件，为避免冲突，将drawable/layout/menu/values目录下的文件名增加前缀</b></p>
+<p><b>15.</b><b>数据一定要效验，例如</b></p>
+<p>字符型转数字型，如果转换失败一定要有缺省值；</p>
+<p>服务端响应数据是否有效判断；</p>
+<p><b>关于是否要强制升级：</b></p>
+<p>1).不管何种情况都强制升级</p>
+<p>2).判断用户的版本和当前最新版本，如果兼容则强制升级，否则可选；</p>
+<p>二、安卓常用框架</p>
+<p><strong>1</strong><strong>、</strong><strong>volley</strong><b> <wbr /></b><b><br />
+</b>2013年Google I/O大会上推出的一个新的网络通信框架<b><br />
+</b>项目地址 https://github.com/smanikandan14/Volley-demo<br />
+<wbr />(1) <wbr /> JSON，图像等的异步下载；<br />
+<wbr />(2) <wbr /> 网络请求的排序（scheduling）<br />
+<wbr />(3) <wbr /> 网络请求的优先级处理<br />
+<wbr />(4) <wbr /> 缓存<br />
+<wbr />(5) <wbr /> 多级别取消请求<br />
+<wbr />(6) <wbr /> 和Activity和生命周期的联动（Activity结束时同时取消所有网络请求）</p>
+<p><strong>2</strong><strong>、</strong><strong>android-async-http <wbr /></strong><b> <wbr /></b><b></p>
+<p></b>项目地址：https://github.com/loopj/android-async-http<br />
+文档介绍：http://loopj.com/android-async-http/ <wbr /><br />
+<wbr />(1) 在匿名回调中处理请求结果<br />
+<wbr />(2) 在UI线程外进行http请求<br />
+<wbr />(3) 文件断点上传<br />
+<wbr />(4) 智能重试<br />
+<wbr />(5) 默认gzip压缩<br />
+<wbr />(6) 支持解析成Json格式<br />
+<wbr />(7) 可将Cookies持久化到SharedPreferences</p>
+<p><strong>3</strong><strong>、</strong><strong>Afinal</strong><strong>框架</strong><b></p>
+<p></b>项目地址：https://github.com/yangfuhai/afinal<br />
+主要有四大模块：<br />
+<wbr />(1) 数据库模块：android中的orm框架，使用了线程池对sqlite进行操作。<br />
+<wbr />(2) 注解模块：android中的ioc框架，完全注解方式就可以进行UI绑定和事件绑定。无需findViewById和setClickListener等。<br />
+<wbr />(3) 网络模块：通过httpclient进行封装http数据请求，支持ajax方式加载，支持下载、上传文件功能。<br />
+<wbr />(4) 图片缓存模块：通过FinalBitmap，imageview加载bitmap的时候无需考虑bitmap加载过程中出现的oom和android容器快速滑动时候出现的图片错位等现象。<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> FinalBitmap可以配置线程加载线程数量，缓存大小，缓存路径，加载显示动画等。FinalBitmap的内存管理使用lru算法，<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 没有使用弱引用（android2.3以后google已经不建议使用弱引用，android2.3后强行回收软引用和弱引用，详情查看android官方文档），<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 更好的管理bitmap内存。FinalBitmap可以自定义下载器，用来扩展其他协议显示网络图片，比如ftp等。同时可以自定义bitmap显示器，<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 在imageview显示图片的时候播放动画等（默认是渐变动画显示）。</p>
+<p><strong>4</strong><strong>、</strong><strong>xUtils</strong><strong>框架</strong><b></p>
+<p></b>项目地址：https://github.com/wyouflf/xUtils<br />
+主要有四大模块：<br />
+<wbr /> (1) 数据库模块：android中的orm框架，一行代码就可以进行增删改查；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 支持事务，默认关闭；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 可通过注解自定义表名，列名，外键，唯一性约束，NOT NULL约束，CHECK约束等（需要混淆的时候请注解表名和列名）；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 支持绑定外键，保存实体时外键关联实体自动保存或更新；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 自动加载外键关联实体，支持延时加载；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 支持链式表达查询，更直观的查询语义，参考下面的介绍或sample中的例子。 <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /><br />
+<wbr /> (2) 注解模块：android中的ioc框架，完全注解方式就可以进行UI，资源和事件绑定；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 新的事件绑定方式，使用混淆工具混淆后仍可正常工作；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 目前支持常用的20种事件绑定，参见ViewCommonEventListener类和包com.lidroid.xutils.view.annotation.event。<br />
+<wbr /> (3) 网络模块：支持同步，异步方式的请求；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 支持大文件上传，上传大文件不会oom；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 支持GET，POST，PUT，MOVE，COPY，DELETE，HEAD，OPTIONS，TRACE，CONNECT请求；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 下载支持301/302重定向，支持设置是否根据Content-Disposition重命名下载的文件；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 返回文本内容的请求(默认只启用了GET请求)支持缓存，可设置默认过期时间和针对当前请求的过期时间。 <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /><br />
+<wbr /> (4) 图片缓存模块：加载bitmap的时候无需考虑bitmap加载过程中出现的oom和android容器快速滑动时候出现的图片错位等现象；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 支持加载网络图片和本地图片；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 内存管理使用lru算法，更好的管理bitmap内存；<br />
+<wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> <wbr /> 可配置线程加载线程数量，缓存大小，缓存路径，加载显示动画等...</p>
+<p><strong>5</strong><strong>、</strong><strong>ThinkAndroid</strong><b></p>
+<p></b>项目地址：https://github.com/white-cat/ThinkAndroid<br />
+主要有以下模块：<br />
+<wbr /> (1) <wbr /> MVC模块：实现视图与模型的分离。<br />
+<wbr /> (2) <wbr /> ioc模块：android中的ioc模块，完全注解方式就可以进行UI绑定、res中的资源的读取、以及对象的初始化。 <wbr /><br />
+<wbr /> (3) <wbr /> 数据库模块：android中的orm框架，使用了线程池对sqlite进行操作。 <wbr /> <wbr /><br />
+<wbr /> (4) <wbr /> http模块：通过httpclient进行封装http数据请求，支持异步及同步方式加载。<br />
+<wbr /> (5) <wbr /> 缓存模块：通过简单的配置及设计可以很好的实现缓存，对缓存可以随意的配置<br />
+<wbr /> (6) <wbr /> 图片缓存模块：imageview加载图片的时候无需考虑图片加载过程中出现的oom和android容器快速滑动时候出现的图片错位等现象。<br />
+<wbr /> (7) <wbr /> 配置器模块：可以对简易的实现配对配置的操作，目前配置文件可以支持Preference、Properties对配置进行存取。<br />
+<wbr /> (8) <wbr /> 日志打印模块：可以较快的轻易的是实现日志打印，支持日志打印的扩展，目前支持对sdcard写入本地打印、以及控制台打印<br />
+<wbr /> (9) <wbr /> 下载器模块:可以简单的实现多线程下载、后台下载、断点续传、对下载进行控制、如开始、暂停、删除等等。<br />
+<wbr /> (10) 网络状态检测模块：当网络状态改变时，对其进行检</p>
+<p><strong>6</strong><strong>、</strong><strong>LoonAndroid</strong><b> <wbr /></b><b></p>
+<p></b>项目地址：https://github.com/gdpancheng/LoonAndroid<br />
+主要有以下模块：<br />
+<wbr /> (1) <wbr /> 自动注入框架（只需要继承框架内的application既可）<br />
+<wbr /> (2) <wbr /> 图片加载框架（多重缓存，自动回收，最大限度保证内存的安全性）<br />
+<wbr /> (3) <wbr /> 网络请求模块（继承了基本上现在所有的http请求）<br />
+<wbr /> (4) <wbr /> eventbus（集成一个开源的框架）<br />
+<wbr /> (5) <wbr /> 验证框架（集成开源框架）<br />
+<wbr /> (6) <wbr /> json解析（支持解析成集合或者对象）<br />
+<wbr /> (7) <wbr /> 数据库（不知道是哪位写的 忘记了）<br />
+<wbr /> (8) <wbr /> 多线程断点下载（自动判断是否支持多线程，判断是否是重定向）<br />
+<wbr /> (9) <wbr /> 自动更新模块<br />
+<wbr /> (10) 一系列工具类</p>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/07/Git%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B/">Git使用教程</a></h1>
+		
+
+		<div class="post-content"><p><img class="alignnone size-full wp-image-110" src="http://donute.com/wp-content/uploads/2016/11/git.png" alt="git" width="1759" height="3162" /></p>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/03/Java%E7%A8%8B%E5%BA%8F%E8%AF%BB%E5%8F%96Excel%E6%96%87%E4%BB%B6/">Java程序读取Excel文件</a></h1>
+		
+
+		<div class="post-content"><p>JAVA EXCEL API:是一开放源码项目，通过它Java开发人员可以读取Excel文件的内容、创建新的Excel文件、更新已经存在的Excel文件。使用该API非Windows操作系统也可以通过纯Java应用来处理Excel数据表。因为它是使用Java编写的，所以我们在Web应用中可以通过JSP、Servlet来调用API实现对Excel数据表的访问，同样也可以用于安卓系统中读写Excel文件。</p>
+<p>Java Excel API的jar包：<a href="http://sourceforge.net/projects/jexcelapi/files/jexcelapi/2.6.6/jexcelapi_2_6_6.zip/download">http://sourceforge.net/projects/jexcelapi/files/jexcelapi/2.6.6/jexcelapi_2_6_6.zip/download</a></p>
+<blockquote>
+<pre>以下是读取Excel表的代码：
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+
+import jxl.Cell;
+import jxl.Sheet;
+import jxl.Workbook;
+
+public class ReadExcelUtils {
+   public static void main(String[] args) {
+        jxl.Workbook readwb = null;
+        try
+        {
+            InputStream instream = new FileInputStream("/sdcard/20150528高校列表.xls");
+            readwb = Workbook.getWorkbook(instream);
+            Sheet readsheet = readwb.getSheet(0);
+            //获取Sheet表中所包含的总列数
+            int rsColumns = readsheet.getColumns();
+            //获取Sheet表中所包含的总行数
+            int rsRows = readsheet.getRows();
+            //获取指定单元格的对象引用
+            for (int i = 0; i &lt; rsRows; i++)
+            {
+                for (int j = 0; j &lt; rsColumns; j++)
+                {
+                    Cell cell = readsheet.getCell(j, i);
+                    System.out.print(cell.getContents() + " ");
+                }
+                System.out.println();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            readwb.close();
+        }
+
+   }
+}
+以下是程序的部分输出：
+北京市（91所） 
+1 北京大学 教育部 北京市 本科 
+2 中国人民大学 教育部 北京市 本科 
+3 清华大学 教育部 北京市 本科 
+4 北京交通大学 教育部 北京市 本科 
+5 北京工业大学 北京市 北京市 本科 
+6 北京航空航天大学 工业和信息化部 北京市 本科 
+7 北京理工大学 工业和信息化部 北京市 本科 
+8 北京科技大学 教育部 北京市 本科 
+9 北方工业大学 北京市 北京市 本科 
+10 北京化工大学 教育部 北京市 本科 
+11 北京工商大学 北京市 北京市 本科 
+12 北京服装学院 北京市 北京市 本科 
+13 北京邮电大学 教育部 北京市 本科 
+14 北京印刷学院 北京市 北京市 本科 
+15 北京建筑大学 北京市 北京市 本科 
+16 北京石油化工学院 北京市 北京市 本科 
+17 北京电子科技学院 中央办公厅 北京市 本科 
+18 中国农业大学 教育部 北京市 本科 
+19 北京农学院 北京市 北京市 本科 
+20 北京林业大学 教育部 北京市 本科 
+21 北京协和医学院 国家卫生和计划生育委员会 北京市 本科 
+22 首都医科大学 北京市 北京市 本科 
+23 北京中医药大学 教育部 北京市 本科 
+24 北京师范大学 教育部 北京市 本科 
+25 首都师范大学 北京市 北京市 本科 
+26 首都体育学院 北京市 北京市 本科 
+27 北京外国语大学 教育部 北京市 本科 
+28 北京第二外国语学院 北京市 北京市 本科 
+29 北京语言大学 教育部 北京市 本科 
+30 中国传媒大学 教育部 北京市 本科 
+31 中央财经大学 教育部 北京市 本科 
+......
+
+</pre>
+</blockquote>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/01/Java%E7%BC%96%E5%86%99%E9%9F%B3%E4%B9%90%E6%92%AD%E6%94%BE%E5%99%A8/">Java编写音乐播放器</a></h1>
+		
+
+		<div class="post-content"><div>
+<p><img class="alignnone size-full wp-image-170" src="http://donute.com/wp-content/uploads/2016/11/002o3oc9gy6ScUkuPpz4d690.png" alt="002o3oc9gy6scukuppz4d690" width="480" height="380" /></p>
+</div>
+<p>使用Jmf播放Mp3</p>
+<div>窗体类：</div>
+<div>
+<div>package com.lc.player;</div>
+<div></div>
+<div>import javax.media.ControllerEvent;</div>
+<div>import javax.media.ControllerListener;</div>
+<div>import javax.swing.DefaultListModel;</div>
+<div>import javax.swing.JFileChooser;</div>
+<div>import javax.swing.JFrame;</div>
+<div>import javax.swing.JList;</div>
+<div>import javax.swing.JPanel;</div>
+<div>import javax.swing.JScrollPane;</div>
+<div>import javax.swing.JButton;</div>
+<div>import javax.swing.JLabel;</div>
+<div></div>
+<div>import java.awt.event.ActionListener;</div>
+<div>import java.awt.event.ActionEvent;</div>
+<div>import java.io.File;</div>
+<div>import java.net.MalformedURLException;</div>
+<div>import java.net.URL;</div>
+<div>import java.util.ArrayList;</div>
+<div>import java.util.List;</div>
+<div></div>
+<div>import javax.swing.JTextField;</div>
+<div>import javax.swing.event.ListSelectionEvent;</div>
+<div>import javax.swing.event.ListSelectionListener;</div>
+<div></div>
+<div>public class WindowKit extends JFrame implements ActionListener,ControllerListener{</div>
+<div>private JScrollPane scrollPane;</div>
+<div>private JPanel jPanel;</div>
+<div>private JButton btnNewButton;</div>
+<div>private JButton btnNewButton_1;</div>
+<div>private JButton button;</div>
+<div>private JButton button_1;</div>
+<div>private JButton btnNewButton_2;</div>
+<div>private JLabel lblNewLabel;</div>
+<div>JFileChooser jfc = new JFileChooser();</div>
+<div>private JLabel label_1;</div>
+<div>private JTextField textField;</div>
+<div>private JButton button_2;</div>
+<div>private MyPlayer player=new MyPlayer();</div>
+<div>private File f ;</div>
+<div></div>
+<div>public WindowKit() {</div>
+<div>setResizable(false);</div>
+<div>setDefaultCloseOperation<wbr />(JFrame.EXIT_ON_CLOSE);</div>
+<div>setBounds(100, 100, 480, 380);</div>
+<div></div>
+<div>jPanel = new JPanel();</div>
+<div>jPanel.setBounds(10, 10, 480, 380);</div>
+<div>setContentPane(jPanel);</div>
+<div>jPanel.setLayout(null);</div>
+<div></div>
+<div>btnNewButton = new JButton("添加歌曲文件夹");</div>
+<div>btnNewButton.addActionListener(this);</div>
+<div>btnNewButton.setBounds(22, 283, 123, 23);</div>
+<div>jPanel.add(btnNewButton);</div>
+<div></div>
+<div>btnNewButton_1 = new JButton("清空列表");</div>
+<div>btnNewButton_1.setBounds(22, 316, 123, 23);</div>
+<div>jPanel.add(btnNewButton_1);</div>
+<div></div>
+<div>JLabel label = new JLabel("\u6B63\u5728\u64AD\u653E\uFF1A");</div>
+<div>label.setBounds(170, 10, 81, 15);</div>
+<div>jPanel.add(label);</div>
+<div></div>
+<div>lblNewLabel = new JLabel("");</div>
+<div>lblNewLabel.setBounds(238, 35, 226, 23);</div>
+<div>jPanel.add(lblNewLabel);</div>
+<div></div>
+<div>button = new JButton("\u6682\u505C/\u64AD\u653E");</div>
+<div>button.setBounds(258, 283, 93, 23);</div>
+<div>jPanel.add(button);</div>
+<div></div>
+<div>button_1 = new JButton("\u4E0A\u4E00\u66F2");</div>
+<div>button_1.setBounds(155, 283, 93, 23);</div>
+<div>jPanel.add(button_1);</div>
+<div></div>
+<div>btnNewButton_2 = new JButton("下一曲");</div>
+<div>btnNewButton_2.setBounds(361, 283, 93, 23);</div>
+<div>jPanel.add(btnNewButton_2);</div>
+<div></div>
+<div>label_1 = new JLabel("\u7F51\u7EDC\u5730\u5740\uFF1A");</div>
+<div>label_1.setBounds(170, 181, 67, 15);</div>
+<div>jPanel.add(label_1);</div>
+<div></div>
+<div>textField = new JTextField();</div>
+<div>textField.setBounds(194, 206, 270, 21);</div>
+<div>jPanel.add(textField);</div>
+<div>textField.setColumns(10);</div>
+<div></div>
+<div>button_2 = new JButton("\u64AD\u653E");</div>
+<div>button_2.setBounds(361, 237, 93, 23);</div>
+<div>jPanel.add(button_2);</div>
+<div>}</div>
+<div></div>
+<div>public void setAudioList(List audioList) {</div>
+<div>DefaultListModel listModel = new DefaultListModel();</div>
+<div>for (File file : audioList) {</div>
+<div>listModel.addElement(file.getName());</div>
+<div>}</div>
+<div></div>
+<div>JList list = new JList(listModel);</div>
+<div>list.setBounds(10, 10, 380, 260);</div>
+<div>list.addListSelectionListener<wbr />(new ListSelectionListener(){</div>
+<div>@Override</div>
+<div>public void valueChanged(ListSelectionEvent event) {</div>
+<div>String a=list.getSelectedValue();</div>
+<div>System.out.println(a);</div>
+<div>File mf=new File(f,a);</div>
+<div>try {</div>
+<div>player.start(mf.toURL());</div>
+<div>} catch (MalformedURLException e) {</div>
+<div>e.printStackTrace();</div>
+<div>}</div>
+<div>}</div>
+<div>});</div>
+<div></div>
+<div>scrollPane = new JScrollPane(list);</div>
+<div>scrollPane.setBounds(10, 10, 140, 260);</div>
+<div></div>
+<div>getContentPane().add(scrollPane);</div>
+<div>}</div>
+<div></div>
+<div>@Override</div>
+<div>public void actionPerformed(ActionEvent e) {</div>
+<div></div>
+<div>// btnNewButton; 添加歌曲文件</div>
+<div>// btnNewButton_1; 清空列表</div>
+<div>// button; 暂停播放</div>
+<div>// button_1; 上一曲</div>
+<div>// btnNewButton_2; 下一曲</div>
+<div>// button_2 播放网络歌曲</div>
+<div>if (e.getSource().equals(btnNewButton)) {// 判断触发方法的按钮是哪个</div>
+<div>jfc.setFileSelectionMode(1);// 设定只能选择到文件夹</div>
+<div>int state = jfc.showOpenDialog(null);// 此句是打开文件选择器界面的触发语句</div>
+<div>if (state == 1) {</div>
+<div>return;</div>
+<div>} else {</div>
+<div>ArrayList audList=new ArrayList();</div>
+<div>f= jfc.getSelectedFile();// f为选择到的目录</div>
+<div>File[] audios = f.listFiles();</div>
+<div>for (File file : audios) {</div>
+<div>if (!file.isDirectory()) {</div>
+<div>String name=file.getName();</div>
+<div>if(name.contains(".mp3")||name.contains(".wav")||name.contains(".mid"))</div>
+<div>audList.add(file);</div>
+<div>}</div>
+<div>}</div>
+<div>this.setAudioList(audList);</div>
+<div>}</div>
+<div>}</div>
+<div>if (e.getSource().equals(btnNewButton_1)) {</div>
+<div>ArrayList audList=new ArrayList();</div>
+<div>this.setAudioList(audList);</div>
+<div>}</div>
+<div>if (e.getSource().equals(button)) {</div>
+<div></div>
+<div>}</div>
+<div>if (e.getSource().equals(button_1)) {</div>
+<div></div>
+<div>}</div>
+<div>if (e.getSource().equals(btnNewButton_2)) {</div>
+<div></div>
+<div>}</div>
+<div>if (e.getSource().equals(button_2)) {</div>
+<div>URL url;</div>
+<div>try {</div>
+<div>url = new URL(textField.getText());</div>
+<div>player.start(url);</div>
+<div>} catch (MalformedURLException e1) {</div>
+<div>// TODO Auto-generated catch block</div>
+<div>e1.printStackTrace();</div>
+<div>}</div>
+<div>}</div>
+<div>}</div>
+<div></div>
+<div>@Override</div>
+<div>public void controllerUpdate(ControllerEvent arg0) {</div>
+<div>// TODO Auto-generated method stub</div>
+<div>}</div>
+<div>}</div>
+</div>
+<div></div>
+<div>播放类:</div>
+<div>
+<div>package com.lc.player;</div>
+<div></div>
+<div>import java.io.File;</div>
+<div>import java.io.IOException;</div>
+<div>import java.net.URL;</div>
+<div></div>
+<div>import javax.media.*;</div>
+<div></div>
+<div>public class MyPlayer {</div>
+<div>private boolean playState;</div>
+<div>private Player player;</div>
+<div></div>
+<div>public MyPlayer() {</div>
+<div>super();</div>
+<div>}</div>
+<div></div>
+<div>public boolean isPlaying() {</div>
+<div>return playState;</div>
+<div>}</div>
+<div></div>
+<div>public void start(URL url) {</div>
+<div>try {</div>
+<div>player = Manager.createPlayer(new MediaLocator(url));</div>
+<div>playState=true;</div>
+<div>} catch (NoPlayerException ex) {</div>
+<div>ex.printStackTrace();</div>
+<div>System.out.println("不能播放文件");</div>
+<div>return;</div>
+<div>} catch (IOException ex) {</div>
+<div>ex.printStackTrace();</div>
+<div>return;</div>
+<div>}</div>
+<div>if (player == null) {</div>
+<div>System.out.println("播放器为空");</div>
+<div>return;</div>
+<div>}</div>
+<div>player.prefetch();</div>
+<div>}</div>
+<div>public void stop()</div>
+<div>{</div>
+<div>if(isPlaying())</div>
+<div>{</div>
+<div>player.stop();</div>
+<div>playState=false;</div>
+<div>}</div>
+<div>}</div>
+<div>}</div>
+</div>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/01/java-%E4%B8%A4%E7%A7%8Djson%E8%A7%A3%E6%9E%90%E8%80%97%E6%97%B6%E5%AF%B9%E6%AF%94/">java 两种json解析耗时对比</a></h1>
+		
+
+		<div class="post-content"><p>粗略的比较了一下，使用org.json与com.google.code.gson解析json数据时所花时间。可以看到在json数组元素个数为20时，gson解析所花时间几乎为org.json的30倍。但是gson有自己的优势，就是代码编写更加简单，使用更加方便。</p>
+<div><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102vu3o&amp;url=http://album.sina.com.cn/pic/002o3oc9gy6U5n932yI48" target="_blank"><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="java &lt;wbr&gt;两种json解析耗时对比" src="http://s9.sinaimg.cn/mw690/002o3oc9gy6U5n932yI48&amp;690" alt="java &lt;wbr&gt;两种json解析耗时对比" width="395" height="55" name="image_operate_99441437717763466" /></a><br />
+代码量对比：</div>
+<div>
+<pre>public static void orgJsonParse(String str,ArrayList jokeList)
+{
+long start=System.currentTimeMillis();
+try {
+JSONArray array=new JSONArray(str);
+JokeBean jb;
+for(int i=0;i;i++)
+{
+JSONObject jobj=array.getJSONObject(i);
+jb=new JokeBean();
+jb.setTitle(jobj.getString("title"));
+jb.setContent(jobj.getString("content"));
+jb.setPoster(jobj.getString("poster"));
+jb.setUrl(jobj.getString("url"));
+jokeList.add(jb);
+}
+} catch (JSONException e) {
+e.printStackTrace();
+}
+long all=System.currentTimeMillis()-start;
+Log.d("org.json解析json耗时：",all+"");
+}</pre>
+<pre></pre>
+<pre></pre>
+<pre>public static void gsonPase(String str,ArrayList jokeList)
+{
+long start=System.currentTimeMillis();
+Gson gson=new Gson();
+List jokeBeanList=gson.fromJson(str,new TypeToken&gt;(){}.getType());
+long all=System.currentTimeMillis()-start;
+Log.d("gson解析json耗时：",all+"");
+
+}</pre>
+</div>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/01/%E5%AE%89%E5%8D%93-%E7%AE%80%E5%8D%95%E7%9A%84PopupWindow%E4%BD%BF%E7%94%A8%E5%AE%9E%E4%BE%8B/">安卓 简单的PopupWindow使用实例</a></h1>
+		
+
+		<div class="post-content"><p>什么是PopupWindow？</p>
+<p>谷歌的描述是：“一个弹出窗口控件，可以用来显示任意视图(View)，而且会浮动在当前 活动(activity)的顶部”</p>
+<p>下面展示一个最简单的实例</p>
+<div>
+<div><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102vuah&amp;url=http://album.sina.com.cn/pic/002o3oc9gy6U9UOCD6y62" target="_blank"><img style="margin: 0px; padding: 0px; border: 0px; list-style: none; vertical-align: middle; max-width: 100%;" title="安卓 &lt;wbr&gt;简单的PopupWindow使用实例" src="http://s3.sinaimg.cn/mw690/002o3oc9gy6U9UOCD6y62" alt="安卓 &lt;wbr&gt;简单的PopupWindow使用实例" /></a>填写图片摘要（选填）</div>
+</div>
+<p>点击button时，弹出PopupWindow</p>
+<p><wbr /></p>
+<pre>public void showPopupWindow(View view) {
+LayoutInflater inflater=LayoutInflater.from(this);
+final View popView=inflater.inflate(R.layout.popupwindow_layout, null);//创建PopupWindow的内容视图
+Button dismiss_bt= (Button) popView.findViewById(R.id.dismiss_bt);
+final PopupWindow popupWindow=new PopupWindow(popView, ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT, true);//创建PopupWindow
+popupWindow.setTouchable(true);
+popupWindow.setBackgroundDrawable(getResources().getDrawable(R.drawable.ba));//设置popupwindow的背景
+dismiss_bt.setOnClickListener(new View.OnClickListener() {
+@Override
+public void onClick(View v) {
+Toast.makeText(MainActivity.this, "button is pressed", Toast.LENGTH_SHORT).show();
+popupWindow.dismiss();
+}
+});
+popupWindow.showAsDropDown(view);//显示PopupWindow
+}</pre>
+<pre>PopupWindow的显示方法</pre>
+<pre>
+　　显示提供了两种形式：
+　　使用showAtLocation()显示在指定位置，两个方法重载：</pre>
+<div>
+<pre>public void showAtLocation(View parent, int gravity, int x, int y)
+
+public void showAtLocation(IBinder token, int gravity, int x, int y)
+</pre>
+</div>
+<pre>
+ <wbr />
+　　使用showAsDropDown()显示在一个参照物View的周围，三个方法重载：</pre>
+<div>
+<pre>public void showAsDropDown(View anchor)
+
+public void showAsDropDown(View anchor, int xoff, int yoff)
+
+public void showAsDropDown(View anchor, int xoff, int yoff, int gravity)
+</pre>
+</div>
+<pre>
+public void showAsDropDown(View anchor, int xoff, int yoff, int gravity）方法是API 19新引入的。</pre>
+<div>PopupWindow如果没有设置Background在按下Back键或点击PopupWindow外区域的时候不会Dismiss。</div>
+<div><span style="font-family: Verdana, Arial, Helvetica, sans-serif;">原因：</span>如果有背景，则会在contentView外面包一层<strong>PopupViewContainer</strong>之后作为mPopupView，如果没有背景，则直接用contentView作为mPopupView。</div>
+<p>而这个<strong>PopupViewContainer</strong>是一个内部私有类，它继承了FrameLayout，在其中重写了Key和Touch事件的分发处理。<strong>由于PopupView本身并没有重写Key和Touch事件的处理，所以如果没有包这个外层容器类，点击Back键或者外部区域是不会导致弹框消失的。</strong></p>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/01/%E5%AE%89%E5%8D%93RecyclerView%E7%9A%84%E4%BD%BF%E7%94%A8/">安卓RecyclerView的使用</a></h1>
+		
+
+		<div class="post-content"><ol>
+<li>RecyclerView是一个ViewGroup；</li>
+<li>LayoutManager控制RecyclerView的ChildView的布局显示，childview由Recycler提供以及管理；</li>
+<li>效果图：<img title="安卓RecyclerView的使用" src="http://s15.sinaimg.cn/mw690/002o3oc9gy6TYRydbtkde&amp;690" alt="安卓RecyclerView的使用" width="540" height="960" name="image_operate_17181437365040720" /><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102vtq5&amp;url=http://album.sina.com.cn/pic/002o3oc9gy6TYRwJYDbe5" target="_blank"><img title="安卓RecyclerView的使用" src="http://s6.sinaimg.cn/mw690/002o3oc9gy6TYRwJYDbe5&amp;690" alt="安卓RecyclerView的使用" width="540" height="960" name="image_operate_54291437365067095" /></a>
+<p>MainActivity代码：</li>
+<li>
+<pre>package com.fabian.recyclerviewtest;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.StaggeredGridLayoutManag<wbr />er;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.AnimationSet;
+import android.view.animation.LayoutAnimationControlle<wbr />r;
+import android.view.animation.ScaleAnimation;
+
+import java.util.ArrayList;
+
+
+public class MainActivity extends Activity {
+
+private RecyclerView my_recycler_view;
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+my_recycler_view= (RecyclerView) findViewById(R.id.my_recycler_view);
+ArrayList entities=new ArrayList&lt;&gt;();
+for(int i=0;i&lt;&lt;span style="color:#6897bb;"&gt;20;i++) {
+entities.add(newEntity("https://ss0.baidu.com/94o3dSag_xI4khGko9WTAnF6hhy/super/whfpf=425,260,50/sign=c5464b263cf33a879e38535a<wbr />a061240a/2f738bd4b31c8701b1f47af0<wbr />217f9e2f0708ff62.jpg", "亚裔小伙帮纽约流浪汉变帅哥 画面温馨"));
+entities.add(new Entity("https://ss0.baidu.com/-Po3dSag_xI4khGko9WTAnF6hhy/super/whfpf=425,260,50/sign=0cdecc1a76cf3bc7e8559eac<wbr />b73d8e93/caef76094b36acaf450aa6eb<wbr />7ad98d1001e99c3a.jpg", "英国蒸汽机集会 穿越时空回到蒸汽时代"));
+entities.add(new Entity("http://upload.cankaoxiaoxi.com/2015/0720/1437345130279.jpg", "世界冲浪冠军赛中选手遭鲨鱼袭击全程"));
+entities.add(new Entity("http://pic.miercn.com/uploads/allimg/150720/40-150H0091F1.jpg", "布隆迪小贩扒卡车回家 险象环生"));
+entities.add(newEntity("http://i2.chinanews.com/simg/hd/2015/07/20/200x133_4ac632f104504b52ae686d18<wbr />a51674bd.jpg", "长春一高校广场上晾晒金针菇 造型似八卦阵"));
+entities.add(newEntity("http://i2.chinanews.com/simg/hd/2015/07/20/200x133_a84bbf720bec4acfb2a708ba<wbr />481a3feb.jpg", "晒金针菇"));
+entities.add(newEntity("http://i2.chinanews.com/simg/hd/2015/07/20/200x133_865e3c7ea863461aabdd80e8<wbr />c0e65de1.jpg", "广场上晒金针菇"));
+}
+RVAdapter rvAdapter=new RVAdapter(entities,this);
+
+LinearLayoutManager mLayoutManager = new LinearLayoutManager(this);
+// GridLayoutManager mLayoutManager=new GridLayoutManager(this,3);
+//StaggeredGridLayoutManag<wbr />er mLayoutManager=new StaggeredGridLayoutManag<wbr />er(2,1);
+my_recycler_view.setLayoutManager(mLayoutManager);
+
+my_recycler_view.setAdapter(rvAdapter);
+
+AnimationSet aset=new AnimationSet(false);
+ScaleAnimation sa=new ScaleAnimation(0f,1f,0f,1f,0.5f,0.5f);
+sa.setDuration(1500);
+AlphaAnimation aa=new AlphaAnimation(0f,1f);
+aa.setDuration(1500);
+aset.addAnimation(sa);
+aset.addAnimation(aa);
+LayoutAnimationControlle<wbr />r controller = new LayoutAnimationControlle<wbr />r(aset, 0.5f);
+controller.setOrder(LayoutAnimationControlle<wbr />r.ORDER_NORMAL);
+
+my_recycler_view.setLayoutAnimation(controller);
+}
+}</pre>
+</li>
+<li>
+<pre>Adapter代码：</pre>
+</li>
+<li>
+<pre></pre>
+<pre>package com.fabian.recyclerviewtest;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.support.v7.widget.RecyclerView;
+import android.util.LruCache;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.Volley;
+
+import java.util.ArrayList;
+
+
+public class RVAdapter extends RecyclerView.Adapter{
+private ArrayList entities;
+private Context context;
+private LayoutInflater inflater;
+private RequestQueue mRequestQueue;
+private final ImageLoader mImageLoader;
+
+public RVAdapter(ArrayList entities, Context context) {
+this.entities = entities;
+this.context = context;
+inflater=LayoutInflater.from(context);
+mRequestQueue= Volley.newRequestQueue(context);
+mImageLoader=new ImageLoader(mRequestQueue,new MyCache());
+}
+
+@Override
+public MyHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+View view=inflater.inflate(R.layout.item_layout,viewGroup,false);
+MyHolder myHolder=new MyHolder(view);
+return myHolder;
+}
+@Override
+public void onBindViewHolder(MyHolder viewHolder, int i) {
+viewHolder.tv.setText(entities.get(i).getContent());
+ImageLoader.ImageListener listener = ImageLoader.getImageListener(viewHolder.iv,android.R.drawable.ic_menu_rotate, android.R.drawable.ic_delete);
+mImageLoader.get(entities.get(i).getUrl(), listener);
+mRequestQueue.start();
+}
+@Override
+public int getItemCount() {
+return entities.size();
+}
+}
+class MyHolder extends RecyclerView.ViewHolder
+{
+TextView tv;
+ImageView iv;
+public MyHolder(View itemView) {
+super(itemView);
+tv= (TextView) itemView.findViewById(R.id.textView);
+iv= (ImageView) itemView.findViewById(R.id.imageView);
+}
+}
+
+class MyCache implements ImageLoader.ImageCache
+{
+private LruCache,Bitmap&gt; cache;
+public MyCache()
+{
+cache=new LruCache, Bitmap&gt;(8*1024*1024)
+{
+@Override
+protected int sizeOf(String key, Bitmap bitmap) {
+return bitmap.getRowBytes() * bitmap.getHeight();
+}
+};
+}
+@Override
+public Bitmap getBitmap(String s) {
+return cache.get(s);
+}
+@Override
+public void putBitmap(String s, Bitmap bitmap) {
+cache.put(s,bitmap);
+}
+}</pre>
+</li>
+<li>
+<pre>Entity代码：</pre>
+</li>
+<li>
+<pre></pre>
+<pre>package com.fabian.recyclerviewtest;
+
+
+public class Entity {
+private String url;
+private String content;
+
+public Entity(String url, String content) {
+this.url = url;
+this.content = content;
+}
+
+public String getUrl() {
+return url;
+}
+
+public void setUrl(String url) {
+this.url = url;
+}
+
+public String getContent() {
+return content;
+}
+
+public void setContent(String content) {
+this.content = content;
+}
+}</pre>
+</li>
+</ol>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/01/%E5%AE%89%E5%8D%93-Messager%E7%B1%BB%E7%9A%84%E4%BD%BF%E7%94%A8/">安卓 Messager类的使用</a></h1>
+		
+
+		<div class="post-content"><p><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102vuam&amp;url=http://album.sina.com.cn/pic/002o3oc9gy6U9ZMbaBF8f" target="_blank"><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="安卓 &lt;wbr&gt;Messager类的使用" src="http://s16.sinaimg.cn/mw690/002o3oc9gy6U9ZMbaBF8f&amp;690" alt="安卓 &lt;wbr&gt;Messager类的使用" width="690" height="223" name="image_operate_39701437968139533" /></a><br />
+（可以看到LogCat中已经打印出了从MainActivity发出的信息）</p>
+<p>进行IPC（进程间通信）通信，一般写一个AIDL（安卓接口定义语言）接口，再写一个Service子类，然后实现AIDL接口 当做IBinder返回给Activity界面层。</p>
+<p>单线程中与Service进行通信 Messenger类来处理，消息传递给Service进行通信。</p>
+<p>Service的代码：</p>
+<pre>public class <wbr />MyService <wbr />extends <wbr />Service {
+
+private <wbr />Messenger <wbr />messenger <wbr />= <wbr />null;
+private <wbr />Handler <wbr />handler <wbr />= <wbr />new <wbr />Handler(){
+public void <wbr />handleMessage(android.os.Message msg) {
+Log.d("MyService_Hanler", <wbr />"Msg:" <wbr />+ msg.what <wbr />+ <wbr />";" <wbr />+ msg.obj);
+}
+};
+public <wbr />MyService() {
+}
+@Override
+public void <wbr />onCreate() {
+super.onCreate();
+messenger <wbr />= <wbr />new <wbr />Messenger(handler);//获取Service中的Messager
+}
+@Override
+public <wbr />IBinder <wbr />onBind(Intent arg0) {
+return <wbr />messenger.getBinder();//取得Binder
+}
+
+}</pre>
+<pre>Activity代码：</pre>
+<pre></pre>
+<pre>public class <wbr />MainActivity <wbr />extends <wbr />ActionBarActivity {
+
+private <wbr />Messenger <wbr />messenger;
+private <wbr />ServiceConnection <wbr />conn <wbr />= <wbr />new <wbr />ServiceConnection() {
+@Override
+public void <wbr />onServiceDisconnected(ComponentName cn) {
+Log.d("MainActivity", <wbr />"ServiceDisconnected");
+}
+@Override
+public void <wbr />onServiceConnected(ComponentName cn, <wbr />IBinder ibiner) {
+messenger <wbr />= <wbr />new <wbr />Messenger(ibiner);//��取得Messenger
+Log.d("MainActivity", <wbr />"Connect Success!!");
+}
+};
+@Override
+protected void <wbr />onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+bindService(new <wbr />Intent(this, <wbr />MyService.class), <wbr />conn, <wbr />Context.BIND_AUTO_CREATE);
+}
+
+public void <wbr />sendMsg(View view) {
+if <wbr />(messenger <wbr />== <wbr />null) {
+return;
+}
+Message msg1 = Message.obtain();
+msg1.what <wbr />= <wbr />1;
+msg1.obj <wbr />= <wbr />"I Send A Message I am MainActivity";
+try <wbr />{
+messenger.send(msg1);
+} <wbr />catch <wbr />(RemoteException e) {
+e.printStackTrace();
+}
+}
+}</pre>
+</div>
+
+	</article>
+
+
+
+
+
+
+	<div class="postnavigation">
+
+		
+			
+				<a class="prev left" href="/page3/">&larr; Newer</a>
+			
+		
+
+		<span class="pages">Page 4 of 6</span>
+
+		
+			<a class="next right" href="/page5/">Older &rarr;</a>
+		
+
+	</div>
+
+    </div>
+
+
+
+  </div>
+
+
+
+  <footer id="footer">
+    <p class="copyright">Copyright &copy; 2017 Solar Theme. Powered by <a href="http://jekyllrb.com">Jekyll</a>, theme by <a href="http://www.webmaster-source.com">Matt Harzewski</a></p>
+  </footer>
+
+
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script src="/assets/js/jquery.mobilemenu.min.js"></script>
+
+  <script>
+    $(document).ready(function(){
+      $('#sidebar nav ul').mobileMenu({'topOptionText': 'Menu', 'prependTo': '#sidebar nav'});
+    });
+  </script>
+
+
+
+</body>
+</html>

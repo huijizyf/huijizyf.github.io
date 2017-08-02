@@ -1,0 +1,60 @@
+---
+layout: post
+status: publish
+published: true
+title: Rxtx在安卓下的使用
+author:
+ yufei.zhou
+
+wordpress_id: 182
+wordpress_url: http://donute.com/?p=182
+date: '2016-11-29 12:53:51 +0800'
+date_gmt: '2016-11-29 04:53:51 +0800'
+categories:
+- 安卓
+tags: [安卓]
+comments: []
+---
+<h3>什么是Rxtx</h3>
+<pre><code>RXTX项目提供了Windows,Linux,Mac os X,Solaris操作系统下的兼容javax.comm
+串口通讯包API的实现，为其他研发人员在此类系统下研发串口应用提供了相当的方便。
+
+RXTX是个提供串口和并口通信的开源java类库，由该项目发布的文档均遵循LGPL协议。
+针对x86体系结构的Linux操作系统平台，RXTX的部署包括下面几个文档：
+* RXTXcomm.jar RXTX自己的实现
+* librxtxSerial.so 由调用的底层串口库文档
+* librxtxParallel.so 由RXTXcomm.jar调用的底层并口库文档
+驱动的类配置文档,内容是Driver=gnu.io.RXTXCommDriver
+
+
+--------------------------------------------------------------------
+以上是来自百度百科的解释，可以看见Rxtx是适用于Windows，Linux，Mac OS等系统的串口
+通讯包，并未包含Android系统。
+有大神已经实现了将Rxtx用于安卓系统上：http://v-lad.org/projects/gnu.io.android/
+
+Github地址：https://github.com/vladistan/gnu.io.android
+</code></pre>
+<h3>使用方法</h3>
+<pre><code>在需要使用Rxtx的安卓设备/system/etc/ 目录下创建文件：gnu.io.rxtx.properties，在文件中写入：
+gnu.io.rxtx.SerialPorts=/dev/ttyUSB3:/dev/ttyUSB4
+
+其中/dev/ttyUSB3和/dev/ttyUSB4表示串口设备在文件系统下的挂载点。
+
+将项目中提供的so库文件放到自己的项目中，在Android Studio中对应的目录为jniLibs
+然后将对应的java类导入项目，就可以正常使用了。
+
+如果使用过程中发生错误，请注意在Logcat中查看，可能是由于目录读写权限引起的错误。
+比如程序需要有权限读取写入：/data/local目录。
+
+</code></pre>
+<h3>补充</h3>
+<pre><code>修改目录权限时如果遇到&amp;quot;... Read-only file system&amp;quot;。
+
+解决办法：
+1. 最简单的，adb remount
+2. 不行的话，adb shell su之后将文件系统remount为读写权限： mount -o remount rw /system。出于安全考虑，记得完事后remount回只读： mount -o ro,remount /system
+3. 和方法2类似，mount -o rw,remount -t ext3 /dev/block/mmcblk1p21 /system
+
+
+Rxtx可配合Modbus4J使用。 关于Modbus4J可查看我的另一篇文章：http://donute.com/?p=153
+</code></pre>

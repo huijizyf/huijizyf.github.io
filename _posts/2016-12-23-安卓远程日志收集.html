@@ -1,0 +1,288 @@
+---
+layout: post
+status: publish
+published: true
+title: 安卓远程日志收集
+author:
+ yufei.zhou
+
+wordpress_id: 199
+wordpress_url: http://donute.com/?p=199
+date: '2016-12-23 10:15:23 +0800'
+date_gmt: '2016-12-23 02:15:23 +0800'
+categories:
+- HelloWorld
+- 安卓
+- python
+tags: [安卓,日志]
+comments: []
+---
+<h3>开始</h3>
+<pre><code>最近在公司的项目中需要收集安卓的运行日志，最开始的时候我把日志写入到设备本地文件中存
+储，使用Bmob的文件管理功能定时上传到服务器，在使用过程中有些地方不太方便，第一就是文
+件上传过程中不能写入日志，不然会因为文件上传完成后的校验不通过，导致上传失败进而引发
+程序崩溃。另外一个就是如果单纯的只为了收集日志的话引入Bmob的sdk有点过于浪费，Bmob
+的SDK体积也并不小。
+然后就开始自己动手解决这个问题。
+</code></pre>
+<h3>服务端实现</h3>
+<pre><code>既然是远程收集日志，我们需要一个服务端程序，服务端的主要作用就是接受客户端传来的数
+据，写入到文件中。我们选择了Python+web.py来实现。
+
+import json
+import web
+import time
+import sys
+reload(sys)
+sys.setdefaultencoding(&amp;#039;UTF-8&amp;#039;)     #设置字符编码
+
+web.config.debug = True             #调试模式打开
+
+urls = (
+        &amp;#039;/&amp;#039;,&amp;#039;index&amp;#039;
+    )
+
+localLogs = &amp;quot;&amp;quot;
+
+
+class index:
+
+    def GET(self):                  #以网页形式返回日志数据
+
+        htmlFormat = &amp;quot;&amp;lt;html&amp;gt;&amp;lt;head&amp;gt;&amp;lt;title&amp;gt;&amp;lt;/title&amp;gt;&amp;lt;/head&amp;gt;&amp;lt;body&amp;gt;%s   &amp;lt;script type=<pre wp-pre-tag-1></pre>amp;quot;text/javascript<pre wp-pre-tag-1></pre>amp;quot;&amp;gt;function myrefresh(){window.location.reload();window.scrollTo(0,document.body.scrollHeight);}setTimeout(&amp;#039;myrefresh()&amp;#039;,1000); &amp;lt;/script&amp;gt;&amp;lt;/body&amp;gt;&amp;lt;/html&amp;gt;&amp;quot;
+        global localLogs
+        # localLogs = localLogs.encode(&amp;#039;gbk&amp;#039;)
+        return htmlFormat % localLogs
+
+    def POST(self):                 #接收请求保存日志到文件
+
+        inputs=web.input()
+        content = web.data()        #接收到日志数据
+
+        if content.startswith(&amp;#039;{&amp;#039;) and content.endswith(&amp;#039;}&amp;#039;):
+            content = &amp;#039;[&amp;#039; + content + &amp;#039;]&amp;#039;           #以Json数组格式处理
+
+        print content
+        logs = json.loads(content)
+
+        for log in logs:                            #处理数组中的log元素
+            if &amp;#039;stack&amp;#039; not in log:
+                log[&amp;#039;stack&amp;#039;] = &amp;quot; &amp;quot;
+
+            color = &amp;#039;#808080&amp;#039;                       #根据日志级别不同，以不同颜色显示到网页
+            if log[&amp;#039;level&amp;#039;] == &amp;#039;INFO&amp;#039;:
+                color = &amp;#039;#008000&amp;#039;
+            elif log[&amp;#039;level&amp;#039;] == &amp;#039;WARNING&amp;#039;:
+                color = &amp;#039;#FFA500&amp;#039;
+            elif log[&amp;#039;level&amp;#039;] == &amp;#039;ERROR&amp;#039;:
+                color = &amp;#039;#FF0000&amp;#039;
+
+            strLog = &amp;#039;&amp;lt;div style=&amp;quot;color:%s&amp;quot;&amp;gt;%s  %s: [%s] %s &amp;lt;/div&amp;gt;&amp;#039; % (color, log[&amp;#039;time&amp;#039;],log[&amp;#039;level&amp;#039;], log[&amp;#039;tag&amp;#039;], log[&amp;#039;msg&amp;#039;])#日志内容
+
+            stacks = log[&amp;#039;stack&amp;#039;].split(&amp;#039;\n&amp;#039;)
+            strLog = strLog + (&amp;#039;&amp;lt;div color=&amp;quot;%s&amp;quot;&amp;gt;&amp;#039; % color)
+            for s in stacks:
+                strLog = strLog + (&amp;#039;&amp;lt;div&amp;gt;%s&amp;lt;/div&amp;gt;&amp;#039; % (s.strip()))
+
+            strLog = strLog + &amp;#039;&amp;lt;/div&amp;gt;&amp;#039;
+
+            fileName=&amp;quot;logs/&amp;quot;+log[&amp;#039;boxId&amp;#039;]+&amp;quot;_&amp;quot;+time.strftime(&amp;#039;%Y-%m-%d&amp;#039;)+&amp;quot;.html&amp;quot;
+            f=open(fileName,&amp;#039;a&amp;#039;)                        #以追加方式写文件
+            f.write(strLog+&amp;quot;\n&amp;quot;)
+            f.close()
+            global localLogs
+            localLogs = localLogs + strLog
+
+        return &amp;quot;&amp;quot;
+
+
+if __name__ == &amp;#039;__main__&amp;#039;:
+    app = web.application(urls, globals())
+    app.run()
+</code></pre>
+<h3>安卓端实现</h3>
+<h4>首先定义一个日志接口</h4>
+<pre><code>public interface ILog {
+
+    public void d(String tag, String msg);
+    public void i(String tag, String msg);
+    public void w(String tag, String msg);
+    public void w(String tag, String msg, Throwable e);
+    public void e(String tag, String msg);
+    public void e(String tag, String msg, Throwable e);
+
+    public void destory();
+}
+</code></pre>
+<h4>远程日志实现接口</h4>
+<pre><code>public class URemoteLog implements ILog{
+
+
+    private URemoteLogPrinter printer;
+
+    public URemoteLog(int interval){
+        printer = new URemoteLogPrinter(interval);
+    }
+
+    @Override
+    public void d(String tag, String msg) {
+        printer.print(new ULog(ULog.L_DEBUG, tag, msg));
+    }
+
+    @Override
+    public void i(String tag, String msg) {
+        printer.print(new ULog(ULog.L_INFO, tag, msg));
+    }
+
+    @Override
+    public void w(String tag, String msg) {
+        printer.print(new ULog(ULog.L_WARN, tag, msg));
+    }
+
+    @Override
+    public void w(String tag, String msg, Throwable e) {
+        printer.print(new ULog(ULog.L_WARN, tag, msg));
+    }
+
+    @Override
+    public void e(String tag, String msg) {
+        printer.print(new ULog(ULog.L_ERROR, tag, msg));
+    }
+
+    @Override
+    public void e(String tag, String msg, Throwable e) {
+        printer.print(new ULog(ULog.L_ERROR, tag, msg));
+    }
+
+    @Override
+    public void destory() {
+        printer.stop();
+    }
+
+}
+</code></pre>
+<h4>日志打印类，主要将日志写入远程</h4>
+<pre><code>public class URemoteLogPrinter {
+
+    private List&amp;lt;ULog&amp;gt; logs;
+    private int interval = 1000; //单位 毫秒
+
+    private Timer timer;
+    private boolean running;
+
+    public URemoteLogPrinter(){
+    }
+
+    public URemoteLogPrinter(int interval){
+        this.logs = Collections.synchronizedList(new ArrayList&amp;lt;ULog&amp;gt;());
+        this.interval = interval;
+    }
+
+    public void print(ULog log){
+        start();
+        synchronized (logs) {
+            logs.add(log);
+        }
+    }
+
+    public void printImmediate(String log){
+        HttpService.reportLog(log, new HttpCallback&amp;lt;String&amp;gt;() {
+            @Override
+            public void onSuccess(String data) {
+
+            }
+            @Override
+            public void onFailure(int statusCode, Error error) {
+
+            }
+        });
+    }
+
+    public List&amp;lt;ULog&amp;gt; getAndClear(){
+        synchronized (logs) {
+            List&amp;lt;ULog&amp;gt; all = new ArrayList&amp;lt;ULog&amp;gt;(logs);
+            logs.clear();
+            return all;
+        }
+    }
+
+    public void start(){
+        if(running){
+            return;
+        }
+
+        running = true;
+        TimerTask task = new LogPrintTask();
+        timer = new Timer(true);
+        timer.scheduleAtFixedRate(task, 100, interval);
+    }
+
+    public void stop(){
+        if(timer != null){
+            timer.cancel();
+        }
+        running = false;
+    }
+
+    class LogPrintTask extends TimerTask{
+        @Override
+        public void run() {
+            try{
+                List&amp;lt;ULog&amp;gt; logs = getAndClear();
+                if(logs.size() &amp;gt; 0){
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(&amp;quot;[&amp;quot;);
+                    for(ULog log : logs){
+                        sb.append(log.toJson()).append(&amp;quot;,&amp;quot;);
+                    }
+                    sb.deleteCharAt(sb.length()-1).append(&amp;quot;]&amp;quot;);
+                    HttpService.reportLog(sb.toString(), new HttpCallback&amp;lt;String&amp;gt;() {
+                        @Override
+                        public void onSuccess(String data) {
+
+                        }
+                        @Override
+                        public void onFailure(int statusCode, Error error) {
+
+                        }
+                    });
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+                stop();
+            }
+        }
+
+    }
+}
+
+</code></pre>
+<h4>日志实体类</h4>
+<pre><code>public class ULog {
+    public static final String L_DEBUG=&amp;quot;L_DEBUG&amp;quot;;
+    public static final String L_INFO=&amp;quot;L_INFO&amp;quot;;
+    public static final String L_WARN=&amp;quot;L_WARN&amp;quot;;
+    public static final String L_ERROR=&amp;quot;L_ERROR&amp;quot;;
+
+    private String boxId;
+    private String level;
+    private String msg;
+    private String tag;
+    private String time;
+
+    public ULog(String level,String tag,String msg) {
+        this.boxId = MainApplication.getBoxId();
+        this.level = level;
+        this.msg = msg;
+        this.tag = tag;
+        Date date=new Date();
+        SimpleDateFormat format=new SimpleDateFormat(&amp;quot;yyyy-MM-dd HH:mm:ss&amp;quot;);
+        String time=format.format(date);
+        this.time = time;
+    }
+    public String toJson(){
+        Gson gson=new Gson();
+        return gson.toJson(this);
+    }
+}
+</code></pre>

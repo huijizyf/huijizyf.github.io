@@ -1,0 +1,298 @@
+---
+layout: post
+status: publish
+published: true
+title: 安卓安装SSH服务（下）
+author:
+ yufei.zhou
+
+wordpress_id: 51
+wordpress_url: http://donute.com/?p=51
+date: '2016-11-01 14:35:47 +0800'
+date_gmt: '2016-11-01 06:35:47 +0800'
+categories:
+- 安卓
+tags: [安卓]
+comments: []
+---
+<div>Doc: dropbear</div>
+
+<div>Note: LEGACY</div>
+
+<div>This guide is provided for support on CM7 devices, OpenSSH is now used instead as of CM9</div>
+
+<div>This short article explains how to connect to your Android device from another computer using the SSH protocol. This allows you to use a big screen and real keyboard to work on the device. This article focuses mainly on connecting with a Linux based computer. We will be using [Dropbear](http://matt.ucc.asn.au/dropbear/dropbear.html) on the Android device as an SSH server. Dropbear is already installed in CyanogenMod. [EDIT: Cyanogenmod 9.0 RC2 no longer includes Dropbear.]</div>
+
+<div>The Android terminal is a fine app, but I prefer a big screen and real keyboard any time.</div>
+
+<div>Contents</div>
+
+<div> [[hide](http://wiki.cyanogenmod.org/w/Doc:_dropbear#)]</div>
+
+*   [1 Prerequisites](http://wiki.cyanogenmod.org/w/Doc:_dropbear#Prerequisites)
+*   [2 Create a SSH key for logging in](http://wiki.cyanogenmod.org/w/Doc:_dropbear#Create_a_SSH_key_for_logging_in)
+*   [3 Prepare the Android Device](http://wiki.cyanogenmod.org/w/Doc:_dropbear#Prepare_the_Android_Device)
+*   [4 Finding the IP address of your Android device](http://wiki.cyanogenmod.org/w/Doc:_dropbear#Finding_the_IP_address_of_your_Android_device)
+*   [5 Testing Dropbear](http://wiki.cyanogenmod.org/w/Doc:_dropbear#Testing_Dropbear)
+*   [6 Running dropbear normally](http://wiki.cyanogenmod.org/w/Doc:_dropbear#Running_dropbear_normally)
+*   [7 Automatic startup of the sshd-server on your device](http://wiki.cyanogenmod.org/w/Doc:_dropbear#Automatic_startup_of_the_sshd-server_on_your_device)
+*   [8 Prepare the Android device (using a root password) for OLD BUILDS of CyanogenMod](http://wiki.cyanogenmod.org/w/Doc:_dropbear#Prepare_the_Android_device_.28using_a_root_password.29_for_OLD_BUILDS_of_CyanogenMod)
+*   [9 See also](http://wiki.cyanogenmod.org/w/Doc:_dropbear#See_also)
+
+<div>Prerequisites</div>
+
+*   CyanogenMod ≥ 5.0.6 (for dropbear & dropbear-keygen)
+*   An SSH client such as OpenSSH or [PuTTY](http://www.chiark.greenend.org.uk/~sgtatham/putty/)
+*   Android debug bridge tool. Please see [SDK documentation](http://wiki.cyanogenmod.org/w/Doc:_sdk_intro) for information on how to do this.
+*   After the SDK is installed, ensure the device is connected to the computer through USB with ADB Debugging enabled in settings.
+
+<div>Create a SSH key for logging in</div>
+
+<div>Create an SSH key on the computer that you wish to connect to your Android device with either `ssh-keygen` or `puttygen`. The public key will copied to the Android device and the private key remains on the computer. Only computers with the private key correctly installed can login to the Android device.</div>
+
+<div>In linux:</div>
+
+<div>ssh-keygen -t rsa</div>
+
+<div>The output should look something like this:</div>
+
+<div>Generating public/private rsa key pair. Enter file in which to save the key (/home/user/.ssh/id_rsa): Enter passphrase (empty for no passphrase): Enter same passphrase again: Your identification has been saved in <Filename>. Your public key has been saved in <Filename>.</div>
+
+<div>adb push <Filename> /sdcard/authorized_keys</div>
+
+<div>In Windows: If using puttygen, paste the string from the puttygen window (looks like "ssh-rsa AAAAB3...hclQ==rsa-key-20100227") in authorized_keys.</div>
+
+<div>(Do not try to rename the file created by puttygen - it's format is incompatible with dropbear)</div>
+
+<div>A password can be used to connect to the device, in this case you can skip the steps above.</div>
+
+<div>Prepare the Android Device</div>
+
+<div>On the computer, open terminal and run the following commands:</div>
+
+{% highlight shell %}
+<div>adb shell</div>
+
+<div>mkdir /data/dropbear</div>
+
+<div>chmod 755 /data/dropbear</div>
+
+<div>mkdir /data/dropbear/.ssh</div>
+
+<div>chmod 700 /data/dropbear/.ssh</div>
+
+<div>mv /sdcard/authorized_keys /data/dropbear/.ssh/</div>
+
+<div>chown root: /data/dropbear/.ssh/authorized_keys</div>
+
+<div>chmod 600 /data/dropbear/.ssh/authorized_keys</div>
+
+<div>dropbearkey -t rsa -f /data/dropbear/dropbear_rsa_host_key</div>
+
+<div>dropbearkey -t dss -f /data/dropbear/dropbear_dss_host_key</div>
+
+{% endhighlight %}
+
+<div>The end result should look something like this:</div>
+
+<div># ls -la /data/dropbear drwxr-xr-x 1 root root 2048 Sep 5 14:55 . drwxrwx--x 1 system system 2048 Sep 5 14:08 .. drwx------ 1 root root 2048 Sep 5 14:51 .ssh -rw------- 1 root root 458 Sep 5 14:09 dropbear_dss_host_key -rw------- 1 root root 427 Sep 5 14:09 dropbear_rsa_host_key # ls -la /data/dropbear/.ssh drwx------ 1 root root 2048 Sep 5 14:51 . drwxr-xr-x 1 root root 2048 Sep 5 14:55 .. -rw------- 1 root root 406 Sep 5 14:01 authorized_keys</div>
+
+*   Creating directories and generating rsa/dsa keys is required even if you plan to use password login.
+
+<div>Finding the IP address of your Android device</div>
+
+<div>Now to test Dropbear, first the IP address of the Android device must be determined, so as to communicate with it. On the Android device, through either adb shell or terminal emulator, do the following.</div>
+
+<div>If connected through a WiFi network, use the following:</div>
+
+<div>ifconfig eth0</div>
+
+<div>The result should look something like this:</div>
+
+<div>eth0: ip 192.168.1.64 mask 255.255.255.0 flags [up broadcast running multicast]</div>
+
+<div>If connected through a mobile network, use the following:</div>
+
+<div>ifconfig rmnet0</div>
+
+<div>The result should look something like this:</div>
+
+<div>rmnet0: ip 200.200.200.200 mask 255.255.255.252 flags [up broadcast multicast]</div>
+
+<div>You can also list all interfaces using</div>
+
+<div>ip addr</div>
+
+<div>NOTE: It may not be possible host services such as SSH via your mobile network.</div>
+
+<div>If that doesn't work run cat /proc/net/dev to see the possible interfaces and use ifconfig with the appropriate interface.</div>
+
+<div>Testing Dropbear</div>
+
+<div>We'll run dropbear in the foreground for testing with debugging information on the Android device. The "-s" option disables password logins (SSH public key authentication is still allowed though which is what we're using). Use either adb shell or terminal emulator to do the following.</div>
+
+<div>dropbear -s -v -F</div>
+
+<div>(You can use the -Y option to specify a master password for login into any account, if not using key based authentication)</div>
+
+<div>The output should look something like this:</div>
+
+<div>... TRACE (3220): listening on ':22' TRACE (3220): enter dropbear_listen TRACE (3220): dropbear_listen: all interfaces TRACE (3220): bind(22) failed TRACE (3220): leave dropbear_listen: success, 1 socks bound [3220] Sep 05 15:16:43 Not backgrounding</div>
+
+<div>NOTE: For more information about dropbear, run dropbear -h.</div>
+
+<div>Now, on the computer, we will try to login to the Android device. Replace the path to your SSH private key and IP address as appropriate. On the computer's terminal, do the following.</div>
+
+<div>ssh -i ./The previously selected name for this key -l root 192.168.1.64</div>
+
+<div>The output should look something like this:</div>
+
+<div>Enter passphrase for key '/home/user/<Filename>': TRACE (3229): entering fake-getpwnam TRACE (3229): leaving fake-getpwnam TRACE (3229): enter sign_key_free TRACE (3229): enter dsa_key_free TRACE (3229): leave dsa_key_free TRACE (3229): enter rsa_key_free TRACE (3229): leave rsa_key_free TRACE (3229): leave sign_key_free</div>
+
+<div>If it didn't run ssh with the -v option to get verbose debugging output to try and see what went wrong.</div>
+
+<div>If you get authentication errors, run this to show the device's public rsa key</div>
+
+<div>dropbearkey -y -f /data/dropbear/dropbear_rsa_host_key</div>
+
+*   the key is formatted like 'ssh-rsa Som3Rand0mStr1n6 root@localhost'
+*   copy and paste it to your PCs known_hosts file, ~/.ssh/known_hosts
+*   and try connecting from your PC again
+
+<div>Assuming everything worked, dropbear can be turned off by running:</div>
+
+<div>killall dropbear</div>
+
+<div>NOTE: For Windows (PuTTY with SSH keyfile) you need to configure putty as follows:</div>
+
+*   Connection » Data » Auto-login Username = root
+*   Connection » SSH » Auth » Private key file = Previously selected key file
+
+<div>Running dropbear normally</div>
+
+<div>To run dropbear, from the Android device, run:</div>
+
+<div>su</div>
+
+<div>dropbear -s</div>
+
+<div>The shell (whether or adb or terminal emulator) can now be exited safely and dropbear will continue to run.</div>
+
+<div>Dropbear can be turned off by running:</div>
+
+<div>killall dropbear</div>
+
+<div>Automatic startup of the sshd-server on your device</div>
+
+<div>To modify the file in /system/etc/ you need to remount the partition to read/write mode using</div>
+
+<div>mount -o remount,rw /system</div>
+
+<div>To run Dropbear on start up, edit the /etc/init.local.rc file (Your preferred editor can be used, as long as it doesn't introduce Windows/DOS line breaks), and add the following snippet to the end of the file</div>
+
+<div># start Dropbear (ssh server) service on boot service sshd /system/xbin/dropbear -s user root group root oneshot</div>
+
+<div>The `oneshot` option instructs Android that the service should not be restarted if it is killed. For a full understanding of the Android Init system see [here](https://github.com/android/platform_system_core/blob/master/init/readme.txt).</div>
+
+<div>Prepare the Android device (using a root password) for OLD BUILDS of CyanogenMod</div>
+
+<div>NOTE: The native dropbear binary included in CyanogenMod 4.0.4 and later seems not to support correctly password protected logins in the sense that you can login even when providing a wrong password. To make it work correctly you need to compile your own dropbear binary statically linked with uClibc.</div>
+
+1.  Compile dropbear (statically linked with uClibc)
+2.  Compile busybox (statically linked with uClibc) and enable
+
+1.  Support for shadow passwords
+2.  Use internal password and group functions rather than system func
+3.  Use internal shadow password functions
+4.  Use internal crypt functions
+5.  passwd
+6.  Check new passwords for weakness
+
+1.  Copy the new dropbear and busybox binaries to the device:
+
+<div>adb push busybox /sdcard/busybox</div>
+
+<div>adb push dropbear /sdcard/dropbear</div>
+
+<div>adb push dropbearkey /sdcard/dropbearkey</div>
+
+1.  Open the terminal and become superuser/root
+2.  Create /data/local/bin directory
+3.  Copy dropbear, dropbearkey and busybox to /data/local/bin and setup file permissions, ownership and links
+4.  Remount /system read-write
+5.  Create the needed passwd files
+6.  Change the root password
+7.  Create /etc/profile with a usable path
+8.  Create /etc/shells
+9.  Remount /system read-only
+10.  Create the dropbear directory
+11.  Generate rsa and dsa keys
+12.  Link /data/dropbear directory to /system/etc/dropbear
+
+<div>su</div>
+
+<div>mkdir /data/local/bin</div>
+
+<div>cp /sdcard/busybox /data/local/bin/busybox</div>
+
+<div>cp /sdcard/dropbear /data/local/bin/dropbear</div>
+
+<div>cp /sdcard/dropbear /data/local/bin/dropbearkey</div>
+
+<div>chown root.root /data/local/bin/dropbear</div>
+
+<div>chown root.root /data/local/bin/dropbearkey</div>
+
+<div>chown root.root /data/local/bin/busybox</div>
+
+<div>chmod 4755 /data/local/bin/busybox</div>
+
+<div>chmod 755 /data/local/bin/dropbear</div>
+
+<div>chmod 755 /data/local/bin/dropbearkey</div>
+
+<div>ln -s /data/local/bin/busybox /data/local/bin/passwd</div>
+
+<div>busybox mount -o remount,rw /dev/block/mtdblock3 /system</div>
+
+<div>echo "root:x:0:0::/data/dropbear:/system/bin/sh" > /etc/passwd</div>
+
+<div>echo "root::14531:0:99999:7:::" > /etc/shadow</div>
+
+<div>echo "root:x:0:" > /etc/group</div>
+
+<div>echo "root:!::" > /etc/gshadow</div>
+
+<div>echo "/system/bin/sh" > /etc/shells</div>
+
+<div>echo "PATH=\"/usr/bin:/usr/sbin:/bin:/sbin:/system/sbin:/system/bin:/system/xbin:/system/xbin/bb:/data/local/bin\"" > /etc/profile</div>
+
+<div>echo "export PATH" >> /etc/profile</div>
+
+<div>/data/local/bin/passwd</div>
+
+<div>Changing password for root</div>
+
+<div>New password:</div>
+
+<div>Retype password:</div>
+
+<div>Password for root changed by root</div>
+
+<div>mkdir /data/dropbear</div>
+
+<div>/data/local/bin/dropbearkey -t rsa -f /data/dropbear/dropbear_rsa_host_key</div>
+
+<div>/data/local/bin/dropbearkey -t dss -f /data/dropbear/dropbear_dss_host_key</div>
+
+<div>ln -s /data/dropbear /system/etc/dropbear</div>
+
+<div>busybox mount -o remount,ro /dev/block/mtdblock3 /system</div>
+
+1.  Then as root to run the compiled version, call it with the full path:
+
+<div>/data/local/bin/dropbear</div>
+
+<div>See also</div>
+
+<div>Link to alternative explanation: [dropbear login](http://code.google.com/p/cyanogenmod/issues/detail?id=145)</div>

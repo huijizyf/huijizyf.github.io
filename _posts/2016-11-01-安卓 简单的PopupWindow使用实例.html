@@ -1,0 +1,67 @@
+---
+layout: post
+status: publish
+published: true
+title: 安卓 简单的PopupWindow使用实例
+author:
+ yufei.zhou
+
+wordpress_id: 81
+wordpress_url: http://donute.com/?p=81
+date: '2016-11-01 15:51:31 +0800'
+date_gmt: '2016-11-01 07:51:31 +0800'
+categories:
+- 安卓
+tags: [安卓]
+comments: []
+---
+<p>什么是PopupWindow？</p>
+<p>谷歌的描述是：“一个弹出窗口控件，可以用来显示任意视图(View)，而且会浮动在当前 活动(activity)的顶部”</p>
+<p>下面展示一个最简单的实例</p>
+<div>
+<div><img style="margin: 0px; padding: 0px; border: 0px; list-style: none; vertical-align: middle; max-width: 100%;" title="安卓 &lt;wbr&gt;简单的PopupWindow使用实例" src="/images/002o3oc9gy6U9UOCD6y62.jpeg" alt="安卓 &lt;wbr&gt;简单的PopupWindow使用实例" /></a>填写图片摘要（选填）</div>
+</div>
+<p>点击button时，弹出PopupWindow</p>
+<p><wbr /></p>
+<pre>public void showPopupWindow(View view) {
+LayoutInflater inflater=LayoutInflater.from(this);
+final View popView=inflater.inflate(R.layout.popupwindow_layout, null);//创建PopupWindow的内容视图
+Button dismiss_bt= (Button) popView.findViewById(R.id.dismiss_bt);
+final PopupWindow popupWindow=new PopupWindow(popView, ViewGroup.LayoutParams.MATCH_PARENT,ViewGroup.LayoutParams.WRAP_CONTENT, true);//创建PopupWindow
+popupWindow.setTouchable(true);
+popupWindow.setBackgroundDrawable(getResources().getDrawable(R.drawable.ba));//设置popupwindow的背景
+dismiss_bt.setOnClickListener(new View.OnClickListener() {
+@Override
+public void onClick(View v) {
+Toast.makeText(MainActivity.this, "button is pressed", Toast.LENGTH_SHORT).show();
+popupWindow.dismiss();
+}
+});
+popupWindow.showAsDropDown(view);//显示PopupWindow
+}</pre>
+<pre>PopupWindow的显示方法</pre>
+<pre>
+　　显示提供了两种形式：
+　　使用showAtLocation()显示在指定位置，两个方法重载：</pre>
+<div>
+<pre>public void showAtLocation(View parent, int gravity, int x, int y)
+
+public void showAtLocation(IBinder token, int gravity, int x, int y)
+</pre>
+</div>
+<pre>
+ <wbr />
+　　使用showAsDropDown()显示在一个参照物View的周围，三个方法重载：</pre>
+<div>
+<pre>public void showAsDropDown(View anchor)
+
+public void showAsDropDown(View anchor, int xoff, int yoff)
+
+public void showAsDropDown(View anchor, int xoff, int yoff, int gravity)
+</pre>
+</div>
+<pre>
+public void showAsDropDown(View anchor, int xoff, int yoff, int gravity）方法是API 19新引入的。</pre>
+<div>PopupWindow如果没有设置Background在按下Back键或点击PopupWindow外区域的时候不会Dismiss。</div>
+<div><span style="font-family: Verdana, Arial, Helvetica, sans-serif;">原因：</span>如果有背景，则会在contentView外面包一层<strong>PopupViewContainer</strong>之后作为mPopupView，如果没有背景，则直接用contentView作为mPopupView。</div>
+<p>而这个<strong>PopupViewContainer</strong>是一个内部私有类，它继承了FrameLayout，在其中重写了Key和Touch事件的分发处理。<strong>由于PopupView本身并没有重写Key和Touch事件的处理，所以如果没有包这个外层容器类，点击Back键或者外部区域是不会导致弹框消失的。</strong></p>

@@ -1,0 +1,22 @@
+---
+layout: post
+status: publish
+published: true
+title: Android出现“Read-only file system”解决办法
+author:
+ yufei.zhou
+
+wordpress_id: 49
+wordpress_url: http://donute.com/?p=49
+date: '2016-11-01 14:34:44 +0800'
+date_gmt: '2016-11-01 06:34:44 +0800'
+categories:
+- 安卓
+tags: [安卓]
+comments: []
+---
+<p>操作设备文件系统上的文件结果遇到"... Read-only file system"。<br />
+解决办法：</p>
+<p>1. 最简单的，adb remount</p>
+<p>2. 不行的话，adb shell su之后将文件系统remount为读写权限： mount -o remount rw /system。出于安全考虑，记得完事后remount回只读： mount -o ro,remount /system</p>
+<p>3. 和方法2类似，mount -o rw,remount -t ext3 /dev/block/mmcblk1p21 /system</p>

@@ -1,0 +1,96 @@
+---
+layout: post
+status: publish
+published: true
+title: Java程序读取Excel文件
+author:
+ yufei.zhou
+
+wordpress_id: 90
+wordpress_url: http://donute.com/?p=90
+date: '2016-11-03 11:01:18 +0800'
+date_gmt: '2016-11-03 03:01:18 +0800'
+categories:
+- 安卓
+tags: [java]
+comments: []
+---
+<p>JAVA EXCEL API:是一开放源码项目，通过它Java开发人员可以读取Excel文件的内容、创建新的Excel文件、更新已经存在的Excel文件。使用该API非Windows操作系统也可以通过纯Java应用来处理Excel数据表。因为它是使用Java编写的，所以我们在Web应用中可以通过JSP、Servlet来调用API实现对Excel数据表的访问，同样也可以用于安卓系统中读写Excel文件。</p>
+<p>Java Excel API的jar包：<a href="http://sourceforge.net/projects/jexcelapi/files/jexcelapi/2.6.6/jexcelapi_2_6_6.zip/download">http://sourceforge.net/projects/jexcelapi/files/jexcelapi/2.6.6/jexcelapi_2_6_6.zip/download</a></p>
+<blockquote>
+<pre>以下是读取Excel表的代码：
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+
+import jxl.Cell;
+import jxl.Sheet;
+import jxl.Workbook;
+
+public class ReadExcelUtils {
+   public static void main(String[] args) {
+        jxl.Workbook readwb = null;
+        try
+        {
+            InputStream instream = new FileInputStream("/sdcard/20150528高校列表.xls");
+            readwb = Workbook.getWorkbook(instream);
+            Sheet readsheet = readwb.getSheet(0);
+            //获取Sheet表中所包含的总列数
+            int rsColumns = readsheet.getColumns();
+            //获取Sheet表中所包含的总行数
+            int rsRows = readsheet.getRows();
+            //获取指定单元格的对象引用
+            for (int i = 0; i &lt; rsRows; i++)
+            {
+                for (int j = 0; j &lt; rsColumns; j++)
+                {
+                    Cell cell = readsheet.getCell(j, i);
+                    System.out.print(cell.getContents() + " ");
+                }
+                System.out.println();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            readwb.close();
+        }
+
+   }
+}
+以下是程序的部分输出：
+北京市（91所） 
+1 北京大学 教育部 北京市 本科 
+2 中国人民大学 教育部 北京市 本科 
+3 清华大学 教育部 北京市 本科 
+4 北京交通大学 教育部 北京市 本科 
+5 北京工业大学 北京市 北京市 本科 
+6 北京航空航天大学 工业和信息化部 北京市 本科 
+7 北京理工大学 工业和信息化部 北京市 本科 
+8 北京科技大学 教育部 北京市 本科 
+9 北方工业大学 北京市 北京市 本科 
+10 北京化工大学 教育部 北京市 本科 
+11 北京工商大学 北京市 北京市 本科 
+12 北京服装学院 北京市 北京市 本科 
+13 北京邮电大学 教育部 北京市 本科 
+14 北京印刷学院 北京市 北京市 本科 
+15 北京建筑大学 北京市 北京市 本科 
+16 北京石油化工学院 北京市 北京市 本科 
+17 北京电子科技学院 中央办公厅 北京市 本科 
+18 中国农业大学 教育部 北京市 本科 
+19 北京农学院 北京市 北京市 本科 
+20 北京林业大学 教育部 北京市 本科 
+21 北京协和医学院 国家卫生和计划生育委员会 北京市 本科 
+22 首都医科大学 北京市 北京市 本科 
+23 北京中医药大学 教育部 北京市 本科 
+24 北京师范大学 教育部 北京市 本科 
+25 首都师范大学 北京市 北京市 本科 
+26 首都体育学院 北京市 北京市 本科 
+27 北京外国语大学 教育部 北京市 本科 
+28 北京第二外国语学院 北京市 北京市 本科 
+29 北京语言大学 教育部 北京市 本科 
+30 中国传媒大学 教育部 北京市 本科 
+31 中央财经大学 教育部 北京市 本科 
+......
+
+</pre>
+</blockquote>

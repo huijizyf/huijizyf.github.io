@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="UTF-8">
+  <title>Android开发中一些被冷落但却很有用的类和方法</title>
+  <meta name="viewport" content="width=device-width">
+
+  <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="/assets/css/style.css" rel="stylesheet" />
+  <link href="/assets/css/colors-dark.css" rel="stylesheet" />
+
+</head>
+
+<body>
+
+
+
+  <header id="header">
+    <h1><a href="/"><i class="icon-sun"></i> Solar Theme</a></h1>
+    <p>A stylish blog using the Solarized color palette</p>
+  </header>
+
+
+
+  <div id="page">
+
+
+
+    <div id="sidebar">
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/archives">Archive</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="http://twitter.com/redwall_hp">Twitter</a></li>
+          <li><a href="/feed.xml">RSS Feed</a></li>
+        </ul>
+      </nav>
+    </div>
+
+
+
+    <div id="content">
+      <article class="post">
+
+	
+		<h1><a href="/2016/12/16/Android%E5%BC%80%E5%8F%91%E4%B8%AD%E4%B8%80%E4%BA%9B%E8%A2%AB%E5%86%B7%E8%90%BD%E4%BD%86%E5%8D%B4%E5%BE%88%E6%9C%89%E7%94%A8%E7%9A%84%E7%B1%BB%E5%92%8C%E6%96%B9%E6%B3%95/">Android开发中一些被冷落但却很有用的类和方法</a></h1>
+	
+
+	<div class="post-content"><p>MediaMetadataRetriever<br />
+顾名思义，就是用来获取媒体文件一些相关信息的类。包括一首歌的标题，作者，专辑封面和名称，时长，比特率等等。如果是视频的话，可以获取视频的长宽，预览图。</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/media/MediaMetadataRetriever.html</p>
+<p>TouchDelegate<br />
+用于更改View的触摸区域。场景：比如在RecyclerView的ItemView里包含了CheckBox组件, 然后想实现点击ItemView的时候，也可以触发CheckBox，就可以使用此类。</p>
+<p>http://developer.android.com/intl/zh-cn/training/gestures/viewgroup.html#delegate</p>
+<p>ArgbEvaluator<br />
+用于计算不同颜色值之间的插值，配合ValueAnimator.ofObject或者ViewPager.PageTransformer使用，可以实现不同颜色之间的平滑过渡。</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/animation/ArgbEvaluator.html</p>
+<p>Palette<br />
+用于提取一张图片的颜色。</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/support/v7/graphics/Palette.html</p>
+<p>ViewDragHelper<br />
+做过自定义ViewGroup的童鞋都应该知道这个东西吧，用来处理触摸事件的神器，妈妈再也不用担心我自定义控件了。</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/support/v4/widget/ViewDragHelper.html</p>
+<p>http://www.cnblogs.com/lqstayreal/p/4500219.html</p>
+<p>PageTransformer<br />
+用于定义ViewPager页面切换时的动画效果（淡入淡出，放大缩小神马的…）官方有例子，直接看吧。</p>
+<p>http://developer.android.com/intl/zh-cn/training/animation/screen-slide.html</p>
+<p>ViewFlipper<br />
+可以实现简单轮播效果的一个组件。</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/widget/ViewFlipper.html</p>
+<p>LocalBroadcastManager<br />
+用于在APP内部使用的，效率和安全性更好的广播工具类。</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/support/v4/content/LocalBroadcastManager.html</p>
+<p>Messenger<br />
+进程间通信的一个工具类。内部也是由AIDL实现的，但是用起来超级方便。</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/os/Messenger.html</p>
+<p>http://blog.csdn.net/lmj623565791/article/details/47017485</p>
+<p>Formatter.formatFileSize<br />
+根据文件大小自动转为以KB, MB, GB为单位的工具类。想想以前都是自己计算的…</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/text/format/Formatter.html</p>
+<p>Activity.recreate<br />
+重新创建Activity。有什么用呢？可以在程序更换主题后，立马刷新当前Activity，而不会有明显的重启Activity的动画。</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/app/Activity.html#recreate%28%29</p>
+<p>View.getContext<br />
+顾名思义，就不用解释了吧…以前在写RecyclerView的Adapter的时候，为了使用LayoutInflater，经常傻乎乎地在构造函数中传入一个外部的context….是不是只有我不知道而已（笑cry脸）</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/view/View.html#getContext()</p>
+<p>View.post<br />
+方便在非UI线程对界面进行修改，与Handler的作用类似。并且由于post的Runnable会保证在该View绘制完成的前提下才调用，所以一般也可以用于获取View的宽高。</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/view/View.html#post(java.lang.Runnable)</p>
+<p>Activity.runOnUiThread<br />
+与View.post类似，方便在非UI线程中对界面进行修改。</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/app/Activity.html#runOnUiThread(java.lang.Runnable)</p>
+<p>Fragment.setUserVisibleHint<br />
+Fragment可以重写此方法，然后根据参数的布尔值（true的话表示当前Fragment对用户可见），来执行一些逻辑。</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/support/v4/app/Fragment.html#setUserVisibleHint(boolean)</p>
+<p>android:animateLayoutChanges<br />
+这是一个非常酷炫的属性。在父布局加上android:animateLayoutChanges="true"后，如果触发了layout方法（比如它的子View设置为GONE），系统就会自动帮你加上布局改变时的动画特效！！</p>
+<p>http://developer.android.com/intl/zh-cn/training/animation/layout.html</p>
+<p>android:clipToPadding<br />
+设置父view是否允许其子view在它的padding（这里指的是父View的padding）中绘制。是不是有点绕？举个实际场景吧：假如有个ListView，我们想要在初始位置时，第一项Item离顶部有10dp的距离，就可以在ListView的布局中加入android:clipToPadding="false"android:paddingTop="10dp"即可。是不是很方便呢？</p>
+<p>http://developer.android.com/intl/zh-cn/reference/android/view/ViewGroup.html#attr_android:clipToPadding</p>
+</div>
+
+	<p class="meta">Posted on <span class="postdate">Dec 16, 2016</span></p>
+
+</article>
+    </div>
+
+
+
+  </div>
+
+
+
+  <footer id="footer">
+    <p class="copyright">Copyright &copy; 2017 Solar Theme. Powered by <a href="http://jekyllrb.com">Jekyll</a>, theme by <a href="http://www.webmaster-source.com">Matt Harzewski</a></p>
+  </footer>
+
+
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script src="/assets/js/jquery.mobilemenu.min.js"></script>
+
+  <script>
+    $(document).ready(function(){
+      $('#sidebar nav ul').mobileMenu({'topOptionText': 'Menu', 'prependTo': '#sidebar nav'});
+    });
+  </script>
+
+
+
+</body>
+</html>

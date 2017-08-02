@@ -1,0 +1,114 @@
+---
+layout: post
+status: publish
+published: true
+title: 安卓使用Volly框架加载图片，GridView使用LayoutAnimation
+author:
+ yufei.zhou
+
+wordpress_id: 116
+wordpress_url: http://donute.com/?p=116
+date: '2016-11-14 09:56:58 +0800'
+date_gmt: '2016-11-14 01:56:58 +0800'
+categories:
+- 安卓
+tags: [安卓]
+comments: []
+---
+<pre>package com.fabian.testvolly;
+
+import android.graphics.Bitmap;
+import android.support.v7.app.ActionBarActivity;
+import android.os.Bundle;
+import android.util.LruCache;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.LayoutAnimationControlle<wbr />r;
+import android.view.animation.ScaleAnimation;
+import android.widget.BaseAdapter;
+import android.widget.GridView;
+import android.widget.ImageView;
+
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.Volley;
+
+import java.util.ArrayList;
+
+
+public class MainActivity extends ActionBarActivity {
+
+ArrayList list=new ArrayList&lt;&gt;();
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+for(int i=0;i&lt;&lt;span style="color:#6897bb;"&gt;20;i++)
+{
+list.add("http://s0.hao123img.com/res/ecom/wph-715.jpg");
+}
+AnimationSet aset=new AnimationSet(false);
+ScaleAnimation sa=new ScaleAnimation(0f,1f,0f,1f,0.5f,0.5f);
+sa.setDuration(2000);
+AlphaAnimation aa=new AlphaAnimation(0f,1f);
+aa.setDuration(2000);
+aset.addAnimation(sa);
+aset.addAnimation(aa);
+LayoutAnimationControlle<wbr />r controller = new LayoutAnimationControlle<wbr />r(aset, 0.5f);
+controller.setOrder(LayoutAnimationControlle<wbr />r.ORDER_NORMAL);
+GridView gv= (GridView) findViewById(R.id.gridView);
+gv.setLayoutAnimation(controller);
+RequestQueue mQueue = Volley.newRequestQueue(getApplicationContext());
+final ImageLoader mImageLoader=new ImageLoader(mQueue,new BitmapCache());
+gv.setAdapter(new BaseAdapter() {
+@Override
+public int getCount() {
+return list.size();
+}
+@Override
+public Object getItem(int position) {
+return list.get(position);
+}
+@Override
+public long getItemId(int position) {
+return position;
+}
+@Override
+public View getView(int position, View convertView, ViewGroup parent) {
+LayoutInflater inflater=LayoutInflater.from(MainActivity.this);
+convertView=inflater.inflate(R.layout.item_layout,null);
+ImageLoader.ImageListener listener = ImageLoader.getImageListener((ImageView) convertView.findViewById(R.id.imageView), android.R.drawable.ic_menu_rotate, android.R.drawable.ic_delete);
+mImageLoader.get(list.get(position), listener);
+return convertView;
+}
+});
+mQueue.start();
+}
+class BitmapCache implements ImageLoader.ImageCache {
+
+private LruCache, Bitmap&gt; cache;
+
+public BitmapCache() {
+cache = new LruCache, Bitmap&gt;(8 * 1024 * 1024) {
+@Override
+protected int sizeOf(String key, Bitmap bitmap) {
+return bitmap.getRowBytes() * bitmap.getHeight();
+}
+};
+}
+@Override
+public Bitmap getBitmap(String url) {
+return cache.get(url);
+}
+@Override
+public void putBitmap(String url, Bitmap bitmap) {
+cache.put(url, bitmap);
+}
+}
+}<img title="安卓使用Volly框架加载图片，GridView使用LayoutAnimation" src="/image/002o3oc9gy6TUt91iEH8b.png" alt="安卓使用Volly框架加载图片，GridView使用LayoutAnimation" width="540" height="960" name="image_operate_48241437127052319" /></pre>

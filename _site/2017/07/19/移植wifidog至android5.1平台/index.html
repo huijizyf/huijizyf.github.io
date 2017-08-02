@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="UTF-8">
+  <title>移植wifidog至android5.1平台</title>
+  <meta name="viewport" content="width=device-width">
+
+  <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="/assets/css/style.css" rel="stylesheet" />
+  <link href="/assets/css/colors-dark.css" rel="stylesheet" />
+
+</head>
+
+<body>
+
+
+
+  <header id="header">
+    <h1><a href="/"><i class="icon-sun"></i> Solar Theme</a></h1>
+    <p>A stylish blog using the Solarized color palette</p>
+  </header>
+
+
+
+  <div id="page">
+
+
+
+    <div id="sidebar">
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/archives">Archive</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="http://twitter.com/redwall_hp">Twitter</a></li>
+          <li><a href="/feed.xml">RSS Feed</a></li>
+        </ul>
+      </nav>
+    </div>
+
+
+
+    <div id="content">
+      <article class="post">
+
+	
+		<h1><a href="/2017/07/19/%E7%A7%BB%E6%A4%8Dwifidog%E8%87%B3android5.1%E5%B9%B3%E5%8F%B0/">移植wifidog至android5.1平台</a></h1>
+	
+
+	<div class="post-content"><h2 id="toc_0">移植wifidog至android5.1平台</h2>
+<h3 id="toc_1">实现的功能</h3>
+<p>先使用nanohttpd在安卓内实现http server的功能，然后在已经移植并开启wifidog的安卓平台开启热点，当其它的手机连接到此热点时，手机上会弹出我们在手机上搭建的http server中运行的指定的网页。如果我们的安卓平台是有多网卡的话，我们也能指定手机连接到此热点时打开外部其他网站的网页。因为是单网卡的设备即时指定了外部的网页，手机连接到此热点因为未连接到互联网，也无法打开外部的网页。</p>
+<h3 id="toc_2">所需内容</h3>
+<p>1.NanoHttpd是一个安卓平台的Http Server，具体可看github上的介绍，本文主要说wifidog在安卓平台的编译，对NanoHttpd的使用不做介绍。</p>
+<p>2.wifidog源码。</p>
+<div>
+<pre><code class="language-none">来自github的简介：The WiFi Guard Dog project is a complete and 
+embeddable captive portal solution for wireless community groups 
+or individuals who wish to open a free hotspot while still 
+preventing abuse of their Internet connection.</code></pre>
+</div>
+<p>3.移植目标的安卓平台源码。本文针对的目标平台是基于三星4418平台的安卓开发板。</p>
+<p>以上列表中所需的1，2两项的源码链接地址如下：</p>
+<p>-<a href="https://github.com/NanoHttpd/nanohttpd">NanoHttpd</a></p>
+<p>-<a href="https://github.com/wifidog/wifidog-gateway">wifidog</a></p>
+<h3 id="toc_3">移植步骤</h3>
+<p>1.使用NanoHttpd在安卓平台搭建HttpServer（编写apk程序即可，具体步骤可见NanoHttpd 在github上的介绍）</p>
+<p>2.在安卓平台的源码<strong>external</strong>目录下新建文件夹命名为<strong>wifidog</strong>，</p>
+<p>3.下载wifidog源码，并将下载到的源码放入第2步中新建的<strong>wifidog</strong>文件夹中</p>
+<p>4.在wifidog目录下新建<strong>config.h</strong>文件，在文件中写入以下代码：</p>
+<div>
+<pre><code class="language-none"> #define VERSION "v1.0"
+ #define HAVE_STDARG_H
+ #define __ANDROID__</code></pre>
+</div>
+<p>5.在wifidog目录下新建Android.mk文件，在文件中写入以下内容：</p>
+<div>
+<pre><code class="language-none">LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := wifidog
+LOCAL_C_INCLUDES=$(LOCAL_PATH)/libhttpd 
+LOCAL_SRC_FILES = src/gateway.c \
+        src/auth.c \
+        src/client_list.c \
+        src/conf.c \
+        src/firewall.c \
+        src/http.c \
+        src/safe.c \
+        src/centralserver.c \
+        src/commandline.c \
+        src/debug.c \
+        src/fw_iptables.c \
+        src/httpd_thread.c \
+        src/ping_thread.c \
+        src/util.c \
+        src/wdctl_thread.c \
+        src/simple_http.c \
+        src/pstring.c \
+        src/wd_util.c \
+        src/main.c \
+        ./libhttpd/api.c \
+        ./libhttpd/ip_acl.c \
+        ./libhttpd/protocol.c \
+        ./libhttpd/version.c
+LOCAL_SHARED_LIBRARIES = $(SHARED_LIBRARIES)
+include $(BUILD_EXECUTABLE)
+</code></pre>
+</div>
+<p>以上步骤完成了对代码的准备，此时进入wifidog目录下使用mm命令已经可以编译通过了，但是还没有完成对wifidog的配置，接下来的我们需要修改配置文件和增加启动脚本。</p>
+<p>6.在wifidog目录下找到<strong>wifidog.conf</strong>配置文件，修改此文件内容：</p>
+<div>
+<pre><code class="language-none">ExternalInterface lo    #如果双网卡设备此处可设定为开启wifi热点网卡的另外一块网卡，因为我们的开发板为单网卡，此处指定了回环
+
+GatewayInterface wlan0   #指定我们开启了热点的网卡设备名称
+
+AuthServer {
+    Hostname 192.168.43.1           #http server 地址
+    HTTPPort 8080                   #http server端口
+    SSLAvailable no                 #https是否可用
+    Path /                          #http页面路径  
+    LoginScriptPathFragment         /
+    PortalScriptPathFragment /
+    MsgScriptPathFragment /
+    PingScriptPathFragment /
+    AuthScriptPathFragment /
+
+}
+
+以上未注释的配置项的意思在下发完整的配置文件中有解释
+</code></pre>
+</div>
+<p>修改完成后的配置文件内容如下：</p>
+<div>
+<pre><code class="language-none"># $Id$
+# WiFiDog Configuration file
+
+# Parameter: GatewayID
+# Default: default
+# Optional
+#
+# Set this to the node ID on the auth server
+# This is used to give a customized login page to the clients and for
+# monitoring/statistics purpose. If you run multiple gateways on the same
+# machine each gateway needs to have a different gateway id.
+# If none is supplied, the mac address of the GatewayInterface interface will be used,
+# without the : separators
+
+# GatewayID default
+
+# Parameter: ExternalInterface
+# Default: NONE
+# Optional
+#
+# Set this to the external interface (the one going out to the Inernet or your larger LAN).  
+# Typically vlan1 for OpenWrt, and eth0 or ppp0 otherwise,
+# Normally autodetected
+
+ExternalInterface lo
+
+# Parameter: GatewayInterface
+# Default: NONE
+# Mandatory
+#
+# Set this to the internal interface (typically your wifi interface).    
+# Typically br-lan for Openwrt (by default the wifi interface is bridged with wired lan in openwrt)
+# and eth1, wlan0, ath0, etc. otherwise
+# You can get this interface with the ifconfig command and finding your wifi interface
+
+GatewayInterface wlan0
+
+# Parameter: GatewayAddress
+# Default: Find it from GatewayInterface
+# Optional
+#
+# Set this to the internal IP address of the gateway.  Not normally required.
+
+# GatewayAddress 192.168.43.1
+
+# Parameter: HtmlMessageFile
+# Default: wifidog-msg.html
+# Optional
+#
+# This allows you to specify a custome HTML file which will be used for
+# system errors by the gateway. Any $title, $message and $node variables
+# used inside the file will be replaced.
+#
+# HtmlMessageFile /opt/wifidog/etc/wifidog-.html
+
+# Parameter: AuthServer
+# Default: NONE
+# Mandatory, repeatable
+#
+# This allows you to configure your auth server(s).  Each one will be tried in order, untill one responds.
+# Set this to the hostname or IP of your auth server(s), the path where
+# WiFiDog-auth resides in and the port it listens on.
+#AuthServer {
+#   Hostname                 (Mandatory; Default: NONE)
+#   SSLAvailable             (Optional; Default: no; Possible values: yes, no)
+#   SSLPort                  (Optional; Default: 443)
+#   HTTPPort                 (Optional; Default: 80)
+#   Path                     (Optional; Default: /wifidog/ Note:  The path must be both prefixed and suffixed by /.  Use a single / for server root.)
+#   LoginScriptPathFragment  (Optional; Default: login/? Note:  This is the script the user will be sent to for login.)
+#   PortalScriptPathFragment (Optional; Default: portal/? Note:  This is the script the user will be sent to after a successfull login.)
+#   MsgScriptPathFragment    (Optional; Default: gw_message.php? Note:  This is the script the user will be sent to upon error to read a readable message.)
+#   PingScriptPathFragment    (Optional; Default: ping/? Note:  This is the wifidog-ping protocol. See http://dev.wifidog.org/wiki/doc/developer/WiFiDogProtocol_V1)
+#   AuthScriptPathFragment    (Optional; Default: auth/? Note:  This is the wifidog-auth protocol. See http://dev.wifidog.org/wiki/doc/developer/WiFiDogProtocol_V1)
+#}
+# If SSLAvailable is set, then the client will be redirected to the
+# auth daemon on its HTTPS port. If Wifidog is compiled with SSL support,
+# then Wifidog will also use HTTPS to talk to the auth server instead of
+# plain HTTP.
+#
+
+AuthServer {
+    Hostname 192.168.43.1
+    HTTPPort 8080
+    SSLAvailable no
+    Path /
+    LoginScriptPathFragment         /
+    PortalScriptPathFragment /
+    MsgScriptPathFragment /
+    PingScriptPathFragment /
+    AuthScriptPathFragment /
+
+}
+
+#AuthServer {
+#    Hostname auth2.ilesansfil.org
+#    SSLAvailable yes
+#    Path /
+#}
+
+# Parameter: DeltaTraffic
+# Default: no
+# Optional
+#
+# Set this to true if you want to reset each user's traffic (Outgoing and Incoming) value after each Auth operation.
+# If this is enabled, Wifidog will add two new parameters to the AuthScriptPathFragment: Incoming_Delta, Outgoing_delta. 
+# DeltaTraffic no
+
+# Parameter: Daemon
+# Default: 1
+# Optional
+#
+# Set this to true if you want to run as a daemon
+# Daemon 1
+
+# Parameter: GatewayPort
+# Default: 2060
+# Optional
+#
+# Listen on this port
+# GatewayPort 2060
+
+# Parameter: ProxyPort
+# Default: 0 (disable)
+# Optional
+#
+# Redirect http traffic of knowns &amp; probations users
+# to a local transparent proxy listening on ProxyPort port
+# ProxyPort 0
+
+# Parameter: HTTPDName
+# Default: WiFiDog
+# Optional
+#
+# Define what name the HTTPD server will respond
+# HTTPDName WiFiDog
+
+# Parameter: HTTPDMaxConn
+# Default: 10
+# Optional
+#
+# How many sockets to listen to
+# HTTPDMaxConn 10
+
+# Parameter: HTTPDRealm
+# Default: WiFiDog
+# Optional
+#
+# The name of the HTTP authentication realm. This only used when a user
+# tries to access a protected WiFiDog internal page. See HTTPUserName.
+# HTTPDRealm WiFiDog
+
+# Parameter: HTTPDUserName / HTTPDPassword
+# Default: unset
+# Optional
+#
+# The gateway exposes some information such as the status page through its web
+# interface. This information can be protected with a username and password,
+# which can be set through the HTTPDUserName and HTTPDPassword parameters.
+# HTTPDUserName admin
+# HTTPDPassword secret
+
+# Parameter: CheckInterval
+# Default: 60
+# Optional
+#
+# How many seconds should we wait between timeout checks.  This is also
+# how often the gateway will ping the auth server and how often it will
+# update the traffic counters on the auth server.  Setting this too low
+# wastes bandwidth, setting this too high will cause the gateway to take 
+# a long time to switch to it's backup auth server(s).
+
+# CheckInterval 60
+
+# Parameter: ClientTimeout
+# Default: 5
+# Optional
+#
+# Set this to the desired of number of CheckInterval of inactivity before a client is logged out
+# The timeout will be INTERVAL * TIMEOUT
+ClientTimeout 5
+
+# Parameter: SSLPeerVerification
+# Default: yes
+# Optional
+#
+# Enable peer certificate verification when talking to the auth
+# server over SSL/TLS. Disabling this setting is mainly useful if
+# you do not want  to install ca-certificates.
+#
+# If this setting is set to yes, then the certificates in
+# the directory indicated by SSLCertPath will be used to
+# verify the auth server.
+#
+# This setting requires that WifiDog is compiled with SSL support.
+# It will be ignored otherwise.
+#
+# To disable SSL completely for testing purposes, set SSLAvailable
+# to False for the auth server in question. Note that this will disable
+# HTTPS when redirecting clients to your auth server.
+#
+# SSLPeerVerification yes
+
+# Parameter: SSLCertPath
+# Default: /etc/ssl/certs/
+# Optional
+#
+# Where to look for SSL certificates to verify the auth servers
+# certificate. Note that these will only be used if the auth server
+# in question is configured with SSLAvailable yes.
+#
+# The certificates in this directory must be named by their hash
+# value. For OpenWRT, you need a ca-certificates package newer
+# than what is shipped in Barrier Breaker (see 
+# https://dev.openwrt.org/ticket/16537).
+#
+# This setting requires that WifiDog is compiled with SSL support.
+# It will be ignored otherwise.
+#
+# SSLCertPath /etc/ssl/certs/ 
+
+# Parameter: SSLAllowedCipherList
+# Default: all ciphers supported
+# Optional
+#
+# Which cipher suite to allow. Note that CyaSSL will ignore cipher
+# suites that use algorithms that aren't compiled in or cipher
+# suites *WITH ERRORS IN THEIR NAMES*.
+#
+# Please see CyaSSL documentation for allowed values, format is a
+# string where the ciphers are separated by colons (:) with no
+# spaces. Ciphers are ordered from most desirable to least desirable.
+#
+# SSLAllowedCipherList ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:ECDH-ECDSA-AES128-GCM-SHA256:ECDH-ECDSA-AES256-GCM-SHA384:ECDH-RSA-AES128-GCM-SHA256:ECDH-RSA-AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:ECDH-ECDSA-AES128-SHA:ECDH-ECDSA-AES256-SHA:ECDH-RSA-AES128-SHA:ECDH-RSA-AES256-SHA:AES128-SHA:AES256-SHA
+
+# Parameter: SSLUseSNI
+# Default: no
+# Optional
+#
+# Enable SNI (Server Name Indication) TLS extension.
+# Enabling this setting is mainly useful if the auth server is hosted
+# multiple secure (HTTPS) websites. The WifiDog should indicate which hostname
+# it is attempting to connect to at the start of the handshaking process.
+#
+# This setting requires that WifiDog is compiled with SSL support.
+# It will be ignored otherwise.
+#
+# SSLUseSNI no
+
+# Parameter: TrustedMACList
+# Default: none
+# Optional
+#
+
+# Check DNS health by querying IPs of these hosts
+PopularServers kernel.org,ieee.org
+
+# Comma separated list of MAC addresses who are allowed to pass
+# through without authentication.
+# N.B.: weak security, since MAC addresses are easy to spoof.
+#
+#TrustedMACList 00:00:DE:AD:BE:AF,00:00:C0:1D:F0:0D
+
+# Parameter: FirewallRuleSet
+# Default: none
+# Mandatory
+#
+# Groups a number of FirewallRule statements together.
+
+# Parameter: FirewallRule
+# Default: none
+# 
+# Define one firewall rule in a rule set.
+
+# Rule Set: global
+# 
+# Used for rules to be applied to all other rulesets except locked.
+FirewallRuleSet global {
+
+    # FirewallRule syntax:
+    # FirewallRule (block|drop|allow|log|ulog) [(tcp|udp|icmp) [port X or port-range X:Y]] [to IP/CIDR]
+
+    ## To block SMTP out, as it's a tech support nightmare, and a legal liability
+    #FirewallRule block tcp port 25
+    
+    ## Use the following if you don't want clients to be able to access machines on 
+    ## the private LAN that gives internet access to wifidog.  Note that this is not
+    ## client isolation;  The laptops will still be able to talk to one another, as
+    ## well as to any machine bridged to the wifi of the router.
+    # FirewallRule block to 192.168.0.0/16
+    # FirewallRule block to 172.16.0.0/12
+    # FirewallRule block to 10.0.0.0/8
+    
+    ## This is an example ruleset for the Teliphone service.
+    #FirewallRule allow udp to 69.90.89.192/27
+    #FirewallRule allow udp to 69.90.85.0/27
+    #FirewallRule allow tcp port 80 to 69.90.89.205
+
+    ## This is an example ruleset for example.com
+    ## example.com means example.com and *.example.com
+    #FirewallRule allow tcp to example.com
+
+    ## Use the following if you are having problems with Apple iOS 7 clients.
+    ## See #7 and #14 at https://github.com/wifidog/wifidog-gateway/issues/
+    #FirewallRule allow tcp to apple.com
+    #FirewallRule allow tcp to icloud.com
+
+    ## Use the following to log or ulog the traffic you want to allow or block.
+    # For OPENWRT: use of these feature requires modules ipt_LOG or ipt_ULOG present in dependencies
+    # iptables-mod-extra and iptables-mod-ulog (to adapt it to the linux distribution). 
+    # Note: the log or ulog rule must be passed before, the rule you want to match.
+    # for openwrt: use of these feature requires modules ipt_LOG or ipt_ULOG present in dependencies
+    # iptables-mod-extra and iptables-mod-ulog
+    # For example, you want to log (ulog works the same way) the traffic allowed on port 80 to the ip 69.90.89.205:
+    #FirewallRule log tcp port 80 to 69.90.89.205
+    #FirewallRule allow tcp port 80 to 69.90.89.205
+    # And you want to know, who matche your block rule:
+    #FirewallRule log to 0.0.0.0/0
+    #FirewallRule block to 0.0.0.0/0
+}
+
+# Rule Set: validating-users
+#
+# Used for new users validating their account
+FirewallRuleSet validating-users {
+    FirewallRule allow to 0.0.0.0/0
+}
+
+# Rule Set: known-users
+#
+# Used for normal validated users.
+FirewallRuleSet known-users {
+    FirewallRule allow to 0.0.0.0/0
+}
+
+# Rule Set: auth-is-down
+#
+# Does nothing when not configured.
+#
+# Used when auth server is down
+#FirewallRuleSet auth-is-down {
+#  FirewallRule allow to 0.0.0.0/0
+#}
+
+# Rule Set: unknown-users
+#
+# Used for unvalidated users, this is the ruleset that gets redirected.
+#
+# XXX The redirect code adds the Default DROP clause.
+FirewallRuleSet unknown-users {
+    # Use to-ipset to block or allow externally specified hosts.
+    # Ipsets are created with the ipset utility. This is useful to
+    # block or allow hosts at runtime externally.
+    # For example, if your auth server requires users to log in
+    # via Facebook, use the ipset feature built into dnsmasq to
+    # to populate a list of various IPs used by the Facebook networks.
+    #FirewallRule allow to-ipset fb
+    FirewallRule allow udp port 53
+    FirewallRule allow tcp port 53
+    FirewallRule allow udp port 67
+    FirewallRule allow tcp port 67
+}
+
+# Rule Set: locked-users
+#
+# Not currently used
+FirewallRuleSet locked-users {
+    FirewallRule block to 0.0.0.0/0
+}
+</code></pre>
+</div>
+<p>7.在安卓平台源码中增加文件拷贝项，在编译时将此配置文件复制至/system/etc目录中。不同平台路径不完全一样，此处就不写我的路径了，具体方式可参考各平台的说明</p>
+<p>8.修改启动脚本，在wifidog目录下找到scripts目录下的init.d文件夹，修改init.d文件夹中的wifidog文件内容</p>
+<div>
+<pre><code class="language-none">删除第一行的：#!/bin/sh
+
+将以下两行内容修改:
+IPT=/usr/sbin/iptables
+WD_DIR=/usr/bin
+
+为
+
+IPT=/system/bin/iptables
+WD_DIR=/system/bin
+</code></pre>
+</div>
+<p>修改完成后的脚本内容为：</p>
+<div>
+<pre><code class="language-none">#
+# Could be better, but it's working as expected
+#
+# 
+#
+# chkconfig: 345 65 35
+#
+# description: Startup/shutdown script for Wifidog captive portal
+# processname: wifidog
+
+# Date    : 2004-08-25
+# Version : 1.0
+
+IPT=/system/bin/iptables
+WD_DIR=/system/bin
+OPTIONS=""
+
+case "$1" in
+  start)
+    echo "Starting Wifidog ... "
+    if $WD_DIR/wdctl status 2&gt; /dev/null
+    then
+    echo "FAILED:  Wifidog already running"
+    else
+        $0 test-module
+    if $WD_DIR/wifidog $OPTIONS
+    then
+        echo "OK"
+    else
+        echo "FAILED:  Wifidog exited with non 0 status"
+    fi
+    fi
+    ;;
+  restart)
+    $0 stop
+    sleep 2
+    $0 start
+    ;;
+  reload)
+    $0 stop
+    sleep 2
+    $0 start
+    ;;
+  stop)
+    echo "Stopping Wifidog ... "
+    if $WD_DIR/wdctl status 2&gt; /dev/null
+    then
+        if $WD_DIR/wdctl stop
+    then
+        echo "OK"
+    else
+        echo "FAILED:  wdctl stop exited with non 0 status"
+    fi
+       
+    else
+       echo "FAILED:  Wifidog was not running"
+    fi
+    ;;
+  status)
+    $WD_DIR/wdctl status
+    ;;
+  debug|test-module)
+
+    ### Test ipt_mark with iptables
+    test_ipt_mark () {
+      IPTABLES_OK=$($IPT -A FORWARD -m mark --mark 2 -j ACCEPT 2&gt;&amp;1 | grep "No chain.target.match")
+      if [ -z "$IPTABLES_OK" ]; then
+        $IPT -D FORWARD -m mark --mark 2 -j ACCEPT 2&gt;&amp;1
+        echo 1
+      else
+        echo 0
+      fi
+    }
+    ### Test ipt_mac with iptables
+    test_ipt_mac () {
+      IPTABLES_OK=$($IPT -A INPUT -m mac --mac-source 00:00:00:00:00:00 -j ACCEPT 2&gt;&amp;1 | grep "No chain.target.match")
+      if [ -z "$IPTABLES_OK" ]; then
+        $IPT -D INPUT -m mac --mac-source 00:00:00:00:00:00 -j ACCEPT 2&gt;&amp;1
+        echo 1
+      else
+        echo 0
+      fi
+    }
+
+    ### Test ipt_REDIRECT with iptables
+    test_ipt_REDIRECT () {
+      IPTABLES_OK=$($IPT -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 2060 2&gt;&amp;1 | grep "No chain.target.match")
+      if [ -z "$IPTABLES_OK" ]; then
+        $IPT -t nat -D PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 2060 2&gt;&amp;1
+        echo 1
+      else
+        echo 0
+      fi
+    }
+
+    ### Find a module on disk
+    module_exists () {
+    echo " Looking for a module on disk"
+      EXIST=$(find /lib/modules/`uname -r` -name $1.*o 2&gt;/dev/null)
+      if [ -n "$EXIST" ]; then
+        echo 1
+      else
+        echo 0
+      fi
+    }
+
+    ### Test if a module is in memory
+    module_in_memory () {
+      MODULE=$(lsmod | grep $1 | awk '{print $1}')
+      if [ "$MODULE" = "$1" ]; then
+        echo 1
+      else
+        echo 0
+      fi
+    }
+
+    echo "Testing for iptables modules"
+
+    echo "  Testing ipt_mac"
+    TEST_IPT_MAC=$(test_ipt_mac)
+    if [ "$TEST_IPT_MAC" = "0" ]; then
+      echo "   iptables is not working with ipt_mac"
+      echo "   Scanning disk for ipt_mac module"
+      TEST_IPT_MAC_MODULE_EXISTS=$(module_exists "ipt_mac")
+      if [ "$TEST_IPT_MAC_MODULE_EXISTS" = "0" ]; then
+        echo "   ipt_mac module is missing, please install it (kernel or module)"
+        exit
+      else
+        echo "   ipt_mac module exists, trying to load"
+        insmod ipt_mac &gt; /dev/null
+        TEST_IPT_MAC_MODULE_MEMORY=$(module_in_memory "ipt_mac")
+        if [ "$TEST_IPT_MAC_MODULE_MEMORY" = "0" ]; then
+          echo "  Error: ipt_mac not loaded"
+          exit
+        else
+          echo "  ipt_mac loaded sucessfully"
+        fi
+      fi
+    else
+      echo "   ipt_mac  module is working"
+    fi
+
+    echo "  Testing ipt_mark"
+    TEST_IPT_MARK=$(test_ipt_mark)
+    if [ "$TEST_IPT_MARK" = "0" ]; then
+      echo "   iptables is not working with ipt_mark"
+      echo "   Scanning disk for ipt_mark module"
+      TEST_IPT_MARK_MODULE_EXISTS=$(module_exists "ipt_mark")
+      if [ "$TEST_IPT_MARK_MODULE_EXISTS" = "0" ]; then
+        echo "   iptables ipt_mark module missing, please install it (kernel or module)"
+        exit
+      else
+        echo "   ipt_mark module exists, trying to load"
+        insmod ipt_mark
+        TEST_IPT_MARK_MODULE_MEMORY=$(module_in_memory "ipt_mark")
+        if [ "$TEST_IPT_MARK_MODULE_MEMORY" = "0" ]; then
+          echo "   Error: ipt_mark not loaded"
+          exit
+        else
+          echo "   ipt_mark loaded sucessfully"
+        fi
+      fi
+      else
+    echo "   ipt_mark module is working"
+    fi
+
+##TODO:  This will not test if required iptables userspace (iptables-mod-nat on Kamikaze) is installed
+    echo "  Testing ipt_REDIRECT"
+    TEST_IPT_MAC=$(test_ipt_REDIRECT)
+    if [ "$TEST_IPT_MAC" = "0" ]; then
+      echo "   iptables is not working with ipt_REDIRECT"
+      echo "   Scanning disk for ipt_REDIRECT module"
+      TEST_IPT_MAC_MODULE_EXISTS=$(module_exists "ipt_REDIRECT")
+      if [ "$TEST_IPT_MAC_MODULE_EXISTS" = "0" ]; then
+        echo "   ipt_REDIRECT module is missing, please install it (kernel or module)"
+        exit
+      else
+        echo "   ipt_REDIRECT module exists, trying to load"
+        insmod ipt_REDIRECT &gt; /dev/null
+        TEST_IPT_MAC_MODULE_MEMORY=$(module_in_memory "ipt_REDIRECT")
+        if [ "$TEST_IPT_MAC_MODULE_MEMORY" = "0" ]; then
+          echo "  Error: ipt_REDIRECT not loaded"
+          exit
+        else
+          echo "  ipt_REDIRECT loaded sucessfully"
+        fi
+      fi
+    else
+      echo "   ipt_REDIRECT  module is working"
+    fi
+
+    ;;
+
+  *)
+   echo "Usage: $0 {start|stop|restart|reload|status|test-module}"
+   exit 1
+   ;;
+esac
+</code></pre>
+</div>
+<p>9.在安卓平台源码中增加文件拷贝项，在编译时将init.d目录连同底下的wifidog启动脚本复制至/system/etc目录中。不同平台路径不完全一样，此处就不写我的路径了，具体方式可参考各平台的说明</p>
+<p>10.增加开机自启动wifidog的功能，修改安卓平台的init脚本 增加以下内容</p>
+<div>
+<pre><code class="language-none">on post-fs-data节点下增加：
+chmod 0777 /etc/init.d/wifidog    #为了给启动脚本增加执行权限
+
+增加服务启动：
+service wifiDog /system/etc/init.d/wifidog start
+    class late_start
+    user root
+    group root
+    oneshot</code></pre>
+</div>
+<p>10.移植完成，开始愉快的编译安卓源码吧。</p>
+</div>
+
+	<p class="meta">Posted on <span class="postdate">Jul 19, 2017</span></p>
+
+</article>
+    </div>
+
+
+
+  </div>
+
+
+
+  <footer id="footer">
+    <p class="copyright">Copyright &copy; 2017 Solar Theme. Powered by <a href="http://jekyllrb.com">Jekyll</a>, theme by <a href="http://www.webmaster-source.com">Matt Harzewski</a></p>
+  </footer>
+
+
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script src="/assets/js/jquery.mobilemenu.min.js"></script>
+
+  <script>
+    $(document).ready(function(){
+      $('#sidebar nav ul').mobileMenu({'topOptionText': 'Menu', 'prependTo': '#sidebar nav'});
+    });
+  </script>
+
+
+
+</body>
+</html>

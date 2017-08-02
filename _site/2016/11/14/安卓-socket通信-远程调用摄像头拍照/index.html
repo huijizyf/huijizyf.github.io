@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="UTF-8">
+  <title>安卓 socket通信  远程调用摄像头拍照</title>
+  <meta name="viewport" content="width=device-width">
+
+  <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="/assets/css/style.css" rel="stylesheet" />
+  <link href="/assets/css/colors-dark.css" rel="stylesheet" />
+
+</head>
+
+<body>
+
+
+
+  <header id="header">
+    <h1><a href="/"><i class="icon-sun"></i> Solar Theme</a></h1>
+    <p>A stylish blog using the Solarized color palette</p>
+  </header>
+
+
+
+  <div id="page">
+
+
+
+    <div id="sidebar">
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/archives">Archive</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="http://twitter.com/redwall_hp">Twitter</a></li>
+          <li><a href="/feed.xml">RSS Feed</a></li>
+        </ul>
+      </nav>
+    </div>
+
+
+
+    <div id="content">
+      <article class="post">
+
+	
+		<h1><a href="/2016/11/14/%E5%AE%89%E5%8D%93-socket%E9%80%9A%E4%BF%A1-%E8%BF%9C%E7%A8%8B%E8%B0%83%E7%94%A8%E6%91%84%E5%83%8F%E5%A4%B4%E6%8B%8D%E7%85%A7/">安卓 socket通信  远程调用摄像头拍照</a></h1>
+	
+
+	<div class="post-content"><p>通过socket通信，在电脑端控制手机拍照，并将照片发回电脑端，今早买了 google ioio（好贵<img style="margin: 0px; padding: 0px; border: 0px; list-style: none; color: #464646; font-family: 'Microsoft YaHei', 'Helvetica Neue', SimSun; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: #f0e7b4;" title="安卓 &lt;wbr&gt;socket通信 &lt;wbr&gt; &lt;wbr&gt;远程调用摄像头拍照" src="http://www.sinaimg.cn/uc/myshow/blog/misc/gif/E___6706EN00SIGG.gif" alt="安卓 &lt;wbr&gt;socket通信 &lt;wbr&gt; &lt;wbr&gt;远程调用摄像头拍照" />）和小车底座，等ioio和底座到了，就可以组合起来了，将手机安放在小车上，通过ioio控制小车运动，远程调用相机拍照并返回照片，想想应该挺好玩的。</p>
+<div>今天花了一下午时间先试着写了一下远程调用摄像头拍照的程序</div>
+<div>手机端：</div>
+<div>
+<div>package com.zyf.video;</div>
+<div></div>
+<div>import java.io.BufferedInputStream;</div>
+<div>import java.io.BufferedReader;</div>
+<div>import java.io.BufferedWriter;</div>
+<div>import java.io.ByteArrayInputStream;</div>
+<div>import java.io.ByteArrayOutputStream;</div>
+<div>import java.io.DataInputStream;</div>
+<div>import java.io.DataOutputStream;</div>
+<div>import java.io.File;</div>
+<div>import java.io.FileInputStream;</div>
+<div>import java.io.FileOutputStream;</div>
+<div>import java.io.IOException;</div>
+<div>import java.io.InputStream;</div>
+<div>import java.io.InputStreamReader;</div>
+<div>import java.io.OutputStream;</div>
+<div>import java.io.OutputStreamWriter;</div>
+<div>import java.io.PrintStream;</div>
+<div>import java.io.PrintWriter;</div>
+<div>import java.net.ServerSocket;</div>
+<div>import java.net.Socket;</div>
+<div></div>
+<div>import android.graphics.Bitmap;</div>
+<div>import android.graphics.BitmapFactory;</div>
+<div>import android.graphics.PixelFormat;</div>
+<div>import android.hardware.Camera;</div>
+<div>import android.hardware.Camera.Parameters;</div>
+<div>import android.hardware.Camera.PictureCallback;</div>
+<div>import android.hardware.Camera.ShutterCallback;</div>
+<div>import android.os.Bundle;</div>
+<div>import android.util.Log;</div>
+<div>import android.view.Display;</div>
+<div>import android.view.SurfaceHolder;</div>
+<div>import android.view.SurfaceHolder.Callback;</div>
+<div>import android.view.SurfaceView;</div>
+<div>import android.view.View;</div>
+<div>import android.view.WindowManager;</div>
+<div>import android.widget.Button;</div>
+<div>import android.widget.EditText;</div>
+<div>import android.app.Activity;</div>
+<div>import android.content.Context;</div>
+<div></div>
+<div>public class MainActivity extends Activity {</div>
+<div></div>
+<div>SurfaceView video_sv;</div>
+<div>Button start_bt;</div>
+<div>Camera camera;</div>
+<div>SurfaceHolder surfaceHolder;</div>
+<div>boolean isPreview;</div>
+<div>ServerSocket ser_socket;</div>
+<div>Socket cli_socket;</div>
+<div></div>
+<div></div>
+<div>@Override</div>
+<div>protected void onCreate(Bundle savedInstanceState) {</div>
+<div>super.onCreate(savedInstanceState);</div>
+<div>setContentView(R.layout.activity_main);</div>
+<div>video_sv = (SurfaceView) findViewById(R.id.video_sv);</div>
+<div>start_bt = (Button) findViewById(R.id.start_bt);</div>
+<div>surfaceHolder=video_sv.getHolder();</div>
+<div>surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);</div>
+<div>surfaceHolder.addCallback(new Callback(){</div>
+<div>public void surfaceCreated(SurfaceHolder holder) {</div>
+<div>camera=Camera.open();</div>
+<div>// WindowManager wm=(WindowManager)getSystemService(Context.WINDOW_SERVICE);</div>
+<div>// Display display=wm.getDefaultDisplay();</div>
+<div>// Parameters para=camera.getParameters();</div>
+<div>// para.setPreviewFormat(PixelFormat.JPEG);</div>
+<div>// para.setPreviewFrameRate(3);</div>
+<div>// para.setPictureSize(display.getWidth(),display.getHeight());</div>
+<div>// para.setJpegQuality(80);</div>
+<div>// camera.setParameters(para);</div>
+<div>try {</div>
+<div>camera.setPreviewDisplay(surfaceHolder);</div>
+<div>camera.startPreview();</div>
+<div>isPreview=true;</div>
+<div>} catch (IOException e) {</div>
+<div>e.printStackTrace();</div>
+<div>}</div>
+<div>}</div>
+<div>public void surfaceChanged(SurfaceHolder holder, int format,int width, int height) {</div>
+<div>}</div>
+<div>public void surfaceDestroyed(SurfaceHolder holder) {</div>
+<div>if(camera!=null)</div>
+<div>{</div>
+<div>if(isPreview)</div>
+<div>{</div>
+<div>camera.stopPreview();</div>
+<div>camera.release();</div>
+<div>}</div>
+<div>}</div>
+<div>}</div>
+<div>});</div>
+<div>}</div>
+<div>public void startSocket(View v)</div>
+<div>{</div>
+<div>ServerThread st=new ServerThread();</div>
+<div>st.start();</div>
+<div>}</div>
+<div>class ServerThread extends Thread</div>
+<div>{</div>
+<div>public void run()</div>
+<div>{</div>
+<div>try {</div>
+<div>ser_socket=new ServerSocket(6000);</div>
+<div>} catch (IOException e) {</div>
+<div>e.printStackTrace();</div>
+<div>}</div>
+<div>while (true)</div>
+<div>{ <wbr /></div>
+<div>try {  <wbr /></div>
+<div>cli_socket = ser_socket.accept(); <wbr /></div>
+<div>Log.e("接受连接","accept"); <wbr /></div>
+<div>BufferedReader in = new BufferedReader(new InputStreamReader(cli_socket.getInputStream())); <wbr /></div>
+<div>String str ="";</div>
+<div>String temp;</div>
+<div>while((temp=in.readLine())!=null)</div>
+<div>{</div>
+<div>str=str+temp;</div>
+<div>Log.e("收到数据",temp);</div>
+<div>if(temp.equals("发送数据"))</div>
+<div>{</div>
+<div>takePic();</div>
+<div>}</div>
+<div>}</div>
+<div>} <wbr /></div>
+<div>catch (Exception e) <wbr /></div>
+<div>{  <wbr /></div>
+<div>e.printStackTrace(); <wbr /></div>
+<div>} <wbr /></div>
+<div>finally</div>
+<div>{ <wbr /></div>
+<div>try <wbr /></div>
+<div>{</div>
+<div>cli_socket.close();</div>
+<div>} <wbr /></div>
+<div>catch (IOException e) <wbr /></div>
+<div>{</div>
+<div>e.printStackTrace();</div>
+<div>} <wbr /></div>
+<div>} <wbr /></div>
+<div>} <wbr /></div>
+<div>} <wbr /></div>
+<div>}</div>
+<div>public void takePic() {</div>
+<div>ShutterCallback mShutterCallback = new ShutterCallback()  <wbr /> <wbr /></div>
+<div> <wbr />  <wbr />{  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />public void onShutter() {  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />Log.i("开始拍照", "myShutterCallback:onShutter...");  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />}  <wbr /></div>
+<div> <wbr />  <wbr />};  <wbr /></div>
+<div> <wbr />  <wbr />PictureCallback mRawCallback = new PictureCallback()  <wbr /> <wbr /></div>
+<div> <wbr />  <wbr />{  <wbr /></div>
+<div> <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />public void onPictureTaken(byte[] data, Camera camera) {  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />Log.i("正在拍照", "myRawCallback:onPictureTaken...");  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />}  <wbr /></div>
+<div> <wbr />  <wbr />};  <wbr /></div>
+<div> <wbr />  <wbr />PictureCallback mJpegPictureCallback = new PictureCallback()  <wbr /> <wbr /></div>
+<div> <wbr />  <wbr />{  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />public void onPictureTaken(byte[] data, Camera camera) {  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />Log.i("拍照", "myJpegCallback:onPictureTaken...");  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />Bitmap b = null;  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />if(null != data){  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />b = BitmapFactory.decodeByteArray(data, 0, data.length);//data是字节数据，将其解析成位图  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />camera.stopPreview();  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />isPreview= false;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />try {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> Socket send_socket=new Socket(cli_socket.getInetAddress(),6001);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> Log.d("创建发送socket","创建发送socket");</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> OutputStream os=send_socket.getOutputStream();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> DataOutputStream writer=new DataOutputStream(os);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> ByteArrayOutputStream baos=new ByteArrayOutputStream();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> b.compress(Bitmap.CompressFormat.JPEG,50,baos);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> writer.write(baos.toByteArray(),0,baos.toByteArray().length);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> writer.flush();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> os.flush();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> os.close();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> writer.close();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> Log.d("发送完毕","发送完毕");</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> send_socket.close();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr /> } catch (IOException e) {</div>
+<div> <wbr />  <wbr /> e.printStackTrace();</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />}  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />camera.startPreview();  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />isPreview = true;  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />}  <wbr /></div>
+<div> <wbr />  <wbr />};</div>
+<div> <wbr />  <wbr />camera.takePicture(mShutterCallback,mRawCallback, mJpegPictureCallback);</div>
+<div>}</div>
+<div>}</div>
+<div> <wbr />电脑端：</div>
+</div>
+<div>
+<div>import java.io.IOException;</div>
+<div>import java.io.PrintStream;</div>
+<div>import java.net.Socket;</div>
+<div>import java.net.UnknownHostException;</div>
+<div></div>
+<div></div>
+<div>public class Test {</div>
+<div>public static void main(String[] args){</div>
+<div>Thread serverThread = new Thread(new Server()); <wbr /></div>
+<div>serverThread.start();</div>
+<div>try {</div>
+<div>Socket so=new Socket("192.168.43.233",6000);</div>
+<div>PrintStream output = new PrintStream(so.getOutputStream(), true, "utf-8");</div>
+<div>output.print("发送数据");</div>
+<div>output.flush();</div>
+<div>so.close();</div>
+<div>} catch (UnknownHostException e) {</div>
+<div>e.printStackTrace();</div>
+<div>} catch (IOException e) {</div>
+<div>e.printStackTrace();</div>
+<div>}</div>
+<div></div>
+<div>}</div>
+<div>}</div>
+</div>
+<div></div>
+<div>
+<div>import java.io.BufferedReader;</div>
+<div>import java.io.BufferedWriter;</div>
+<div>import java.io.File;</div>
+<div>import java.io.FileOutputStream;</div>
+<div>import java.io.InputStream;</div>
+<div>import java.io.InputStreamReader;</div>
+<div>import java.io.OutputStream;</div>
+<div>import java.io.OutputStreamWriter;</div>
+<div>import java.io.PrintWriter;</div>
+<div>import java.net.ServerSocket;</div>
+<div>import java.net.Socket;</div>
+<div></div>
+<div></div>
+<div>public class Server implements Runnable{</div>
+<div>public void run() {</div>
+<div>try { <wbr /></div>
+<div>//创建ServerSocket <wbr /></div>
+<div>ServerSocket serverSocket = new ServerSocket(6001); <wbr /></div>
+<div>while (true) { <wbr /></div>
+<div>//接受客户端请求 <wbr /></div>
+<div>Socket client = serverSocket.accept(); <wbr /></div>
+<div>System.out.println("accept"); <wbr /></div>
+<div>try { <wbr /></div>
+<div>//接收客户端消息 <wbr /></div>
+<div>//BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream())); <wbr /></div>
+<div>//String str = in.readLine(); <wbr /></div>
+<div>//System.out.println("read:" + str); <wbr /></div>
+<div>//向服务器发送消息 <wbr /></div>
+<div>//PrintWriter out = new PrintWriter( new BufferedWriter( new OutputStreamWriter(client.getOutputStream())),true); <wbr /></div>
+<div>//out.println("server message"); <wbr /></div>
+<div>//关闭流 <wbr /></div>
+<div>//out.close(); <wbr /></div>
+<div>//in.close();</div>
+<div>InputStream is=client.getInputStream();</div>
+<div>int bytesRead = 0;</div>
+<div>byte[] buffer=new byte[1024];</div>
+<div>File f=new File("C:\\Users\\Administrator\\Desktop\\m.jpg");</div>
+<div>OutputStream fos=new FileOutputStream(f);</div>
+<div>while((bytesRead=is.read(buffer,0,1024))!=-1)</div>
+<div>{</div>
+<div>fos.write(buffer,0,bytesRead);</div>
+<div>System.out.println(new String(buffer));</div>
+<div>}</div>
+<div>fos.close();</div>
+<div>} catch (Exception e) { <wbr /></div>
+<div>System.out.println(e.getMessage()); <wbr /></div>
+<div>e.printStackTrace(); <wbr /></div>
+<div>} finally { <wbr /></div>
+<div></div>
+<div>//关闭 <wbr /></div>
+<div>client.close(); <wbr /></div>
+<div>System.out.println("close"); <wbr /></div>
+<div>} <wbr /></div>
+<div>} <wbr /></div>
+<div>} catch (Exception e) { <wbr /></div>
+<div>System.out.println(e.getMessage()); <wbr /></div>
+<div>} <wbr /></div>
+<div>}</div>
+<div>}</div>
+</div>
+</div>
+
+	<p class="meta">Posted on <span class="postdate">Nov 14, 2016</span></p>
+
+</article>
+    </div>
+
+
+
+  </div>
+
+
+
+  <footer id="footer">
+    <p class="copyright">Copyright &copy; 2017 Solar Theme. Powered by <a href="http://jekyllrb.com">Jekyll</a>, theme by <a href="http://www.webmaster-source.com">Matt Harzewski</a></p>
+  </footer>
+
+
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script src="/assets/js/jquery.mobilemenu.min.js"></script>
+
+  <script>
+    $(document).ready(function(){
+      $('#sidebar nav ul').mobileMenu({'topOptionText': 'Menu', 'prependTo': '#sidebar nav'});
+    });
+  </script>
+
+
+
+</body>
+</html>

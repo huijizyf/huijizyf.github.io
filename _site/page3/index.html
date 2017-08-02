@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="UTF-8">
+  <title>Solar Theme</title>
+  <meta name="viewport" content="width=device-width">
+
+  <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="/assets/css/style.css" rel="stylesheet" />
+  <link href="/assets/css/colors-dark.css" rel="stylesheet" />
+
+</head>
+
+<body>
+
+
+
+  <header id="header">
+    <h1><a href="/"><i class="icon-sun"></i> Solar Theme</a></h1>
+    <p>A stylish blog using the Solarized color palette</p>
+  </header>
+
+
+
+  <div id="page">
+
+
+
+    <div id="sidebar">
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/archives">Archive</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="http://twitter.com/redwall_hp">Twitter</a></li>
+          <li><a href="/feed.xml">RSS Feed</a></li>
+        </ul>
+      </nav>
+    </div>
+
+
+
+    <div id="content">
+      
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/14/C-backgroundWorker-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%9F%A5%E8%AF%A2%E8%AE%AF%E8%88%AA%E7%8F%AD/">C# backgroundWorker 多线程查询讯航班</a></h1>
+		
+
+		<div class="post-content"><p>效果：</p>
+<div><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102v2lw&amp;url=http://album.sina.com.cn/pic/002o3oc9zy6MwQA3bwka8" target="_blank"><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="C# &lt;wbr&gt;backgroundWorker &lt;wbr&gt;多线程查询讯航班" src="http://s9.sinaimg.cn/mw690/002o3oc9zy6MwQA3bwka8&amp;690" alt="C# &lt;wbr&gt;backgroundWorker &lt;wbr&gt;多线程查询讯航班" width="690" height="332" name="image_operate_28221412338182124" /></a><br />
+调用web service接口，返回结果，在listview中显示。</div>
+<div>代码：</div>
+<div>
+<div>using multiThread_airplane.ServiceReference1;</div>
+<div>using System;</div>
+<div>using System.Collections.Generic;</div>
+<div>using System.ComponentModel;</div>
+<div>using System.Data;</div>
+<div>using System.Drawing;</div>
+<div>using System.Linq;</div>
+<div>using System.Text;</div>
+<div>using System.Windows.Forms;</div>
+<div>using System.Collections;</div>
+<div></div>
+<div>namespace multiThread_airplane</div>
+<div>{</div>
+<div> <wbr />  <wbr /> public partial class Form1 : Form</div>
+<div> <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> BackgroundWorker bw = new BackgroundWorker();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> DataSet end;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> public Form1()</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> InitializeComponent();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> private void Form1_Load(object sender, EventArgs e)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("航空公司", 80, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("航班号", 80, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("出发机场", 150, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("到达机场", 150, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("出发时间", 80, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("到达时间", 80, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("经停", 70, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("飞行周期", 80, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> private void button1_Click(object sender, EventArgs e)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> bw.DoWork +=new DoWorkEventHandler(doworker);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> bw.RunWorkerCompleted += new RunWorkerCompletedEventH<wbr />andler(worker_completed);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> bw.RunWorkerAsync();</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> public void doworker(object sender,DoWorkEventArgs e)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> try</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> DomesticAirlineSoapClien<wbr />t client = new DomesticAirlineSoapClien<wbr />t("DomesticAirlineSoap");</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> end = client.getDomesticAirlinesTime(textBox1.Text, textBox2.Text, dateTimePicker1.Value.Year.ToString() + "-" + dateTimePicker1.Value.Month.ToString() + "-"+dateTimePicker1.Value.Day.ToString(),"");</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> catch(Exception ex)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> MessageBox.Show(ex.Message);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> public void worker_completed(object sender,RunWorkerCompletedEventA<wbr />rgs e)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> DataTable dt = end.Tables[0];</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> foreach(DataRow dr in dt.Rows)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Items.Add(new ListViewItem(new string[] { dr[0].ToString(), dr[1].ToString(), dr[2].ToString(), dr[3].ToString(), dr[4].ToString(), dr[5].ToString(), dr[6].ToString(), dr[7].ToString() }));</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> }</div>
+<div>}</div>
+</div>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/14/%E4%BD%BF%E7%94%A8%E5%B9%B2%E6%A0%91%E5%8F%B6%E5%88%B6%E4%BD%9C%E5%9B%BE%E5%BD%A2/">使用干树叶制作图形</a></h1>
+		
+
+		<div class="post-content"><p>1、收集树叶</p>
+<div>在做手工前要提前3~5天准备好树叶，整理铺平放在书面面夹好，然后，用厚厚一摞书压好。</p>
+<div>2、准备工具</div>
+</div>
+<div>三、五天后树叶差不多干枯了，用手轻轻一捏树叶就碎了，这个时候就可以开始做了（由于是靠纸把水分吸干，所以叶子看起来还是绿色），拿出叶子待用，准备好胶水，一般的粘纸的固体胶就好，另外还需要一把剪刀，方便的话有镊子更好了，不过我没用到，要上色的话还可以准备一些彩笔。</div>
+<div>3、开始</div>
+<div>先想好自己想做的图形，拿叶子在纸上大致比划好，觉得差不多以后，在叶子上涂上固体胶，粘到纸上，叶子很脆，注意不要弄碎，需要裁剪的叶子先用剪刀剪好以后再涂胶水</div>
+<div></div>
+<div>好了，步骤其实很简单。</div>
+<div>图：</div>
+<div><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102v4kw&amp;url=http://album.sina.com.cn/pic/002o3oc9gy6NiuJPkYF79" target="_blank"><img title="来个手工教程吧" src="http://s10.sinaimg.cn/mw690/002o3oc9gy6NiuJPkYF79&amp;690" alt="来个手工教程吧" width="690" height="388" name="image_operate_38921414919474133" /></a></p>
+<p><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102v4kw&amp;url=http://album.sina.com.cn/pic/002o3oc9gy6NiuJBsTOdc" target="_blank"><img title="来个手工教程吧" src="http://s13.sinaimg.cn/mw690/002o3oc9gy6NiuJBsTOdc&amp;690" alt="来个手工教程吧" width="690" height="388" name="image_operate_60901414919474557" /></a></p>
+<p><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102v4kw&amp;url=http://album.sina.com.cn/pic/002o3oc9gy6NiuJI4fM92" target="_blank"><img title="来个手工教程吧" src="http://s3.sinaimg.cn/mw690/002o3oc9gy6NiuJI4fM92&amp;690" alt="来个手工教程吧" width="690" height="1226" /></a></div>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/14/%E5%AE%89%E5%8D%93-%E4%BD%BF%E7%94%A8%E5%BC%82%E6%AD%A5%E6%A1%86%E6%9E%B6-%E5%90%91%E6%9C%8D%E5%8A%A1%E5%99%A8-servlet-%E4%BC%A0%E9%80%81%E6%96%87%E4%BB%B6/">安卓 使用异步框架，向服务器（servlet）传送文件</a></h1>
+		
+
+		<div class="post-content"><p>servlet接收文件后，向数据库写入参数</p>
+<div>效果：</div>
+<div><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102v5ze&amp;url=http://album.sina.com.cn/pic/002o3oc9zy6NN7ntUvIf6" target="_blank"><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="安卓 &lt;wbr&gt;使用异步框架，向服务器（servlet）传送文件" src="http://s7.sinaimg.cn/mw690/002o3oc9zy6NN7ntUvIf6&amp;690" alt="安卓 &lt;wbr&gt;使用异步框架，向服务器（servlet）传送文件" width="690" height="342" name="image_operate_16081416578067480" /></a><br />
+servlet接收并写数据库代码：</div>
+<div>
+<div>package com.zyf.services;</div>
+<div></div>
+<div>import java.awt.Image;</div>
+<div>import java.io.File;</div>
+<div>import java.io.FileOutputStream;</div>
+<div>import java.io.IOException;</div>
+<div>import java.io.PrintWriter;</div>
+<div>import java.sql.Connection;</div>
+<div>import java.sql.DriverManager;</div>
+<div>import java.sql.SQLException;</div>
+<div>import java.sql.Statement;</div>
+<div>import java.text.SimpleDateFormat;</div>
+<div>import java.util.Date;</div>
+<div>import java.util.List;</div>
+<div></div>
+<div>import javax.servlet.ServletException;</div>
+<div>import javax.servlet.http.HttpServlet;</div>
+<div>import javax.servlet.http.HttpServletRequest;</div>
+<div>import javax.servlet.http.HttpServletResponse;</div>
+<div></div>
+<div>import org.apache.commons.fileupload.FileItem;</div>
+<div>import org.apache.commons.fileupload.FileItemFactory;</div>
+<div>import org.apache.commons.fileupload.disk.DiskFileItemFactory;</div>
+<div>import org.apache.commons.fileupload.servlet.ServletFileUpload;</div>
+<div></div>
+<div>import com.zyf.staticvalues.DbValues;</div>
+<div></div>
+<div>public class ReceiveArticle extends HttpServlet {</div>
+<div>private static final long serialVersionUID = 1L;</div>
+<div>String driver =DbValues.driver;</div>
+<div>String url = DbValues.url;</div>
+<div>String user = DbValues.user;</div>
+<div>String password =DbValues.password;</div>
+<div>int sender;String image;String content;String title;int code;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr /></div>
+<div> <wbr />  <wbr /> public ReceiveArticle() {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> // TODO Auto-generated constructor stub</div>
+<div> <wbr />  <wbr /> }</div>
+<div></div>
+<div>protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {</div>
+<div>// TODO Auto-generated method stub</div>
+<div>}</div>
+<div></div>
+<div>protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {</div>
+<div>// TODO Auto-generated method stub</div>
+<div>boolean isMultipart=ServletFileUpload.isMultipartContent(request);</div>
+<div>if(isMultipart)</div>
+<div>{</div>
+<div>String realpath=request.getSession().getServletContext().getRealPath("/files");</div>
+<div>System.out.println(realpath);</div>
+<div>File dir=new File(realpath);</div>
+<div>if(!dir.exists())</div>
+<div>{</div>
+<div>dir.mkdir();</div>
+<div>}</div>
+<div>FileItemFactory factory=new DiskFileItemFactory();</div>
+<div>ServletFileUpload upload=new ServletFileUpload(factory);</div>
+<div>upload.setHeaderEncoding("UTF-8");</div>
+<div>try</div>
+<div>{</div>
+<div>List items=upload.parseRequest(request);</div>
+<div>for(FileItem item : items)</div>
+<div>{</div>
+<div>if(item.isFormField())</div>
+<div>{</div>
+<div>if(item.getFieldName().equals("sender"))</div>
+<div>{</div>
+<div>sender=Integer.parseInt(item.getString("UTF-8"));</div>
+<div>}</div>
+<div>if(item.getFieldName().equals("content"))</div>
+<div>{</div>
+<div>content=item.getString("UTF-8");</div>
+<div>}</div>
+<div>if(item.getFieldName().equals("title"))</div>
+<div>{</div>
+<div>title=item.getString("UTF-8");</div>
+<div>}</div>
+<div>}</div>
+<div>else</div>
+<div>{</div>
+<div>image=System.currentTimeMillis()+item.getName().substring(item.getName().lastIndexOf("."));</div>
+<div>item.write(new File(dir,image));</div>
+<div>}</div>
+<div>}</div>
+<div>writeSql(response);</div>
+<div>}</div>
+<div>catch(Exception e)</div>
+<div>{</div>
+<div>e.printStackTrace();</div>
+<div>}</div>
+<div>}</div>
+<div>else</div>
+<div>{</div>
+<div>doGet(request,response);</div>
+<div>}</div>
+<div>}</div>
+<div>private void writeSql(HttpServletResponse response) throws ClassNotFoundException, SQLException, IOException</div>
+<div>{</div>
+<div>Class.forName(driver);</div>
+<div>Connection conn =DriverManager.getConnection(url, user, password);</div>
+<div>if(!conn.isClosed())</div>
+<div> <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr /> System.out.println("Succeeded connecting to the Database!");</div>
+<div> <wbr />  <wbr /> Statement statement = conn.createStatement();</div>
+<div> <wbr />  <wbr /> Date now = new Date(); <wbr /></div>
+<div> <wbr />  <wbr /> SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");</div>
+<div> <wbr />  <wbr /> String sql = "insert into contenttext(sendtime,sender,pic,content,texttitle) values('"+dateFormat.format(now)+"','"+sender+"','"+image+"','"+content+"','"+title+"')";</div>
+<div> <wbr />  <wbr /> statement.executeUpdate(sql); <wbr /></div>
+<div> <wbr />  <wbr /> System.out.println("写入文章成功");</div>
+<div> <wbr />  <wbr /> PrintWriter out = response.getWriter();</div>
+<div> <wbr />  <wbr /> out.print("success");</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> else</div>
+<div> <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr /> System.out.println("失败");</div>
+<div> <wbr />  <wbr /> }</div>
+<div>}</div>
+<div>}</div>
+</div>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/14/%E5%AE%89%E5%8D%93%E8%93%9D%E7%89%99%E9%81%A5%E6%8E%A7%E5%B0%8F%E8%BD%A6-%E6%89%8B%E6%9C%BA%E7%AB%AF%E7%A8%8B%E5%BA%8F/">安卓蓝牙遥控小车 手机端程序</a></h1>
+		
+
+		<div class="post-content"><p><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102v7q0&amp;url=http://album.sina.com.cn/pic/002o3oc9zy6OfskKuYn27" target="_blank"><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="安卓蓝牙遥控小车 &lt;wbr&gt;手机端程序" src="http://s8.sinaimg.cn/mw690/002o3oc9zy6OfskKuYn27&amp;690" alt="安卓蓝牙遥控小车 &lt;wbr&gt;手机端程序" width="540" height="960" name="image_operate_34641418113070980" /></a></p>
+<div>手机与单片机蓝牙模块连接后，通过手机端程序向蓝牙发送信息控制小车的运动，这里是手机端程序</div>
+<div>关键代码：</div>
+<div>
+<div>package gjz.bluetooth;</div>
+<div></div>
+<div>import gjz.bluetooth.R;</div>
+<div>import gjz.bluetooth.Bluetooth.ServerOrCilent;</div>
+<div>import java.io.IOException;</div>
+<div>import java.io.InputStream;</div>
+<div>import java.io.OutputStream;</div>
+<div>import java.util.ArrayList;</div>
+<div>import java.util.UUID;</div>
+<div>import android.annotation.SuppressLint;</div>
+<div>import android.app.Activity;</div>
+<div>import android.bluetooth.BluetoothAdapter;</div>
+<div>import android.bluetooth.BluetoothDevice;</div>
+<div>import android.bluetooth.BluetoothServerSocket;</div>
+<div>import android.bluetooth.BluetoothSocket;</div>
+<div>import android.content.Context;</div>
+<div>import android.os.Bundle;</div>
+<div>import android.os.Handler;</div>
+<div>import android.os.Message;</div>
+<div>import android.util.Log;</div>
+<div>import android.view.View;</div>
+<div>import android.view.View.OnLongClickListener;</div>
+<div>import android.view.Window;</div>
+<div>import android.view.View.OnClickListener;</div>
+<div>import android.view.inputmethod.InputMethodManager;</div>
+<div>import android.widget.AdapterView;</div>
+<div>import android.widget.Button;</div>
+<div>import android.widget.CompoundButton;</div>
+<div>import android.widget.EditText;</div>
+<div>import android.widget.ListView;</div>
+<div>import android.widget.SeekBar;</div>
+<div>import android.widget.Toast;</div>
+<div>import android.widget.ToggleButton;</div>
+<div>import android.widget.AdapterView.OnItemClickListener;</div>
+<div>import android.widget.CompoundButton.OnCheckedChangeListener;</div>
+<div></div>
+<div>@SuppressLint("HandlerLeak")</div>
+<div>public class chatActivity extends Activity implements OnItemClickListener,OnClickListener, OnLongClickListener{</div>
+<div>Handler handler=new Handler()</div>
+<div>{</div>
+<div>public void handleMessage(Message msg)</div>
+<div>{</div>
+<div>if(msg.what==1)</div>
+<div>{</div>
+<div>Toast.makeText(getApplicationContext(),"连接成功，可以开始控制小车", 1).show();</div>
+<div>}</div>
+<div>if(msg.what==0)</div>
+<div>{</div>
+<div>Toast.makeText(getApplicationContext(),"连接失败,原因："+msg.obj, 1).show();</div>
+<div>}</div>
+<div>}</div>
+<div>};</div>
+<div> <wbr />  <wbr /></div>
+<div>private ArrayList list;</div>
+<div>Context mContext;</div>
+<div>ToggleButton start_stop;//开始暂停按钮</div>
+<div>SeekBar speedadjust;//速度调节按钮</div>
+<div>Button ahead;;</div>
+<div>Button back;;</div>
+<div>Button left;</div>
+<div>Button right;</div>
+<div>public static final String PROTOCOL_SCHEME_L2CAP = "btl2cap";</div>
+<div>public static final String PROTOCOL_SCHEME_RFCOMM = "btspp";</div>
+<div>public static final String PROTOCOL_SCHEME_BT_OBEX = "btgoep";</div>
+<div>public static final String PROTOCOL_SCHEME_TCP_OBEX = "tcpobex";</div>
+<div>private BluetoothServerSocket mserverSocket = null;// 服务端socket</div>
+<div>private clientThread clientConnectThread = null;// 客户端现成</div>
+<div>private BluetoothSocket socket = null;// 蓝牙socket</div>
+<div>private BluetoothDevice device = null;// 蓝牙设备socket</div>
+<div>private readThread mreadThread = null;// 读消息线程</div>
+<div>// 获取当前蓝牙适配器，即蓝牙设备</div>
+<div>private BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();</div>
+<div> <wbr />  <wbr /> @Override</div>
+<div> <wbr />  <wbr /> public void onCreate(Bundle savedInstanceState) {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super.onCreate(savedInstanceState); <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> requestWindowFeature(Window.FEATURE_NO_TITLE);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> setContentView(R.layout.activity_control);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> mContext = this;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> init();</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> <wbr /></div>
+<div>private void init() {  <wbr /> <wbr /></div>
+<div>list = new ArrayList();</div>
+<div>start_stop=(ToggleButton)findViewById(R.id.start_stop);//开始暂停按钮</div>
+<div>speedadjust=(SeekBar)findViewById(R.id.speedadjust);//速度调节按钮</div>
+<div>Button ahead=(Button)findViewById(R.id.ahead);</div>
+<div>Button back=(Button)findViewById(R.id.back);</div>
+<div>Button left=(Button)findViewById(R.id.left);</div>
+<div>Button right=(Button)findViewById(R.id.right);</div>
+<div></div>
+<div>//单击事件</div>
+<div>ahead.setOnClickListener(this);</div>
+<div>back.setOnClickListener(this);</div>
+<div>left.setOnClickListener(this);</div>
+<div>right.setOnClickListener(this);</div>
+<div>//长按事件</div>
+<div>ahead.setOnLongClickListener(this);</div>
+<div>back.setOnLongClickListener(this);</div>
+<div>left.setOnLongClickListener(this);</div>
+<div>right.setOnLongClickListener(this);</div>
+<div>start_stop.setOnCheckedChangeListen<wbr />er(new OnCheckedChangeListener(){</div>
+<div>public void onCheckedChanged(CompoundButton buttonView,boolean isChecked) {</div>
+<div>if(isChecked)</div>
+<div>{</div>
+<div>sendMessage("1");</div>
+<div>}</div>
+<div>else</div>
+<div>{</div>
+<div>sendMessage("6");</div>
+<div>}</div>
+<div>}</div>
+<div>});</div>
+<div>}  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr /> private Handler LinkDetectedHandler = new Handler(){</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> @Override</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> public void handleMessage(Message msg) {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> //Toast.makeText(mContext,(String)msg.obj,Toast.LENGTH_SHORT).show();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> if(msg.what==1)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> list.add(new deviceListItem((String)msg.obj,true));</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> else</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> list.add(new deviceListItem((String)msg.obj,false));</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> <wbr /></div>
+<div> <wbr />  <wbr /> };  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr /> <wbr /></div>
+<div> <wbr />  <wbr /> @Override</div>
+<div> <wbr />  <wbr /> public synchronized void onPause() {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super.onPause();</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> @Override</div>
+<div> <wbr />  <wbr /> public synchronized void onResume() {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super.onResume();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> if(Bluetooth.isOpen)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> Toast.makeText(mContext, "连接已经打开，可以通信。如果要再建立连接，请先断开！", Toast.LENGTH_SHORT)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> .show();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> return;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> if(Bluetooth.serviceOrCilent==ServerOrCilent.CILENT)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {// 如果是客户端，启动客户端的线程</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> //获取本设备的MAC地址</div>
+<div>String address = Bluetooth.BlueToothAddress;</div>
+<div>if(!address.equals("null"))</div>
+<div>{// 如果获取地址不为空</div>
+<div>device = mBluetoothAdapter.getRemoteDevice(address);</div>
+<div>clientConnectThread = new clientThread();</div>
+<div>clientConnectThread.start();</div>
+<div>Bluetooth.isOpen = true;</div>
+<div>}</div>
+<div>else</div>
+<div>{</div>
+<div>Toast.makeText(mContext,"地址为空！",Toast.LENGTH_SHORT)</div>
+<div> <wbr />  <wbr /> .show();</div>
+<div>}</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> else if(Bluetooth.serviceOrCilent==ServerOrCilent.SERVICE)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {// 如果是服务端，启动服务端的线程  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> Bluetooth.isOpen = true;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> }</div>
+<div>//开启客户端线程</div>
+<div>private class clientThread extends Thread {</div>
+<div>public void run() {</div>
+<div>try {</div>
+<div>// 创建一个Socket连接：只需要服务器在注册时的UUID号</div>
+<div>// 必须要有一个UUID号码，如果获取，可以百度</div>
+<div>// socket = device.createRfcommSocketToServ<wbr />iceRecord(BluetoothProtocols.OBEX_OBJECT_PUSH_PROTOCOL_UUID);</div>
+<div>socket = device.createRfcommSocketToServ<wbr />iceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));</div>
+<div>//连接，一下的Message是android中的</div>
+<div>Log.e("蓝牙地址",device.getAddress());</div>
+<div>socket.connect();</div>
+<div>Message msg=new Message();</div>
+<div>msg.what=1;</div>
+<div>handler.sendMessage(msg);</div>
+<div>} <wbr /></div>
+<div>catch (IOException e) <wbr /></div>
+<div>{</div>
+<div>Log.e("connect","", e);</div>
+<div>Message msg=new Message();</div>
+<div>msg.obj=e.getMessage();</div>
+<div>msg.what=0;</div>
+<div>handler.sendMessage(msg);</div>
+<div>} <wbr /></div>
+<div>}</div>
+<div>};</div>
+<div></div>
+<div>private void shutdownClient() {</div>
+<div>new Thread() {</div>
+<div>public void run() {</div>
+<div>if(clientConnectThread!=null)</div>
+<div>{</div>
+<div>clientConnectThread.interrupt();</div>
+<div>clientConnectThread= null;</div>
+<div>}</div>
+<div>if(mreadThread != null)</div>
+<div>{</div>
+<div>mreadThread.interrupt();</div>
+<div>mreadThread = null;</div>
+<div>}</div>
+<div>if (socket != null) {</div>
+<div>try {</div>
+<div>socket.close();</div>
+<div>} catch (IOException e) {</div>
+<div>e.printStackTrace();</div>
+<div>}</div>
+<div>socket = null;</div>
+<div>}</div>
+<div>};</div>
+<div>}.start();</div>
+<div>}</div>
+<div>//发送数据</div>
+<div>private void sendMessageHandle(String msg) <wbr /></div>
+<div>{</div>
+<div>if (socket == null) <wbr /></div>
+<div>{</div>
+<div>Toast.makeText(mContext, "没有连接", Toast.LENGTH_SHORT)</div>
+<div>.show();</div>
+<div>return;</div>
+<div>}</div>
+<div>try {</div>
+<div>// 输入输出流</div>
+<div>OutputStream os = socket.getOutputStream(); <wbr /></div>
+<div>os.write(msg.getBytes());</div>
+<div>}catch (IOException e) {</div>
+<div>e.printStackTrace();</div>
+<div>}</div>
+<div>list.add(new deviceListItem(msg, false));</div>
+<div>}</div>
+<div>//读取数据</div>
+<div> <wbr />  <wbr /> private class readThread extends Thread { <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> public void run(){</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> //按比特读取流</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> byte[] buffer = new byte[1024];</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> int bytes;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> InputStream mmInStream = null;  <wbr /></div>
+<div>try {</div>
+<div>mmInStream = socket.getInputStream();// 获得输入流</div>
+<div>} catch (IOException e1) {</div>
+<div>e1.printStackTrace();</div>
+<div>}</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> while(true){</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> try {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> // Read from the InputStream</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> if( (bytes = mmInStream.read(buffer))&gt;0 )</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />byte[] buf_data = new byte[bytes];</div>
+<div> <wbr />  <wbr /> for(int i=0; i</div>
+<div> <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr /> buf_data[i] = buffer[i];</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> // 将输入流转换为string类型</div>
+<div>String s = new String(buf_data);</div>
+<div>Message msg = new Message();</div>
+<div>msg.obj = s;</div>
+<div>msg.what = 1;</div>
+<div>LinkDetectedHandler.sendMessage(msg);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> } catch (IOException e) {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> try {</div>
+<div>mmInStream.close();</div>
+<div>} catch (IOException e1) {</div>
+<div>e1.printStackTrace();</div>
+<div>}</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> break;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> @Override</div>
+<div> <wbr />  <wbr /> protected void onDestroy() {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super.onDestroy();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> // 复写onDestroy方法，回收资源</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> if (Bluetooth.serviceOrCilent == ServerOrCilent.CILENT) <wbr /></div>
+<div>{// 如果是客户端</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> shutdownClient();</div>
+<div>}</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> // 关闭蓝牙</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> Bluetooth.isOpen = false;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> // 设置本设备类型为空</div>
+<div>Bluetooth.serviceOrCilent = ServerOrCilent.NONE;</div>
+<div> <wbr />  <wbr /> }</div>
+<div>public class SiriListItem {</div>
+<div>//本类实现在arraylist中显示信息</div>
+<div>String message;</div>
+<div>boolean isSiri;</div>
+<div>public SiriListItem(String msg, boolean siri) {</div>
+<div>message = msg;</div>
+<div>isSiri = siri;</div>
+<div>}</div>
+<div>}</div>
+</div>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/14/%E5%AE%89%E5%8D%93-socket%E9%80%9A%E4%BF%A1-%E8%BF%9C%E7%A8%8B%E8%B0%83%E7%94%A8%E6%91%84%E5%83%8F%E5%A4%B4%E6%8B%8D%E7%85%A7/">安卓 socket通信  远程调用摄像头拍照</a></h1>
+		
+
+		<div class="post-content"><p>通过socket通信，在电脑端控制手机拍照，并将照片发回电脑端，今早买了 google ioio（好贵<img style="margin: 0px; padding: 0px; border: 0px; list-style: none; color: #464646; font-family: 'Microsoft YaHei', 'Helvetica Neue', SimSun; font-size: 14px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: normal; letter-spacing: normal; orphans: 2; text-align: left; text-indent: 0px; text-transform: none; white-space: normal; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; background-color: #f0e7b4;" title="安卓 &lt;wbr&gt;socket通信 &lt;wbr&gt; &lt;wbr&gt;远程调用摄像头拍照" src="http://www.sinaimg.cn/uc/myshow/blog/misc/gif/E___6706EN00SIGG.gif" alt="安卓 &lt;wbr&gt;socket通信 &lt;wbr&gt; &lt;wbr&gt;远程调用摄像头拍照" />）和小车底座，等ioio和底座到了，就可以组合起来了，将手机安放在小车上，通过ioio控制小车运动，远程调用相机拍照并返回照片，想想应该挺好玩的。</p>
+<div>今天花了一下午时间先试着写了一下远程调用摄像头拍照的程序</div>
+<div>手机端：</div>
+<div>
+<div>package com.zyf.video;</div>
+<div></div>
+<div>import java.io.BufferedInputStream;</div>
+<div>import java.io.BufferedReader;</div>
+<div>import java.io.BufferedWriter;</div>
+<div>import java.io.ByteArrayInputStream;</div>
+<div>import java.io.ByteArrayOutputStream;</div>
+<div>import java.io.DataInputStream;</div>
+<div>import java.io.DataOutputStream;</div>
+<div>import java.io.File;</div>
+<div>import java.io.FileInputStream;</div>
+<div>import java.io.FileOutputStream;</div>
+<div>import java.io.IOException;</div>
+<div>import java.io.InputStream;</div>
+<div>import java.io.InputStreamReader;</div>
+<div>import java.io.OutputStream;</div>
+<div>import java.io.OutputStreamWriter;</div>
+<div>import java.io.PrintStream;</div>
+<div>import java.io.PrintWriter;</div>
+<div>import java.net.ServerSocket;</div>
+<div>import java.net.Socket;</div>
+<div></div>
+<div>import android.graphics.Bitmap;</div>
+<div>import android.graphics.BitmapFactory;</div>
+<div>import android.graphics.PixelFormat;</div>
+<div>import android.hardware.Camera;</div>
+<div>import android.hardware.Camera.Parameters;</div>
+<div>import android.hardware.Camera.PictureCallback;</div>
+<div>import android.hardware.Camera.ShutterCallback;</div>
+<div>import android.os.Bundle;</div>
+<div>import android.util.Log;</div>
+<div>import android.view.Display;</div>
+<div>import android.view.SurfaceHolder;</div>
+<div>import android.view.SurfaceHolder.Callback;</div>
+<div>import android.view.SurfaceView;</div>
+<div>import android.view.View;</div>
+<div>import android.view.WindowManager;</div>
+<div>import android.widget.Button;</div>
+<div>import android.widget.EditText;</div>
+<div>import android.app.Activity;</div>
+<div>import android.content.Context;</div>
+<div></div>
+<div>public class MainActivity extends Activity {</div>
+<div></div>
+<div>SurfaceView video_sv;</div>
+<div>Button start_bt;</div>
+<div>Camera camera;</div>
+<div>SurfaceHolder surfaceHolder;</div>
+<div>boolean isPreview;</div>
+<div>ServerSocket ser_socket;</div>
+<div>Socket cli_socket;</div>
+<div></div>
+<div></div>
+<div>@Override</div>
+<div>protected void onCreate(Bundle savedInstanceState) {</div>
+<div>super.onCreate(savedInstanceState);</div>
+<div>setContentView(R.layout.activity_main);</div>
+<div>video_sv = (SurfaceView) findViewById(R.id.video_sv);</div>
+<div>start_bt = (Button) findViewById(R.id.start_bt);</div>
+<div>surfaceHolder=video_sv.getHolder();</div>
+<div>surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);</div>
+<div>surfaceHolder.addCallback(new Callback(){</div>
+<div>public void surfaceCreated(SurfaceHolder holder) {</div>
+<div>camera=Camera.open();</div>
+<div>// WindowManager wm=(WindowManager)getSystemService(Context.WINDOW_SERVICE);</div>
+<div>// Display display=wm.getDefaultDisplay();</div>
+<div>// Parameters para=camera.getParameters();</div>
+<div>// para.setPreviewFormat(PixelFormat.JPEG);</div>
+<div>// para.setPreviewFrameRate(3);</div>
+<div>// para.setPictureSize(display.getWidth(),display.getHeight());</div>
+<div>// para.setJpegQuality(80);</div>
+<div>// camera.setParameters(para);</div>
+<div>try {</div>
+<div>camera.setPreviewDisplay(surfaceHolder);</div>
+<div>camera.startPreview();</div>
+<div>isPreview=true;</div>
+<div>} catch (IOException e) {</div>
+<div>e.printStackTrace();</div>
+<div>}</div>
+<div>}</div>
+<div>public void surfaceChanged(SurfaceHolder holder, int format,int width, int height) {</div>
+<div>}</div>
+<div>public void surfaceDestroyed(SurfaceHolder holder) {</div>
+<div>if(camera!=null)</div>
+<div>{</div>
+<div>if(isPreview)</div>
+<div>{</div>
+<div>camera.stopPreview();</div>
+<div>camera.release();</div>
+<div>}</div>
+<div>}</div>
+<div>}</div>
+<div>});</div>
+<div>}</div>
+<div>public void startSocket(View v)</div>
+<div>{</div>
+<div>ServerThread st=new ServerThread();</div>
+<div>st.start();</div>
+<div>}</div>
+<div>class ServerThread extends Thread</div>
+<div>{</div>
+<div>public void run()</div>
+<div>{</div>
+<div>try {</div>
+<div>ser_socket=new ServerSocket(6000);</div>
+<div>} catch (IOException e) {</div>
+<div>e.printStackTrace();</div>
+<div>}</div>
+<div>while (true)</div>
+<div>{ <wbr /></div>
+<div>try {  <wbr /></div>
+<div>cli_socket = ser_socket.accept(); <wbr /></div>
+<div>Log.e("接受连接","accept"); <wbr /></div>
+<div>BufferedReader in = new BufferedReader(new InputStreamReader(cli_socket.getInputStream())); <wbr /></div>
+<div>String str ="";</div>
+<div>String temp;</div>
+<div>while((temp=in.readLine())!=null)</div>
+<div>{</div>
+<div>str=str+temp;</div>
+<div>Log.e("收到数据",temp);</div>
+<div>if(temp.equals("发送数据"))</div>
+<div>{</div>
+<div>takePic();</div>
+<div>}</div>
+<div>}</div>
+<div>} <wbr /></div>
+<div>catch (Exception e) <wbr /></div>
+<div>{  <wbr /></div>
+<div>e.printStackTrace(); <wbr /></div>
+<div>} <wbr /></div>
+<div>finally</div>
+<div>{ <wbr /></div>
+<div>try <wbr /></div>
+<div>{</div>
+<div>cli_socket.close();</div>
+<div>} <wbr /></div>
+<div>catch (IOException e) <wbr /></div>
+<div>{</div>
+<div>e.printStackTrace();</div>
+<div>} <wbr /></div>
+<div>} <wbr /></div>
+<div>} <wbr /></div>
+<div>} <wbr /></div>
+<div>}</div>
+<div>public void takePic() {</div>
+<div>ShutterCallback mShutterCallback = new ShutterCallback()  <wbr /> <wbr /></div>
+<div> <wbr />  <wbr />{  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />public void onShutter() {  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />Log.i("开始拍照", "myShutterCallback:onShutter...");  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />}  <wbr /></div>
+<div> <wbr />  <wbr />};  <wbr /></div>
+<div> <wbr />  <wbr />PictureCallback mRawCallback = new PictureCallback()  <wbr /> <wbr /></div>
+<div> <wbr />  <wbr />{  <wbr /></div>
+<div> <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />public void onPictureTaken(byte[] data, Camera camera) {  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />Log.i("正在拍照", "myRawCallback:onPictureTaken...");  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />}  <wbr /></div>
+<div> <wbr />  <wbr />};  <wbr /></div>
+<div> <wbr />  <wbr />PictureCallback mJpegPictureCallback = new PictureCallback()  <wbr /> <wbr /></div>
+<div> <wbr />  <wbr />{  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />public void onPictureTaken(byte[] data, Camera camera) {  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />Log.i("拍照", "myJpegCallback:onPictureTaken...");  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />Bitmap b = null;  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />if(null != data){  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />b = BitmapFactory.decodeByteArray(data, 0, data.length);//data是字节数据，将其解析成位图  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />camera.stopPreview();  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />isPreview= false;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />try {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> Socket send_socket=new Socket(cli_socket.getInetAddress(),6001);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> Log.d("创建发送socket","创建发送socket");</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> OutputStream os=send_socket.getOutputStream();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> DataOutputStream writer=new DataOutputStream(os);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> ByteArrayOutputStream baos=new ByteArrayOutputStream();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> b.compress(Bitmap.CompressFormat.JPEG,50,baos);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> writer.write(baos.toByteArray(),0,baos.toByteArray().length);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> writer.flush();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> os.flush();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> os.close();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> writer.close();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> Log.d("发送完毕","发送完毕");</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> send_socket.close();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr /> } catch (IOException e) {</div>
+<div> <wbr />  <wbr /> e.printStackTrace();</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />}  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />camera.startPreview();  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />isPreview = true;  <wbr /></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />}  <wbr /></div>
+<div> <wbr />  <wbr />};</div>
+<div> <wbr />  <wbr />camera.takePicture(mShutterCallback,mRawCallback, mJpegPictureCallback);</div>
+<div>}</div>
+<div>}</div>
+<div> <wbr />电脑端：</div>
+</div>
+<div>
+<div>import java.io.IOException;</div>
+<div>import java.io.PrintStream;</div>
+<div>import java.net.Socket;</div>
+<div>import java.net.UnknownHostException;</div>
+<div></div>
+<div></div>
+<div>public class Test {</div>
+<div>public static void main(String[] args){</div>
+<div>Thread serverThread = new Thread(new Server()); <wbr /></div>
+<div>serverThread.start();</div>
+<div>try {</div>
+<div>Socket so=new Socket("192.168.43.233",6000);</div>
+<div>PrintStream output = new PrintStream(so.getOutputStream(), true, "utf-8");</div>
+<div>output.print("发送数据");</div>
+<div>output.flush();</div>
+<div>so.close();</div>
+<div>} catch (UnknownHostException e) {</div>
+<div>e.printStackTrace();</div>
+<div>} catch (IOException e) {</div>
+<div>e.printStackTrace();</div>
+<div>}</div>
+<div></div>
+<div>}</div>
+<div>}</div>
+</div>
+<div></div>
+<div>
+<div>import java.io.BufferedReader;</div>
+<div>import java.io.BufferedWriter;</div>
+<div>import java.io.File;</div>
+<div>import java.io.FileOutputStream;</div>
+<div>import java.io.InputStream;</div>
+<div>import java.io.InputStreamReader;</div>
+<div>import java.io.OutputStream;</div>
+<div>import java.io.OutputStreamWriter;</div>
+<div>import java.io.PrintWriter;</div>
+<div>import java.net.ServerSocket;</div>
+<div>import java.net.Socket;</div>
+<div></div>
+<div></div>
+<div>public class Server implements Runnable{</div>
+<div>public void run() {</div>
+<div>try { <wbr /></div>
+<div>//创建ServerSocket <wbr /></div>
+<div>ServerSocket serverSocket = new ServerSocket(6001); <wbr /></div>
+<div>while (true) { <wbr /></div>
+<div>//接受客户端请求 <wbr /></div>
+<div>Socket client = serverSocket.accept(); <wbr /></div>
+<div>System.out.println("accept"); <wbr /></div>
+<div>try { <wbr /></div>
+<div>//接收客户端消息 <wbr /></div>
+<div>//BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream())); <wbr /></div>
+<div>//String str = in.readLine(); <wbr /></div>
+<div>//System.out.println("read:" + str); <wbr /></div>
+<div>//向服务器发送消息 <wbr /></div>
+<div>//PrintWriter out = new PrintWriter( new BufferedWriter( new OutputStreamWriter(client.getOutputStream())),true); <wbr /></div>
+<div>//out.println("server message"); <wbr /></div>
+<div>//关闭流 <wbr /></div>
+<div>//out.close(); <wbr /></div>
+<div>//in.close();</div>
+<div>InputStream is=client.getInputStream();</div>
+<div>int bytesRead = 0;</div>
+<div>byte[] buffer=new byte[1024];</div>
+<div>File f=new File("C:\\Users\\Administrator\\Desktop\\m.jpg");</div>
+<div>OutputStream fos=new FileOutputStream(f);</div>
+<div>while((bytesRead=is.read(buffer,0,1024))!=-1)</div>
+<div>{</div>
+<div>fos.write(buffer,0,bytesRead);</div>
+<div>System.out.println(new String(buffer));</div>
+<div>}</div>
+<div>fos.close();</div>
+<div>} catch (Exception e) { <wbr /></div>
+<div>System.out.println(e.getMessage()); <wbr /></div>
+<div>e.printStackTrace(); <wbr /></div>
+<div>} finally { <wbr /></div>
+<div></div>
+<div>//关闭 <wbr /></div>
+<div>client.close(); <wbr /></div>
+<div>System.out.println("close"); <wbr /></div>
+<div>} <wbr /></div>
+<div>} <wbr /></div>
+<div>} catch (Exception e) { <wbr /></div>
+<div>System.out.println(e.getMessage()); <wbr /></div>
+<div>} <wbr /></div>
+<div>}</div>
+<div>}</div>
+</div>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/14/%E5%AE%89%E5%8D%93-%E4%BD%BF%E7%94%A8IOIO%E6%8E%A7%E5%88%B6%E8%9C%82%E9%B8%A3%E5%99%A8%E5%8F%91%E5%A3%B0%E9%A2%91%E7%8E%87/">安卓 使用IOIO控制蜂鸣器发声频率</a></h1>
+		
+
+		<div class="post-content"><div>接好供电电路后，将电位调到合适位置（手机显示调试模式已连接，并正在充电），然后将实例程序安装至手机，打开实例程序，即可通过手机控制IOIO板子上的引脚，可作为输出，也可作为输入口</div>
+<p><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102v8hz&amp;url=http://album.sina.com.cn/pic/002o3oc9gy6OvhmF9m939" target="_blank"><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="安卓&nbsp;&lt;wbr&gt;使用IOIO控制蜂鸣器发声频率" src="http://s10.sinaimg.cn/mw690/002o3oc9gy6OvhmF9m939&amp;690" alt="安卓&nbsp;&lt;wbr&gt;使用IOIO控制蜂鸣器发声频率" width="690" height="579" name="image_operate_10101418970383589"></a></p>
+<div>示例程序的代码：</div>
+<div>
+<div>package ioio.examples.simple;</div>
+<div></div>
+<div>import ioio.lib.api.AnalogInput;</div>
+<div>import ioio.lib.api.DigitalOutput;</div>
+<div>import ioio.lib.api.IOIO;</div>
+<div>import ioio.lib.api.PwmOutput;</div>
+<div>import ioio.lib.api.exception.ConnectionLostException;</div>
+<div>import ioio.lib.util.BaseIOIOLooper;</div>
+<div>import ioio.lib.util.IOIOLooper;</div>
+<div>import ioio.lib.util.android.IOIOActivity;</div>
+<div>import android.os.Bundle;</div>
+<div>import android.widget.SeekBar;</div>
+<div>import android.widget.TextView;</div>
+<div>import android.widget.ToggleButton;</div>
+<div></div>
+<div>public class IOIOSimpleApp extends IOIOActivity {</div>
+<div>private TextView textView_;</div>
+<div>private SeekBar seekBar_;</div>
+<div>private ToggleButton toggleButton_;</div>
+<div></div>
+<div>@Override</div>
+<div>public void onCreate(Bundle savedInstanceState) {</div>
+<div>super.onCreate(savedInstanceState);</div>
+<div>setContentView(R.layout.main);</div>
+<div></div>
+<div>textView_ = (TextView) findViewById(R.id.TextView);</div>
+<div>seekBar_ = (SeekBar) findViewById(R.id.SeekBar);</div>
+<div>toggleButton_ = (ToggleButton) findViewById(R.id.ToggleButton);</div>
+<div></div>
+<div>enableUi(false);</div>
+<div>}</div>
+<div></div>
+<div>class Looper extends BaseIOIOLooper {</div>
+<div>private AnalogInput input_;</div>
+<div>private PwmOutput pwmOutput_;</div>
+<div>private DigitalOutput led_;</div>
+<div></div>
+<div>@Override</div>
+<div>public void setup() throws ConnectionLostException {</div>
+<div>led_ = ioio_.openDigitalOutput(IOIO.LED_PIN, true);</div>
+<div>input_ = ioio_.openAnalogInput(40);</div>
+<div>pwmOutput_ = ioio_.openPwmOutput(12, 100);</div>
+<div>enableUi(true);</div>
+<div>}</div>
+<div></div>
+<div>@Override</div>
+<div>public void loop() throws ConnectionLostException, InterruptedException {</div>
+<div>setNumber(input_.read());</div>
+<div>pwmOutput_.setPulseWidth(500 + seekBar_.getProgress() * 2);</div>
+<div>led_.write(!toggleButton_.isChecked());</div>
+<div>Thread.sleep(10);</div>
+<div>}</div>
+<div></div>
+<div>@Override</div>
+<div>public void disconnected() {</div>
+<div>enableUi(false);</div>
+<div>}</div>
+<div>}</div>
+<div></div>
+<div>@Override</div>
+<div>protected IOIOLooper createIOIOLooper() {</div>
+<div>return new Looper();</div>
+<div>}</div>
+<div></div>
+<div>private void enableUi(final boolean enable) {</div>
+<div>runOnUiThread(new Runnable() {</div>
+<div>@Override</div>
+<div>public void run() {</div>
+<div>seekBar_.setEnabled(enable);</div>
+<div>toggleButton_.setEnabled(enable);</div>
+<div>}</div>
+<div>});</div>
+<div>}</div>
+<div></div>
+<div>private void setNumber(float f) {</div>
+<div>final String str = String.format("%.2f", f);</div>
+<div>runOnUiThread(new Runnable() {</div>
+<div>@Override</div>
+<div>public void run() {</div>
+<div>textView_.setText(str);</div>
+<div>}</div>
+<div>});</div>
+<div>}</div>
+<div>}</div>
+</div>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/14/%E4%BD%BF%E7%94%A8android-IOIO%E5%92%8C%E5%AE%89%E5%8D%93%E6%89%8B%E6%9C%BA%E5%88%B6%E4%BD%9C%E8%A7%86%E9%A2%91%E9%81%A5%E6%8E%A7%E5%B0%8F%E8%BD%A6-%E6%8E%A7%E5%88%B6%E7%81%AF%E7%9A%84%E5%BC%80%E5%85%B3-%E5%AE%9E%E6%97%B6%E8%A7%86%E9%A2%91%E4%BC%A0%E8%BE%93-%E6%96%B9%E5%90%91%E6%8E%A7%E5%88%B6/">使用android IOIO和安卓手机制作视频遥控小车（控制灯的开关、实时视频传输、方向控制）</a></h1>
+		
+
+		<div class="post-content"><div>
+<div><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=&amp;url=http://album.sina.com.cn/pic/002o3oc9gy6QHba3uLwe2" target="_blank"><img title="" src="http://s3.sinaimg.cn/mw690/002o3oc9gy6QHba3uLwe2" alt="" /></a></div>
+</div>
+<p>android IOIO是通过安卓手机的USB接口控制的电路板，通过android IOIO可以不需要太多的硬件知识，通过安卓手机转接的IOIO板控制外围设备，配件有纸盒、L298N电机驱动模块、旧手机一部（系统必须在安卓2.3以上（与IOIO的固件有关）），旧手机电池两块，LED灯一组，USB线一根、减速电机带轮子 两个、万向轮一个、杜邦线6根左右就够了</p>
+<p>先搭好硬件环境，然后进行安卓代码的编写，以下是代码：</p>
+<p>视频传输部分参考了网上的代码</p>
+<p>public class SocketCameraActivity extends IOIOActivity implements SurfaceHolder.Callback,</p>
+<p>Camera.PreviewCallback{</p>
+<p>private SurfaceView mSurfaceview = null; // SurfaceView对象：(视图组件)视频显示</p>
+<p>private SurfaceHolder mSurfaceHolder = null; // SurfaceHolder对象：(抽象接口)SurfaceView支持类</p>
+<p>private Camera mCamera = null; // Camera对象，相机预览</p>
+<p>DigitalOutput left,right,light;</p>
+<p>ServerSocket ser_socket;</p>
+<p>Socket cli_socket;</p>
+<p>&nbsp;</p>
+<p>private String pUsername="XZY";</p>
+<p>&nbsp;</p>
+<p>private String serverUrl="192.168.1.100";</p>
+<p>&nbsp;</p>
+<p>private int serverPort=8888;</p>
+<p>&nbsp;</p>
+<p>private int VideoPreRate=1;</p>
+<p>&nbsp;</p>
+<p>private int tempPreRate=0;</p>
+<p>&nbsp;</p>
+<p>private int VideoQuality=85;</p>
+<p>&nbsp;</p>
+<p>private float VideoWidthRatio=1;</p>
+<p>&nbsp;</p>
+<p>private float VideoHeightRatio=1;</p>
+<p>&nbsp;</p>
+<p>private int VideoWidth=320;</p>
+<p>&nbsp;</p>
+<p>private int VideoHeight=240;</p>
+<p>&nbsp;</p>
+<p>private int VideoFormatIndex=0;</p>
+<p>&nbsp;</p>
+<p>private boolean startSendVideo=false;</p>
+<p>&nbsp;</p>
+<p>private boolean connectedServer=false;</p>
+<p>private Button myBtn01, myBtn02;</p>
+<p>&nbsp;</p>
+<p>@Override</p>
+<p>public void onCreate(Bundle savedInstanceState) {</p>
+<p>super.onCreate(savedInstanceState);</p>
+<p>setContentView(R.layout.main);</p>
+<p>//禁止屏幕休眠</p>
+<p>getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON,</p>
+<p>WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);</p>
+<p>mSurfaceview = (SurfaceView) findViewById(R.id.camera_preview);</p>
+<p>myBtn01=(Button)findViewById(R.id.button1);</p>
+<p>myBtn02=(Button)findViewById(R.id.button2);</p>
+<p>ServerThread st=new ServerThread();</p>
+<p>st.start();</p>
+<p>//开始连接主机按钮</p>
+<p>myBtn01.setOnClickListener(new OnClickListener(){</p>
+<p>public void onClick(View v) {</p>
+<p>//Common.SetGPSConnected(LoginActivity.this, false);</p>
+<p>if(connectedServer){//停止连接主机，同时断开传输</p>
+<p>startSendVideo=false;</p>
+<p>connectedServer=false;</p>
+<p>myBtn02.setEnabled(false);</p>
+<p>myBtn01.setText("开始连接");</p>
+<p>myBtn02.setText("开始传输");</p>
+<p>//断开连接</p>
+<p>Thread th = new MySendCommondThread("PHONEDISCONNECT|"+pUsername+"|");</p>
+<p>th.start();</p>
+<p>}</p>
+<p>else//连接主机</p>
+<p>{</p>
+<p>//启用线程发送命令PHONECONNECT</p>
+<p>Thread th = new MySendCommondThread("PHONECONNECT|"+pUsername+"|");</p>
+<p>th.start();</p>
+<p>connectedServer=true;</p>
+<p>myBtn02.setEnabled(true);</p>
+<p>myBtn01.setText("停止连接");</p>
+<p>}</p>
+<p>}});</p>
+<p>myBtn02.setEnabled(false);</p>
+<p>myBtn02.setOnClickListener(new OnClickListener(){</p>
+<p>public void onClick(View v) {</p>
+<p>if(startSendVideo)//停止传输视频</p>
+<p>{</p>
+<p>startSendVideo=false;</p>
+<p>myBtn02.setText("开始传输");</p>
+<p>}</p>
+<p>else{ // 开始传输视频</p>
+<p>startSendVideo=true;</p>
+<p>myBtn02.setText("停止传输");</p>
+<p>}</p>
+<p>}});</p>
+<p>}</p>
+<p>@Override</p>
+<p>public void onStart()//重新启动的时候</p>
+<p>{</p>
+<p>mSurfaceHolder = mSurfaceview.getHolder(); // 绑定SurfaceView，取得SurfaceHolder对象</p>
+<p>mSurfaceHolder.addCallback(this); // SurfaceHolder加入回调接口</p>
+<p>mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);// 设置显示器类型，setType必须设置</p>
+<p>//读取配置文件</p>
+<p>SharedPreferences preParas = PreferenceManager.getDefaultSharedPreferences(SocketCameraActivity.this);</p>
+<p>pUsername=preParas.getString("Username", "XZY");</p>
+<p>serverUrl=preParas.getString("ServerUrl", "172.17.95.1");</p>
+<p>String tempStr=preParas.getString("ServerPort", "8888");</p>
+<p>serverPort=Integer.parseInt(tempStr);</p>
+<p>tempStr=preParas.getString("VideoPreRate", "1");</p>
+<p>VideoPreRate=Integer.parseInt(tempStr);</p>
+<p>tempStr=preParas.getString("VideoQuality", "85");</p>
+<p>VideoQuality=Integer.parseInt(tempStr);</p>
+<p>tempStr=preParas.getString("VideoWidthRatio", "100");</p>
+<p>VideoWidthRatio=Integer.parseInt(tempStr);</p>
+<p>tempStr=preParas.getString("VideoHeightRatio", "100");</p>
+<p>VideoHeightRatio=Integer.parseInt(tempStr);</p>
+<p>VideoWidthRatio=VideoWidthRatio/100f;</p>
+<p>VideoHeightRatio=VideoHeightRatio/100f;</p>
+<p>super.onStart();</p>
+<p>}</p>
+<p>@Override</p>
+<p>protected void onResume() {</p>
+<p>super.onResume();</p>
+<p>InitCamera();</p>
+<p>}</p>
+<p>&nbsp;</p>
+<p>private void InitCamera(){</p>
+<p>try{</p>
+<p>mCamera = Camera.open();</p>
+<p>} catch (Exception e) {</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>}</p>
+<p>@Override</p>
+<p>protected void onPause() {</p>
+<p>super.onPause();</p>
+<p>try{</p>
+<p>if (mCamera != null) {</p>
+<p>mCamera.setPreviewCallback(null); // ！！这个必须在前，不然退出出错</p>
+<p>mCamera.stopPreview();</p>
+<p>mCamera.release();</p>
+<p>mCamera = null;</p>
+<p>}</p>
+<p>} catch (Exception e) {</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>}</p>
+<p>@Override</p>
+<p>public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3) {</p>
+<p>// TODO Auto-generated method stub</p>
+<p>if (mCamera == null) {</p>
+<p>return;</p>
+<p>}</p>
+<p>mCamera.stopPreview();</p>
+<p>mCamera.setPreviewCallback(this);</p>
+<p>mCamera.setDisplayOrientation(90); //设置横行录制</p>
+<p>//获取摄像头参数</p>
+<p>Camera.Parameters parameters = mCamera.getParameters();</p>
+<p>Size size = parameters.getPreviewSize();</p>
+<p>VideoWidth=size.width;</p>
+<p>VideoHeight=size.height;</p>
+<p>VideoFormatIndex=parameters.getPreviewFormat();</p>
+<p>mCamera.startPreview();</p>
+<p>}</p>
+<p>@Override</p>
+<p>public void surfaceCreated(SurfaceHolder holder) {</p>
+<p>// TODO Auto-generated method stub</p>
+<p>try {</p>
+<p>if (mCamera != null) {</p>
+<p>mCamera.setPreviewDisplay(mSurfaceHolder);</p>
+<p>mCamera.startPreview();</p>
+<p>}</p>
+<p>} catch (IOException e) {</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>}</p>
+<p>@Override</p>
+<p>public void surfaceDestroyed(SurfaceHolder holder) {</p>
+<p>// TODO Auto-generated method stub</p>
+<p>if (null != mCamera) {</p>
+<p>mCamera.setPreviewCallback(null); // ！！这个必须在前，不然退出出错</p>
+<p>mCamera.stopPreview();</p>
+<p>mCamera.release();</p>
+<p>mCamera = null;</p>
+<p>}</p>
+<p>}</p>
+<p>@Override</p>
+<p>public void onPreviewFrame(byte[] data, Camera camera) {</p>
+<p>// TODO Auto-generated method stub</p>
+<p>//如果没有指令传输视频，就先不传</p>
+<p>if(!startSendVideo)</p>
+<p>return;</p>
+<p>if(tempPreRate</p>
+<p>tempPreRate++;</p>
+<p>return;</p>
+<p>}</p>
+<p>tempPreRate=0;</p>
+<p>try {</p>
+<p>if(data!=null)</p>
+<p>{</p>
+<p>Log.d("YuvImage","success");</p>
+<p>YuvImage image = new YuvImage(data,VideoFormatIndex, VideoWidth, VideoHeight,null);</p>
+<p>if(image!=null)</p>
+<p>{</p>
+<p>ByteArrayOutputStream outstream = new ByteArrayOutputStream();</p>
+<p>//在此设置图片的尺寸和质量</p>
+<p>image.compressToJpeg(new Rect(0, 0, (int)(VideoWidthRatio*VideoWidth),</p>
+<p>(int)(VideoHeightRatio*VideoHeight)), VideoQuality, outstream);</p>
+<p>outstream.flush();</p>
+<p>//启用线程将图像数据发送出去</p>
+<p>Thread th = new MySendFileThread(outstream,pUsername,serverUrl,serverPort);</p>
+<p>th.start();</p>
+<p>}</p>
+<p>}</p>
+<p>} catch (IOException e) {</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>}</p>
+<p>&nbsp;</p>
+<p>public boolean onCreateOptionsMenu(Menu menu)</p>
+<p>{</p>
+<p>menu.add(0,0,0,"系统设置");</p>
+<p>menu.add(0,1,1,"关于程序");</p>
+<p>menu.add(0,2,2,"退出程序");</p>
+<p>return super.onCreateOptionsMenu(menu);</p>
+<p>}</p>
+<p>&nbsp;</p>
+<p>public boolean onOptionsItemSelected(MenuItem item)</p>
+<p>{</p>
+<p>super.onOptionsItemSelected(item);//获取菜单</p>
+<p>switch(item.getItemId())//菜单序号</p>
+<p>{</p>
+<p>case 0:</p>
+<p>//系统设置</p>
+<p>{</p>
+<p>Intent intent=new Intent(this,SettingActivity.class);</p>
+<p>startActivity(intent);</p>
+<p>}</p>
+<p>break;</p>
+<p>case 1://关于程序</p>
+<p>{</p>
+<p>new AlertDialog.Builder(this)</p>
+<p>.setTitle("关于本程序")</p>
+<p>.setMessage("遥控小车程序")</p>
+<p>.setPositiveButton</p>
+<p>(</p>
+<p>"我知道了",</p>
+<p>new DialogInterface.OnClickListener()</p>
+<p>{</p>
+<p>@Override</p>
+<p>public void onClick(DialogInterface dialog, int which)</p>
+<p>{</p>
+<p>}</p>
+<p>}</p>
+<p>)</p>
+<p>.show();</p>
+<p>}</p>
+<p>break;</p>
+<p>case 2://退出程序</p>
+<p>{</p>
+<p>//杀掉线程强制退出</p>
+<p>android.os.Process.killProcess(android.os.Process.myPid());</p>
+<p>}</p>
+<p>break;</p>
+<p>}</p>
+<p>return true;</p>
+<p>}</p>
+<p>&nbsp;</p>
+<p>class MySendCommondThread extends Thread{</p>
+<p>private String commond;</p>
+<p>public MySendCommondThread(String commond){</p>
+<p>this.commond=commond;</p>
+<p>}</p>
+<p>public void run(){</p>
+<p>//实例化Socket</p>
+<p>try {</p>
+<p>Socket socket=new Socket(serverUrl,serverPort);</p>
+<p>PrintWriter out = new PrintWriter(socket.getOutputStream());</p>
+<p>out.println(commond);</p>
+<p>out.flush();</p>
+<p>} catch (UnknownHostException e) {</p>
+<p>} catch (IOException e) {</p>
+<p>}</p>
+<p>}</p>
+<p>}</p>
+<p>&nbsp;</p>
+<p>class MySendFileThread extends Thread{</p>
+<p>private String username;</p>
+<p>private String ipname;</p>
+<p>private int port;</p>
+<p>private byte byteBuffer[] = new byte[1024];</p>
+<p>private OutputStream outsocket;</p>
+<p>private ByteArrayOutputStream myoutputstream;</p>
+<p>public MySendFileThread(ByteArrayOutputStream myoutputstream,String username,String ipname,int port){</p>
+<p>this.myoutputstream = myoutputstream;</p>
+<p>this.username=username;</p>
+<p>this.ipname = ipname;</p>
+<p>this.port=port;</p>
+<p>try {</p>
+<p>myoutputstream.close();</p>
+<p>} catch (IOException e) {</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>}</p>
+<p>public void run() {</p>
+<p>try{</p>
+<p>//将图像数据通过Socket发送出去</p>
+<p>Socket tempSocket = new Socket(ipname, port);</p>
+<p>outsocket = tempSocket.getOutputStream();</p>
+<p>//写入头部数据信息</p>
+<p>String msg=java.net.URLEncoder.encode("PHONEVIDEO|"+username+"|","utf-8");</p>
+<p>byte[] buffer= msg.getBytes();</p>
+<p>outsocket.write(buffer);</p>
+<p>ByteArrayInputStream inputstream = new ByteArrayInputStream(myoutputstream.toByteArray());</p>
+<p>int amount;</p>
+<p>while ((amount = inputstream.read(byteBuffer)) != -1) {</p>
+<p>outsocket.write(byteBuffer, 0, amount);</p>
+<p>}</p>
+<p>myoutputstream.flush();</p>
+<p>myoutputstream.close();</p>
+<p>tempSocket.close();</p>
+<p>Log.d("MySendFileThread","success");</p>
+<p>} catch (IOException e) {</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>}</p>
+<p>}</p>
+<p>class Looper extends BaseIOIOLooper {</p>
+<p>@Override</p>
+<p>protected void setup() throws ConnectionLostException {</p>
+<p>left=ioio_.openDigitalOutput(1);</p>
+<p>right=ioio_.openDigitalOutput(2);</p>
+<p>light=ioio_.openDigitalOutput(3);</p>
+<p>left.write(true);</p>
+<p>right.write(true);</p>
+<p>light.write(true);</p>
+<p>}</p>
+<p>@Override</p>
+<p>public void loop() throws ConnectionLostException {</p>
+<p>}</p>
+<p>}</p>
+<p>@Override</p>
+<p>protected IOIOLooper createIOIOLooper() {</p>
+<p>return new Looper();</p>
+<p>}</p>
+<p>public void go()</p>
+<p>{</p>
+<p>try {</p>
+<p>left.write(false);</p>
+<p>right.write(false);</p>
+<p>} catch (ConnectionLostException e) {</p>
+<p>// TODO Auto-generated catch block</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>}</p>
+<p>public void nstop()</p>
+<p>{</p>
+<p>try {</p>
+<p>left.write(true);</p>
+<p>right.write(true);</p>
+<p>} catch (ConnectionLostException e) {</p>
+<p>// TODO Auto-generated catch block</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>}</p>
+<p>public void goleft()</p>
+<p>{</p>
+<p>try {</p>
+<p>left.write(false);</p>
+<p>right.write(true);</p>
+<p>} catch (ConnectionLostException e) {</p>
+<p>// TODO Auto-generated catch block</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>}</p>
+<p>public void goright()</p>
+<p>{</p>
+<p>try {</p>
+<p>left.write(true);</p>
+<p>right.write(false);</p>
+<p>} catch (ConnectionLostException e) {</p>
+<p>// TODO Auto-generated catch block</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>}</p>
+<p>public void lightOn()</p>
+<p>{</p>
+<p>try {</p>
+<p>light.write(false);</p>
+<p>} catch (ConnectionLostException e) {</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>}</p>
+<p>public void lightOff()</p>
+<p>{</p>
+<p>try {</p>
+<p>light.write(true);</p>
+<p>} catch (ConnectionLostException e) {</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>}</p>
+<p>class ServerThread extends Thread</p>
+<p>{</p>
+<p>public void run()</p>
+<p>{</p>
+<p>try {</p>
+<p>ser_socket=new ServerSocket(8000);</p>
+<p>} catch (IOException e) {</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>while (true)</p>
+<p>{</p>
+<p>try {</p>
+<p>cli_socket = ser_socket.accept();</p>
+<p>Log.e("接受连接", "accept");</p>
+<p>BufferedReader in = new BufferedReader(new InputStreamReader(cli_socket.getInputStream()));</p>
+<p>String str ="";</p>
+<p>String temp;</p>
+<p>while((temp=in.readLine())!=null)</p>
+<p>{</p>
+<p>str=str+temp;</p>
+<p>Log.e("收到数据",temp);</p>
+<p>if(temp.equals("lightOn"))</p>
+<p>{</p>
+<p>Log.d("收到","lightOn");</p>
+<p>lightOn();</p>
+<p>}</p>
+<p>if(temp.equals("lightOff"))</p>
+<p>{</p>
+<p>lightOff();</p>
+<p>}</p>
+<p>if(temp.equals("go"))</p>
+<p>{</p>
+<p>go();</p>
+<p>}</p>
+<p>if(temp.equals("nstop"))</p>
+<p>{</p>
+<p>nstop();</p>
+<p>}</p>
+<p>if(temp.equals("goleft"))</p>
+<p>{</p>
+<p>goleft();</p>
+<p>}</p>
+<p>if(temp.equals("goright"))</p>
+<p>{</p>
+<p>goright();</p>
+<p>}</p>
+<p>}</p>
+<p>}</p>
+<p>catch (Exception e)</p>
+<p>{</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>finally</p>
+<p>{</p>
+<p>try</p>
+<p>{</p>
+<p>cli_socket.close();</p>
+<p>}</p>
+<p>catch (IOException e)</p>
+<p>{</p>
+<p>e.printStackTrace();</p>
+<p>}</p>
+<p>}</p>
+<p>}</p>
+<p>}</p>
+<p>}</p>
+<p>}</p>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/14/%E4%BD%BF%E7%94%A8HC-SR04%E5%92%8Candroid-IOIO%E6%9D%BF%E5%AE%9E%E7%8E%B0%E8%B6%85%E5%A3%B0%E6%B3%A2%E6%B5%8B%E8%B7%9D%E7%9A%84%E5%8A%9F%E8%83%BD/">使用HC-SR04和android IOIO板实现超声波测距的功能</a></h1>
+		
+
+		<div class="post-content"><div>
+<div><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=&amp;url=http://album.sina.com.cn/pic/002o3oc9gy6QHbACELm88" target="_blank"><img title="" src="http://s9.sinaimg.cn/mw690/002o3oc9gy6QHbACELm88" alt="" /></a></div>
+</div>
+<p>可能是我在实现计时部分的逻辑实现的不够好，误差较大。</p>
+<p>同样接好电路</p>
+<p>开始编写代码，功能比较单一，因此代码也比较简单：</p>
+<p>public class MainActivity extends IOIOActivity {</p>
+<p>Button button;</p>
+<p>private DigitalOutput led_;</p>
+<p>private DigitalOutput vout;</p>
+<p>private AnalogInput vin;</p>
+<p>private TextView tv;</p>
+<p>int flag,i;</p>
+<p>long start,end;</p>
+<p>@Override</p>
+<p>public void onCreate(Bundle savedInstanceState) {</p>
+<p>super.onCreate(savedInstanceState);</p>
+<p>setContentView(R.layout.activity_main);</p>
+<p>button=(Button)findViewById(R.id.button);</p>
+<p>tv=(TextView)findViewById(R.id.textView2);</p>
+<p>}</p>
+<p>class Looper extends BaseIOIOLooper {</p>
+<p>@Override</p>
+<p>protected void setup() throws ConnectionLostException {</p>
+<p>led_ = ioio_.openDigitalOutput(0,true);</p>
+<p>vout= ioio_.openDigitalOutput(1,true);</p>
+<p>vin=ioio_.openAnalogInput(40);</p>
+<p>}</p>
+<p>@Override</p>
+<p>public void loop() throws ConnectionLostException, InterruptedException {</p>
+<p>//Thread.sleep(1);</p>
+<p>vout.write(true);</p>
+<p>if(vin.read()&gt;0.5)</p>
+<p>{</p>
+<p>if(i==1)</p>
+<p>{</p>
+<p>start=System.nanoTime();</p>
+<p>}</p>
+<p>led_.write(true);</p>
+<p>flag=2;</p>
+<p>i++;</p>
+<p>}</p>
+<p>else</p>
+<p>{</p>
+<p>led_.write(false);</p>
+<p>flag=flag-1;</p>
+<p>end=System.nanoTime();</p>
+<p>}</p>
+<p>if(flag==1)</p>
+<p>{</p>
+<p>float time=end-start;</p>
+<p>setNumber(time*340/2000000000);</p>
+<p>flag=0;i=1;</p>
+<p>}</p>
+<p>}</p>
+<p>}</p>
+<p>@Override</p>
+<p>protected IOIOLooper createIOIOLooper() {</p>
+<p>return new Looper();</p>
+<p>}</p>
+<p>public void bt_Click(View v) throws ConnectionLostException{</p>
+<p>led_.write(false);</p>
+<p>vout.write(false);</p>
+<p>flag=0;</p>
+<p>i=1;</p>
+<p>}</p>
+<p>private void setNumber(float f) {</p>
+<p>final String str = String.format("%.2f", f);</p>
+<p>runOnUiThread(new Runnable() {</p>
+<p>@Override</p>
+<p>public void run() {</p>
+<p>tv.setText("声波传递时间约为"+Float.parseFloat(str)*2000000000/340+"毫微秒，估算距离为"+str+"米");</p>
+<p>}</p>
+<p>});</p>
+<p>}</p>
+<p>}</p>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/14/%E8%87%AA%E5%AE%9A%E4%B9%89View-%E5%8F%AF%E6%BB%91%E5%8A%A8%E8%B0%83%E5%80%BC%E7%9A%84%E5%9C%86%E7%8E%AF/">自定义View 可滑动调值的圆环</a></h1>
+		
+
+		<div class="post-content"><div>
+<div><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=&amp;url=http://album.sina.com.cn/pic/002o3oc9zy6QICyfM1r01" target="_blank"><img title="" src="http://s2.sinaimg.cn/mw690/002o3oc9zy6QICyfM1r01" alt="" /></a></div>
+</div>
+<p>前一篇关于滑动圆盘的代码，因为没有在手机上测试，代码有些错误，这次做了修正</p>
+<p>package com.example.administrator.sildecircle;</p>
+<p>import android.content.Context;</p>
+<p>import android.graphics.Canvas;</p>
+<p>import android.graphics.Color;</p>
+<p>import android.graphics.Paint;</p>
+<p>import android.util.AttributeSet;</p>
+<p>import android.util.Log;</p>
+<p>import android.view.MotionEvent;</p>
+<p>import android.view.View;</p>
+<p>public class SildeCircle extends View {</p>
+<p>Canvas canvas;</p>
+<p>Context context;</p>
+<p>float cx;</p>
+<p>float cy;</p>
+<p>float r=205;</p>
+<p>float downx=0;</p>
+<p>float downy=0;</p>
+<p>public SildeCircle(Context context, AttributeSet attrs) {</p>
+<p>super(context, attrs);</p>
+<p>this.context=context;</p>
+<p>}</p>
+<p>public SildeCircle(Context context, AttributeSet attrs, int defStyleAttr) {</p>
+<p>super(context, attrs, defStyleAttr);</p>
+<p>this.context=context;</p>
+<p>}</p>
+<p>public SildeCircle(Context context) {</p>
+<p>super(context);</p>
+<p>this.context=context;</p>
+<p>}</p>
+<p>@Override</p>
+<p>protected void onDraw(Canvas canvas) {</p>
+<p>super.onDraw(canvas);</p>
+<p>this.canvas=canvas;</p>
+<p>int w=getWidth();</p>
+<p>int h=getHeight();</p>
+<p>cx=(float)(w/2+r*(downx-w/2)/(Math.sqrt(Math.pow(h/2-downy,2)+Math.pow(downx-w/2,2))));</p>
+<p>cy=(float)(h/2-r*(h/2-downy)/(Math.sqrt(Math.pow(h/2-downy,2)+Math.pow(downx-w/2,2))));</p>
+<p>Log.d("onDraw",cx+"   "+cy);</p>
+<p>myDrawCircle(canvas,w/2,h/2,250,Color.GREEN);</p>
+<p>myDrawCircle(canvas,w/2,h/2,160,Color.WHITE);</p>
+<p>myDrawCircle(canvas,cx,cy,45,Color.WHITE);</p>
+<p>this.setOnTouchListener(new OnTouchListener() {</p>
+<p>@Override</p>
+<p>public boolean onTouch(View v, MotionEvent event) {</p>
+<p>downx=event.getX();</p>
+<p>downy=event.getY();</p>
+<p>SildeCircle.this.invalidate();</p>
+<p>Log.d("On Touch ",downx+"   "+downy);</p>
+<p>return true;</p>
+<p>}</p>
+<p>});</p>
+<p>}</p>
+<p>private void myDrawCircle(Canvas canvas,float cx,float cy,float radius,int color)</p>
+<p>{</p>
+<p>Paint paint=new Paint();</p>
+<p>paint.setColor(color);</p>
+<p>canvas.drawCircle(cx,cy,radius,paint);</p>
+<p>}</p>
+<p>}</p>
+</div>
+
+	</article>
+
+
+
+	<article class="post">
+
+		
+			<h1><a href="/2016/11/14/%E5%AE%89%E5%8D%93%E8%87%AA%E5%AE%9A%E4%B9%89View/">安卓自定义View</a></h1>
+		
+
+		<div class="post-content"><div><a href="http://photo.blog.sina.com.cn/showpic.html#blogid=8265bd790102vi47&amp;url=http://album.sina.com.cn/pic/002o3oc9zy6QR2noYGIf8" target="_blank"><img title="看到一个不错的UI设计，用代码试着实现了一下" src="http://s9.sinaimg.cn/mw690/002o3oc9zy6QR2noYGIf8&amp;690" alt="看到一个不错的UI设计，用代码试着实现了一下" name="image_operate_17451426865811070" /></a></div>
+<div>
+<div>package com.zyf.drawview;</div>
+<div></div>
+<div>import android.content.Context;</div>
+<div>import android.graphics.Canvas;</div>
+<div>import android.graphics.Color;</div>
+<div>import android.graphics.Paint;</div>
+<div>import android.graphics.Rect;</div>
+<div>import android.graphics.RectF;</div>
+<div>import android.util.AttributeSet;</div>
+<div>import android.view.View;</div>
+<div>import android.view.ViewGroup;</div>
+<div></div>
+<div>public class MyView extends View{</div>
+<div></div>
+<div> <wbr />  <wbr /> int value1=0;</div>
+<div> <wbr />  <wbr /> int value2=0;</div>
+<div> <wbr />  <wbr /> int value3=0;</div>
+<div> <wbr />  <wbr /> public void setNumber(int value1,int value2,int value3)</div>
+<div> <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> this.value1=value1;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> this.value2=value2;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> this.value3=value3;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> this.postInvalidate();</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> public MyView(Context context) {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super(context);</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> public MyView(Context context, AttributeSet attrs) {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super(context, attrs);</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> public MyView(Context context, AttributeSet attrs, int defStyleAttr) {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super(context, attrs, defStyleAttr);</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> @Override</div>
+<div> <wbr />  <wbr /> protected void onDraw(Canvas canvas) {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawColor(Color.BLACK);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> Paint paint=new Paint();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setColor(Color.WHITE);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setTextSize(50f);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawText("今天",getWidth()/3,50f,paint);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> int width=getWidth();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> int height=getHeight();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float cx1=width/3;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float cy1=height/5*2;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float radius1=cx1-40;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> drawcir(canvas,Color.GREEN,cx1,cy1,radius1,"行走步数",value1+"步");</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float cx2=width/4*3;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float cy2=height/3;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float radius2=width/4-50;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> drawcir(canvas,Color.BLUE,cx2,cy2,radius2,"运动时间",value2+"分钟");</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float cx3=width/3*2;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float cy3=height/5*3;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float radius3=width/5-30;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> drawcir(canvas,Color.rgb(255,200,255),cx3,cy3,radius3,"热量",value3+"\n卡");</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> drawcir(canvas, Color.WHITE, width / 4, height, width / 4 - 80, "", "");</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setColor(Color.GREEN);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawRect(width/4-10,height-150,width/4+10,height-width/4+80,paint);</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setColor(Color.WHITE);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> RectF oval3 = new RectF(width/4-30,height-300,width/4+30,height-150);// 设置个新的长方形</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawRoundRect(oval3, 20, 15, paint);//第二个参数是x半径，第三个参数是y半径</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setTextSize(20f);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawText("Home",width/4+50,height-260,paint);</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setColor(Color.GREEN);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawText("Walk",width/4+50,height-100,paint);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super.onDraw(canvas);</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> public void drawcir(Canvas canvas,int color,float cx,float cy,float radius,String text,String t2)</div>
+<div> <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> Paint paint=new Paint();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setColor(color);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawCircle(cx, cy, radius, paint);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setTextSize(30f);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawText(text,cx-radius/2,cy-radius-30,paint);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setColor(Color.WHITE);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawText(t2,cx-30,cy,paint);</div>
+<div> <wbr />  <wbr /> }</div>
+<div>}</div>
+</div>
+</div>
+
+	</article>
+
+
+
+
+
+
+	<div class="postnavigation">
+
+		
+			
+				<a class="prev left" href="/page2/">&larr; Newer</a>
+			
+		
+
+		<span class="pages">Page 3 of 6</span>
+
+		
+			<a class="next right" href="/page4/">Older &rarr;</a>
+		
+
+	</div>
+
+    </div>
+
+
+
+  </div>
+
+
+
+  <footer id="footer">
+    <p class="copyright">Copyright &copy; 2017 Solar Theme. Powered by <a href="http://jekyllrb.com">Jekyll</a>, theme by <a href="http://www.webmaster-source.com">Matt Harzewski</a></p>
+  </footer>
+
+
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script src="/assets/js/jquery.mobilemenu.min.js"></script>
+
+  <script>
+    $(document).ready(function(){
+      $('#sidebar nav ul').mobileMenu({'topOptionText': 'Menu', 'prependTo': '#sidebar nav'});
+    });
+  </script>
+
+
+
+</body>
+</html>

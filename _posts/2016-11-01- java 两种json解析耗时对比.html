@@ -1,0 +1,55 @@
+---
+layout: post
+status: publish
+published: true
+title: java 两种json解析耗时对比
+author:
+ yufei.zhou
+
+wordpress_id: 83
+wordpress_url: http://donute.com/?p=83
+date: '2016-11-01 15:52:08 +0800'
+date_gmt: '2016-11-01 07:52:08 +0800'
+categories:
+- 安卓
+tags: [java,json]
+comments: []
+---
+<p>粗略的比较了一下，使用org.json与com.google.code.gson解析json数据时所花时间。可以看到在json数组元素个数为20时，gson解析所花时间几乎为org.json的30倍。但是gson有自己的优势，就是代码编写更加简单，使用更加方便。</p>
+<div><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="java &lt;wbr&gt;两种json解析耗时对比" src="h/images/002o3oc9gy6U5n932yI48.png" alt="java &lt;wbr&gt;两种json解析耗时对比" width="395" height="55" name="image_operate_99441437717763466" /></a><br />
+代码量对比：</div>
+<div>
+<pre>public static void orgJsonParse(String str,ArrayList jokeList)
+{
+long start=System.currentTimeMillis();
+try {
+JSONArray array=new JSONArray(str);
+JokeBean jb;
+for(int i=0;i;i++)
+{
+JSONObject jobj=array.getJSONObject(i);
+jb=new JokeBean();
+jb.setTitle(jobj.getString("title"));
+jb.setContent(jobj.getString("content"));
+jb.setPoster(jobj.getString("poster"));
+jb.setUrl(jobj.getString("url"));
+jokeList.add(jb);
+}
+} catch (JSONException e) {
+e.printStackTrace();
+}
+long all=System.currentTimeMillis()-start;
+Log.d("org.json解析json耗时：",all+"");
+}</pre>
+<pre></pre>
+<pre></pre>
+<pre>public static void gsonPase(String str,ArrayList jokeList)
+{
+long start=System.currentTimeMillis();
+Gson gson=new Gson();
+List jokeBeanList=gson.fromJson(str,new TypeToken&gt;(){}.getType());
+long all=System.currentTimeMillis()-start;
+Log.d("gson解析json耗时：",all+"");
+
+}</pre>
+</div>

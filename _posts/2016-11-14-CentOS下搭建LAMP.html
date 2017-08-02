@@ -1,0 +1,43 @@
+---
+layout: post
+status: publish
+published: true
+title: CentOS下搭建LAMP
+author:
+ yufei.zhou
+
+wordpress_id: 143
+wordpress_url: http://donute.com/?p=143
+date: '2016-11-14 10:23:49 +0800'
+date_gmt: '2016-11-14 02:23:49 +0800'
+categories:
+- HelloWorld
+tags: [CentOS,LAMP]
+comments: []
+---
+<h2>1、下载CentOS镜像</h2>
+<p>打开网站www.centos.org 下载CentOS 6.5版镜像（即CentOS-6.5-1406-x86_64-DVD.iso），用软碟通软件刻录成系统安装光盘。</p>
+<h2>2、安装CentOS</h2>
+<p>光盘放入服务器光驱，打开电源，服务器从光驱启动，按提示步骤安装CentOS系统。</p>
+<h2>3、安装apache</h2>
+<p>登录系统，打开终端，通过su命令切换到root用户（在centos下默认只有root用户有权限安装软件）输入yum install httpd等命令执行完毕，apache安装成功，可通过命令service httpd restart重启apache服务，在浏览器输入localhost可访问测试页面</p>
+<h2>4、安装mysql</h2>
+<p>进入网站www.mysql.org，下载MySQL-5.6.19-1.linux_glibc2.5.x86_64.rpm-bundle.tar，将文件解压到桌面，使用cd命令切换工作目录到安装包所在的目录，使用命令rpm –ivh * --force，等待7个文件安装完成，使用service mysql start启动mysql服务。在终端输入mysql 发现需要输入密码，但是安装过程中未提示设置密码，这是我们需要通过其他方式找回mysql的root密码</p>
+<pre>找回mysql密码方法：修改改MySQL配置文件：vi /etc/my.cnf</pre>
+<pre>在[mysqld]的段中加上一句：skip-grant-tables</pre>
+<pre>例如：</pre>
+<pre>[mysqld]</pre>
+<pre>datadir=/var/lib/mysql</pre>
+<pre>socket=/var/lib/mysql/mysql.sock</pre>
+<pre>skip-name-resolve</pre>
+<pre>skip-grant-tables</pre>
+<pre>保存并且退出vi。</pre>
+<pre>重新启动mysql，使用命令：service mysql restart。</pre>
+<pre>再输入mysql，发现已经进入mysql了，这时候就可以修改root用户密码了。</pre>
+<pre>输入：use mysql；</pre>
+<pre>再输入：UPDATE user SET Password = password ( ‘new-password’ ) WHERE User = ‘root’ ;</pre>
+<pre>再输入：flush privileges ;</pre>
+<pre>Exit离开数据库，然后将上面修改的mysql配置文件还原。使用service mysql restart重启数据库，使用mysql –u root –p 提示输入密码，此时输入上面设置的密码，即可进入数据库。</pre>
+<h2>5、安装php</h2>
+<pre>打开终端，su命令，切换到root用户。使用命令yum install php.等待命令执行完毕，php安装成功。使用service httpd restart 命令重启apache服务器 是php生效。</pre>
+<pre>到此CentOS下LAMP搭建完成。</pre>

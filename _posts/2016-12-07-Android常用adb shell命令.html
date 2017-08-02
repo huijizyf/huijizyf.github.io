@@ -1,0 +1,103 @@
+---
+layout: post
+status: publish
+published: true
+title: Android常用adb shell命令
+author:
+ yufei.zhou
+
+wordpress_id: 188
+wordpress_url: http://donute.com/?p=188
+date: '2016-12-07 21:23:10 +0800'
+date_gmt: '2016-12-07 13:23:10 +0800'
+categories:
+- 随记
+tags: [安卓,adb]
+comments: []
+---
+<p>调试Android程序有时需要adb shell命令，adb全称Android Debug Bridge，就是起到调试桥的作用。通过adb我们可以在Eclipse中通过DDMS来调试Android程序，说白了就是debug工具。adb通过监听Socket TCP 5554等端口让IDE和Qemu通讯。默认情况下当我们运行Eclipse时adb进程就会自动运行。adb是一个C/S模式的程序，由三个部分组成：a client，a server and a daemon。其中client和server运行在的development machine上，daemon运行在emulator或设备上。</p>
+<p>adb一般位于/platform-tools/目录下，其中是android sdk的安装目录。可以把adb路径添加进系统环境变量path里面，例：D:\sdk\platform-tools;这样就能在打开powershell时就能响应adb命令，不用每次都进入adb目录。以下是常用adb命令<br />
+adb常用命令<br />
+显示系统中全部Android平台：<br />
+android list targets<br />
+显示系统中全部AVD(模拟器)：<br />
+android list avd<br />
+创建AVD(模拟器)：<br />
+android create avd –name 名称 –target 平台编号<br />
+启动模拟器：<br />
+emulator -avd 名称 -sdcard ~/名称.img (-skin 1280×800)<br />
+删除AVD(模拟器)：<br />
+android delete avd –name 名称<br />
+创建SDCard：<br />
+mksdcard 1024M ~/名称.img<br />
+AVD(模拟器)所在位置：<br />
+Linux(~/.android/avd) Windows(C:\Documents and Settings\Administrator&#46;android\avd)<br />
+启动DDMS：<br />
+ddms<br />
+显示当前运行的全部模拟器：<br />
+adb devices<br />
+对某一模拟器执行命令：<br />
+abd -s 模拟器编号 命令<br />
+安装应用程序：<br />
+adb install -r 应用程序.apk<br />
+获取模拟器中的文件：<br />
+adb pull  &lt;remote&gt;&lt;local&gt;<br />
+向模拟器中写文件：<br />
+adb push  &lt;local&gt; &lt;remote&gt;<br />
+进入模拟器的shell模式：<br />
+adb shell<br />
+启动SDK，文档，实例下载管理器：<br />
+android<br />
+缷载apk包：<br />
+adb shell&nbsp;<br />
+cd data/app&nbsp;<br />
+rm apk包&nbsp;<br />
+exit&nbsp;<br />
+adb uninstall apk包的主包名&nbsp;<br />
+adb install -r apk包<br />
+查看adb命令帮助信息：<br />
+adb help<br />
+在命令行中查看LOG信息：<br />
+adb logcat -s 标签名<br />
+adb shell后面跟的命令主要来自：<br />
+源码\system\core\toolbox目录和源码\frameworks\base\cmds目录。<br />
+删除系统应用：<br />
+adb remount （重新挂载系统分区，使系统分区重新可写）。<br />
+adb shell&nbsp;<br />
+cd system/app<br />
+rm *.apk<br />
+获取管理员权限：<br />
+adb root<br />
+启动Activity：<br />
+adb shell am start -n 包名/包名+类名(-n 类名,-a action,-d date,-m MIME-TYPE,-c category,-e 扩展数据,等)。<br />
+发布端口：<br />
+你可以设置任意的端口号，做为主机向模拟器或设备的请求端口。如：<br />
+&nbsp;adb forward tcp:5555 tcp:8000<br />
+复制文件：<br />
+你可向一个设备或从一个设备中复制文件，<br />
+复制一个文件或目录到设备或模拟器上：&nbsp;<br />
+adb push &lt;source&gt;&lt;destination&gt;&lt;/destination&gt;&lt;/source&gt;<br />
+如：adb push test.txt /tmp/test.txt&nbsp;<br />
+从设备或模拟器上复制一个文件或目录：&nbsp;<br />
+adb pull &nbsp;&nbsp;<br />
+如：adb pull /addroid/lib/libwebcore.so .<br />
+搜索模拟器/设备的实例：<br />
+取得当前运行的模拟器/设备的实例的列表及每个实例的状态：&nbsp;<br />
+adb devices<br />
+查看bug报告：<br />
+adb bugreport<br />
+记录无线通讯日志：<br />
+一般来说，无线通讯的日志非常多，在运行时没必要去记录，但我们还是可以通过命令，设置记录：&nbsp;<br />
+adb shell&nbsp;<br />
+logcat -b radio<br />
+获取设备的ID和序列号：<br />
+adb get-product&nbsp;<br />
+adb get-serialno<br />
+访问数据库SQLite3<br />
+adb shell&nbsp;<br />
+sqlite3<br />
+cd system/sd/data //进入系统内指定文件夹<br />
+ls //列表显示当前文件夹内容<br />
+rm -r xxx //删除名字为xxx的文件夹及其里面的所有文件<br />
+rm xxx //删除文件xxx<br />
+rmdir xxx //删除xxx的文件夹</p>

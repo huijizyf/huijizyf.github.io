@@ -1,0 +1,102 @@
+---
+layout: post
+status: publish
+published: true
+title: 安卓自定义View
+author:
+ yufei.zhou
+
+wordpress_id: 120
+wordpress_url: http://donute.com/?p=120
+date: '2016-11-14 10:02:01 +0800'
+date_gmt: '2016-11-14 02:02:01 +0800'
+categories:
+- 安卓
+tags: [安卓,自定义View]
+comments: []
+---
+<div><img title="看到一个不错的UI设计，用代码试着实现了一下" src="/images/002o3oc9zy6QR2noYGIf8.png" alt="看到一个不错的UI设计，用代码试着实现了一下" name="image_operate_17451426865811070" /></div>
+<div>
+<div>package com.zyf.drawview;</div>
+<div></div>
+<div>import android.content.Context;</div>
+<div>import android.graphics.Canvas;</div>
+<div>import android.graphics.Color;</div>
+<div>import android.graphics.Paint;</div>
+<div>import android.graphics.Rect;</div>
+<div>import android.graphics.RectF;</div>
+<div>import android.util.AttributeSet;</div>
+<div>import android.view.View;</div>
+<div>import android.view.ViewGroup;</div>
+<div></div>
+<div>public class MyView extends View{</div>
+<div></div>
+<div> <wbr />  <wbr /> int value1=0;</div>
+<div> <wbr />  <wbr /> int value2=0;</div>
+<div> <wbr />  <wbr /> int value3=0;</div>
+<div> <wbr />  <wbr /> public void setNumber(int value1,int value2,int value3)</div>
+<div> <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> this.value1=value1;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> this.value2=value2;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> this.value3=value3;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> this.postInvalidate();</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> public MyView(Context context) {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super(context);</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> public MyView(Context context, AttributeSet attrs) {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super(context, attrs);</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> public MyView(Context context, AttributeSet attrs, int defStyleAttr) {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super(context, attrs, defStyleAttr);</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> @Override</div>
+<div> <wbr />  <wbr /> protected void onDraw(Canvas canvas) {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawColor(Color.BLACK);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> Paint paint=new Paint();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setColor(Color.WHITE);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setTextSize(50f);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawText("今天",getWidth()/3,50f,paint);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> int width=getWidth();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> int height=getHeight();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float cx1=width/3;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float cy1=height/5*2;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float radius1=cx1-40;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> drawcir(canvas,Color.GREEN,cx1,cy1,radius1,"行走步数",value1+"步");</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float cx2=width/4*3;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float cy2=height/3;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float radius2=width/4-50;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> drawcir(canvas,Color.BLUE,cx2,cy2,radius2,"运动时间",value2+"分钟");</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float cx3=width/3*2;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float cy3=height/5*3;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> float radius3=width/5-30;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> drawcir(canvas,Color.rgb(255,200,255),cx3,cy3,radius3,"热量",value3+"\n卡");</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> drawcir(canvas, Color.WHITE, width / 4, height, width / 4 - 80, "", "");</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setColor(Color.GREEN);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawRect(width/4-10,height-150,width/4+10,height-width/4+80,paint);</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setColor(Color.WHITE);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> RectF oval3 = new RectF(width/4-30,height-300,width/4+30,height-150);// 设置个新的长方形</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawRoundRect(oval3, 20, 15, paint);//第二个参数是x半径，第三个参数是y半径</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setTextSize(20f);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawText("Home",width/4+50,height-260,paint);</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setColor(Color.GREEN);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawText("Walk",width/4+50,height-100,paint);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super.onDraw(canvas);</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> public void drawcir(Canvas canvas,int color,float cx,float cy,float radius,String text,String t2)</div>
+<div> <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> Paint paint=new Paint();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setColor(color);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawCircle(cx, cy, radius, paint);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setTextSize(30f);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawText(text,cx-radius/2,cy-radius-30,paint);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> paint.setColor(Color.WHITE);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> canvas.drawText(t2,cx-30,cy,paint);</div>
+<div> <wbr />  <wbr /> }</div>
+<div>}</div>
+</div>

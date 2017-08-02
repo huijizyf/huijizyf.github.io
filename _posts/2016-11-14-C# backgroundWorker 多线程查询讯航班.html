@@ -1,0 +1,86 @@
+---
+layout: post
+status: publish
+published: true
+title: C# backgroundWorker 多线程查询讯航班
+author:
+ yufei.zhou
+
+wordpress_id: 139
+wordpress_url: http://donute.com/?p=139
+date: '2016-11-14 10:21:20 +0800'
+date_gmt: '2016-11-14 02:21:20 +0800'
+categories:
+- HelloWorld
+tags: [C#]
+comments: []
+---
+<p>效果：</p>
+<div><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="C# &lt;wbr&gt;backgroundWorker &lt;wbr&gt;多线程查询讯航班" src="/images/002o3oc9zy6MwQA3bwka8.png" alt="C# &lt;wbr&gt;backgroundWorker &lt;wbr&gt;多线程查询讯航班" width="690" height="332" name="image_operate_28221412338182124" /></a><br />
+调用web service接口，返回结果，在listview中显示。</div>
+<div>代码：</div>
+<div>
+<div>using multiThread_airplane.ServiceReference1;</div>
+<div>using System;</div>
+<div>using System.Collections.Generic;</div>
+<div>using System.ComponentModel;</div>
+<div>using System.Data;</div>
+<div>using System.Drawing;</div>
+<div>using System.Linq;</div>
+<div>using System.Text;</div>
+<div>using System.Windows.Forms;</div>
+<div>using System.Collections;</div>
+<div></div>
+<div>namespace multiThread_airplane</div>
+<div>{</div>
+<div> <wbr />  <wbr /> public partial class Form1 : Form</div>
+<div> <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> BackgroundWorker bw = new BackgroundWorker();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> DataSet end;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> public Form1()</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> InitializeComponent();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> private void Form1_Load(object sender, EventArgs e)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("航空公司", 80, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("航班号", 80, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("出发机场", 150, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("到达机场", 150, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("出发时间", 80, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("到达时间", 80, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("经停", 70, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Columns.Add("飞行周期", 80, HorizontalAlignment.Center);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> private void button1_Click(object sender, EventArgs e)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> bw.DoWork +=new DoWorkEventHandler(doworker);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> bw.RunWorkerCompleted += new RunWorkerCompletedEventH<wbr />andler(worker_completed);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> bw.RunWorkerAsync();</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> public void doworker(object sender,DoWorkEventArgs e)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> try</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> DomesticAirlineSoapClien<wbr />t client = new DomesticAirlineSoapClien<wbr />t("DomesticAirlineSoap");</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> end = client.getDomesticAirlinesTime(textBox1.Text, textBox2.Text, dateTimePicker1.Value.Year.ToString() + "-" + dateTimePicker1.Value.Month.ToString() + "-"+dateTimePicker1.Value.Day.ToString(),"");</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> catch(Exception ex)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> MessageBox.Show(ex.Message);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> public void worker_completed(object sender,RunWorkerCompletedEventA<wbr />rgs e)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> DataTable dt = end.Tables[0];</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> foreach(DataRow dr in dt.Rows)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> listView1.Items.Add(new ListViewItem(new string[] { dr[0].ToString(), dr[1].ToString(), dr[2].ToString(), dr[3].ToString(), dr[4].ToString(), dr[5].ToString(), dr[6].ToString(), dr[7].ToString() }));</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> }</div>
+<div>}</div>
+</div>

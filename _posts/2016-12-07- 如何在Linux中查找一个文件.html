@@ -1,0 +1,40 @@
+---
+layout: post
+status: publish
+published: true
+title: 如何在Linux中查找一个文件
+author:
+ yufei.zhou
+
+wordpress_id: 189
+wordpress_url: http://donute.com/?p=189
+date: '2016-12-07 21:27:29 +0800'
+date_gmt: '2016-12-07 13:27:29 +0800'
+categories:
+- 随记
+tags: [Linux,grep]
+comments: []
+---
+<p>在Linux中查找文件有两种方法。一种是使用 find 命令，另外一种是使用 locate 命令。我们先看第一种。<br />
+find命令使用 Linux find命令可以用不同的搜索标准如名字、类型、所属人、大小等来搜索目录树。基本语法如下：</p>
+<h1>find path expression search-term</h1>
+<p>下面是使用find命令根据文件名来查找特定文件的一个例子：</p>
+<h1>find -name test.file</h1>
+<p>命令会搜索整个目录树来查找名为 test.file 的文件，并且会提供其存放位置。你可以使用你Linux上一个存在的文件名来尝试一下。<br />
+find命令有时会花费几分钟来查找整个目录树，尤其是如果系统中有很多文件和目录的话。要显著减少时间，你可以指定搜索的目录。比如，如果你知道 /var 中存在 test.file，那就没有必要搜索其它目录。这样，你可以使用下面的命令：</p>
+<h1>find /var -name test.file</h1>
+<p>find还可以根据时间、大小、所属人、权限等选项搜索文件。要了解更多关于这些选项的信息，你可以使用查看** Linux find命令**的手册。</p>
+<h1>man find</h1>
+<p>locate命令<br />
+要在Linux中使用locate命令，首先需要安装它。<br />
+如果你正在使用Ubuntu，运行下面的命令来安装locate：</p>
+<h1>apt-get update</h1>
+<h1>apt-get install mlocate</h1>
+<p>如果你使用的是CentOS，运行下面的命令来安装locate：</p>
+<h1>yum install mlocate</h1>
+<p>locate是一种比find更快的方式，因为它在数据库中查找文件。要更新搜索数据库，运行下面的命令：</p>
+<h1>updatedb</h1>
+<p>使用locate查找文件的语法：</p>
+<h1>locate test.file</h1>
+<p>就像find命令一样，locate也有很多选项来过滤输出。要了解更多你可以查看Linux Locate命令的手册。</p>
+<h1>man locate</h1>

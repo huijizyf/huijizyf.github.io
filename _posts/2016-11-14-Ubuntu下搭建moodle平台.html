@@ -1,0 +1,43 @@
+---
+layout: post
+status: publish
+published: true
+title: Ubuntu下 搭建moodle平台
+author:
+ yufei.zhou
+
+wordpress_id: 147
+wordpress_url: http://donute.com/?p=147
+date: '2016-11-14 10:24:53 +0800'
+date_gmt: '2016-11-14 02:24:53 +0800'
+categories:
+- HelloWorld
+tags: [Moodle]
+comments: []
+---
+<div>1、安装apache2软件。</div>
+<div>登录ubuntu系统，在联网的情况下打开终端，输入sudo apt-get install apache2.等待安装完成</div>
+<div>2、安装Mysql软件。</div>
+<div>在终端输入sudo apt-get install mysql-server，期间会提示设置数据库管理员的密码，请牢记，在第六步中需要使用。</div>
+<div>3、安装php5及扩展软件。</div>
+<div>在终端输入sudo apt-get install php5  <wbr />php5-curl  <wbr />phpmyadmin</div>
+<div>期间需要输入mysql管理员帐号密码，并设置phpmyadmin的密码</div>
+<div>装完之后重启apache2使curl启用生效：sudo /etc/init.d/apache2 restart</div>
+<div>4、下载最新版的moodle。</div>
+<div>进入网站http://moodle.org/download/下载最新版的moodle。我们下载使用的是：2.7+ (Build: 20140703)。下载完成后将moodle解压至apache的默认目录（/var/www/html）</div>
+<div>5、修改文件夹权限。</div>
+<div>将moodle所在目录修改为都可写，在终端中输入：sudo chmod -R a+w html</div>
+<div>将/var目录改为可写，在终端中输入：sudo chmod a+w /var</div>
+<div>6、进行moodle的设置。</div>
+<div>打开浏览器，在地址栏输入：127.0.0.1  <wbr /> 回车</div>
+<div>选择中文，一步一步往下设置</div>
+<div>期间需要确认data文件安装位置，确认之后会安装中文语言包。如果不能自动下载，可以手动下载后解压至文件夹。</div>
+<div>输入第二步中设置的mysql数据库管理员帐号密码。</div>
+<div>在确认了机器配置符合最低需求之后，便开始安装。</div>
+<div>大约过几分钟安装完成后，设置一下moodle管理员的帐号信息，站点信息等。</div>
+<div>安装完成后，可以通过localhost访问到刚才搭建的moodle平台。</div>
+<div>7、对外发布。</div>
+<div>到第六步为止，moodle已经搭建完成，但是只能在本地服务器上通过127.0.0.1访问。若要在其他机器访问moodle，可以打开终端，输入sudo gedit  <wbr />/var/www/html/config.php  <wbr />  <wbr /> 这时可以看到一个文本编辑窗口，将文本中的127.0.0.1字段替换成本机IP地址即可例如：192.168.1.115.</div>
+<div></div>
+<div></div>
+<div>如果搭建完成，在浏览器中打开页面为空白一般为文件夹权限设置错误。如果只能通过localhost访问则是由于config.php中设置不正确。</div>

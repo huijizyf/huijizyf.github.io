@@ -1,0 +1,93 @@
+---
+layout: post
+status: publish
+published: true
+title: 使用HC-SR04和android IOIO板实现超声波测距的功能
+author:
+ yufei.zhou
+
+wordpress_id: 124
+wordpress_url: http://donute.com/?p=124
+date: '2016-11-14 10:04:21 +0800'
+date_gmt: '2016-11-14 02:04:21 +0800'
+categories:
+- 安卓
+tags: [安卓]
+comments: []
+---
+<div>
+<div><img title="" src="/images/002o3oc9gy6QHbACELm88.png" alt="" /></div>
+</div>
+<p>可能是我在实现计时部分的逻辑实现的不够好，误差较大。</p>
+<p>同样接好电路</p>
+<p>开始编写代码，功能比较单一，因此代码也比较简单：</p>
+<p>public class MainActivity extends IOIOActivity {</p>
+<p>Button button;</p>
+<p>private DigitalOutput led_;</p>
+<p>private DigitalOutput vout;</p>
+<p>private AnalogInput vin;</p>
+<p>private TextView tv;</p>
+<p>int flag,i;</p>
+<p>long start,end;</p>
+<p>@Override</p>
+<p>public void onCreate(Bundle savedInstanceState) {</p>
+<p>super.onCreate(savedInstanceState);</p>
+<p>setContentView(R.layout.activity_main);</p>
+<p>button=(Button)findViewById(R.id.button);</p>
+<p>tv=(TextView)findViewById(R.id.textView2);</p>
+<p>}</p>
+<p>class Looper extends BaseIOIOLooper {</p>
+<p>@Override</p>
+<p>protected void setup() throws ConnectionLostException {</p>
+<p>led_ = ioio_.openDigitalOutput(0,true);</p>
+<p>vout= ioio_.openDigitalOutput(1,true);</p>
+<p>vin=ioio_.openAnalogInput(40);</p>
+<p>}</p>
+<p>@Override</p>
+<p>public void loop() throws ConnectionLostException, InterruptedException {</p>
+<p>//Thread.sleep(1);</p>
+<p>vout.write(true);</p>
+<p>if(vin.read()&gt;0.5)</p>
+<p>{</p>
+<p>if(i==1)</p>
+<p>{</p>
+<p>start=System.nanoTime();</p>
+<p>}</p>
+<p>led_.write(true);</p>
+<p>flag=2;</p>
+<p>i++;</p>
+<p>}</p>
+<p>else</p>
+<p>{</p>
+<p>led_.write(false);</p>
+<p>flag=flag-1;</p>
+<p>end=System.nanoTime();</p>
+<p>}</p>
+<p>if(flag==1)</p>
+<p>{</p>
+<p>float time=end-start;</p>
+<p>setNumber(time*340/2000000000);</p>
+<p>flag=0;i=1;</p>
+<p>}</p>
+<p>}</p>
+<p>}</p>
+<p>@Override</p>
+<p>protected IOIOLooper createIOIOLooper() {</p>
+<p>return new Looper();</p>
+<p>}</p>
+<p>public void bt_Click(View v) throws ConnectionLostException{</p>
+<p>led_.write(false);</p>
+<p>vout.write(false);</p>
+<p>flag=0;</p>
+<p>i=1;</p>
+<p>}</p>
+<p>private void setNumber(float f) {</p>
+<p>final String str = String.format("%.2f", f);</p>
+<p>runOnUiThread(new Runnable() {</p>
+<p>@Override</p>
+<p>public void run() {</p>
+<p>tv.setText("声波传递时间约为"+Float.parseFloat(str)*2000000000/340+"毫微秒，估算距离为"+str+"米");</p>
+<p>}</p>
+<p>});</p>
+<p>}</p>
+<p>}</p>

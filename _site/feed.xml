@@ -1,0 +1,2559 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title></title>
+    <description>A stylish blog using the Solarized color palette</description>
+    <link>http://0.0.0.0:4000/</link>
+    <atom:link href="http://0.0.0.0:4000/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Fri, 21 Jul 2017 14:36:11 +0800</pubDate>
+    <lastBuildDate>Fri, 21 Jul 2017 14:36:11 +0800</lastBuildDate>
+    <generator>Jekyll v3.5.1</generator>
+    
+      <item>
+        <title>移植wifidog至android5.1平台</title>
+        <description>&lt;h2 id=&quot;toc_0&quot;&gt;移植wifidog至android5.1平台&lt;/h2&gt;
+&lt;h3 id=&quot;toc_1&quot;&gt;实现的功能&lt;/h3&gt;
+&lt;p&gt;先使用nanohttpd在安卓内实现http server的功能，然后在已经移植并开启wifidog的安卓平台开启热点，当其它的手机连接到此热点时，手机上会弹出我们在手机上搭建的http server中运行的指定的网页。如果我们的安卓平台是有多网卡的话，我们也能指定手机连接到此热点时打开外部其他网站的网页。因为是单网卡的设备即时指定了外部的网页，手机连接到此热点因为未连接到互联网，也无法打开外部的网页。&lt;/p&gt;
+&lt;h3 id=&quot;toc_2&quot;&gt;所需内容&lt;/h3&gt;
+&lt;p&gt;1.NanoHttpd是一个安卓平台的Http Server，具体可看github上的介绍，本文主要说wifidog在安卓平台的编译，对NanoHttpd的使用不做介绍。&lt;/p&gt;
+&lt;p&gt;2.wifidog源码。&lt;/p&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;来自github的简介：The WiFi Guard Dog project is a complete and 
+embeddable captive portal solution for wireless community groups 
+or individuals who wish to open a free hotspot while still 
+preventing abuse of their Internet connection.&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;3.移植目标的安卓平台源码。本文针对的目标平台是基于三星4418平台的安卓开发板。&lt;/p&gt;
+&lt;p&gt;以上列表中所需的1，2两项的源码链接地址如下：&lt;/p&gt;
+&lt;p&gt;-&lt;a href=&quot;https://github.com/NanoHttpd/nanohttpd&quot;&gt;NanoHttpd&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;-&lt;a href=&quot;https://github.com/wifidog/wifidog-gateway&quot;&gt;wifidog&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&quot;toc_3&quot;&gt;移植步骤&lt;/h3&gt;
+&lt;p&gt;1.使用NanoHttpd在安卓平台搭建HttpServer（编写apk程序即可，具体步骤可见NanoHttpd 在github上的介绍）&lt;/p&gt;
+&lt;p&gt;2.在安卓平台的源码&lt;strong&gt;external&lt;/strong&gt;目录下新建文件夹命名为&lt;strong&gt;wifidog&lt;/strong&gt;，&lt;/p&gt;
+&lt;p&gt;3.下载wifidog源码，并将下载到的源码放入第2步中新建的&lt;strong&gt;wifidog&lt;/strong&gt;文件夹中&lt;/p&gt;
+&lt;p&gt;4.在wifidog目录下新建&lt;strong&gt;config.h&lt;/strong&gt;文件，在文件中写入以下代码：&lt;/p&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt; #define VERSION &quot;v1.0&quot;
+ #define HAVE_STDARG_H
+ #define __ANDROID__&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;5.在wifidog目录下新建Android.mk文件，在文件中写入以下内容：&lt;/p&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;LOCAL_PATH := $(call my-dir)
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := wifidog
+LOCAL_C_INCLUDES=$(LOCAL_PATH)/libhttpd 
+LOCAL_SRC_FILES = src/gateway.c \
+        src/auth.c \
+        src/client_list.c \
+        src/conf.c \
+        src/firewall.c \
+        src/http.c \
+        src/safe.c \
+        src/centralserver.c \
+        src/commandline.c \
+        src/debug.c \
+        src/fw_iptables.c \
+        src/httpd_thread.c \
+        src/ping_thread.c \
+        src/util.c \
+        src/wdctl_thread.c \
+        src/simple_http.c \
+        src/pstring.c \
+        src/wd_util.c \
+        src/main.c \
+        ./libhttpd/api.c \
+        ./libhttpd/ip_acl.c \
+        ./libhttpd/protocol.c \
+        ./libhttpd/version.c
+LOCAL_SHARED_LIBRARIES = $(SHARED_LIBRARIES)
+include $(BUILD_EXECUTABLE)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;以上步骤完成了对代码的准备，此时进入wifidog目录下使用mm命令已经可以编译通过了，但是还没有完成对wifidog的配置，接下来的我们需要修改配置文件和增加启动脚本。&lt;/p&gt;
+&lt;p&gt;6.在wifidog目录下找到&lt;strong&gt;wifidog.conf&lt;/strong&gt;配置文件，修改此文件内容：&lt;/p&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;ExternalInterface lo    #如果双网卡设备此处可设定为开启wifi热点网卡的另外一块网卡，因为我们的开发板为单网卡，此处指定了回环
+
+GatewayInterface wlan0   #指定我们开启了热点的网卡设备名称
+
+AuthServer {
+    Hostname 192.168.43.1           #http server 地址
+    HTTPPort 8080                   #http server端口
+    SSLAvailable no                 #https是否可用
+    Path /                          #http页面路径  
+    LoginScriptPathFragment         /
+    PortalScriptPathFragment /
+    MsgScriptPathFragment /
+    PingScriptPathFragment /
+    AuthScriptPathFragment /
+
+}
+
+以上未注释的配置项的意思在下发完整的配置文件中有解释
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;修改完成后的配置文件内容如下：&lt;/p&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;# $Id$
+# WiFiDog Configuration file
+
+# Parameter: GatewayID
+# Default: default
+# Optional
+#
+# Set this to the node ID on the auth server
+# This is used to give a customized login page to the clients and for
+# monitoring/statistics purpose. If you run multiple gateways on the same
+# machine each gateway needs to have a different gateway id.
+# If none is supplied, the mac address of the GatewayInterface interface will be used,
+# without the : separators
+
+# GatewayID default
+
+# Parameter: ExternalInterface
+# Default: NONE
+# Optional
+#
+# Set this to the external interface (the one going out to the Inernet or your larger LAN).  
+# Typically vlan1 for OpenWrt, and eth0 or ppp0 otherwise,
+# Normally autodetected
+
+ExternalInterface lo
+
+# Parameter: GatewayInterface
+# Default: NONE
+# Mandatory
+#
+# Set this to the internal interface (typically your wifi interface).    
+# Typically br-lan for Openwrt (by default the wifi interface is bridged with wired lan in openwrt)
+# and eth1, wlan0, ath0, etc. otherwise
+# You can get this interface with the ifconfig command and finding your wifi interface
+
+GatewayInterface wlan0
+
+# Parameter: GatewayAddress
+# Default: Find it from GatewayInterface
+# Optional
+#
+# Set this to the internal IP address of the gateway.  Not normally required.
+
+# GatewayAddress 192.168.43.1
+
+# Parameter: HtmlMessageFile
+# Default: wifidog-msg.html
+# Optional
+#
+# This allows you to specify a custome HTML file which will be used for
+# system errors by the gateway. Any $title, $message and $node variables
+# used inside the file will be replaced.
+#
+# HtmlMessageFile /opt/wifidog/etc/wifidog-.html
+
+# Parameter: AuthServer
+# Default: NONE
+# Mandatory, repeatable
+#
+# This allows you to configure your auth server(s).  Each one will be tried in order, untill one responds.
+# Set this to the hostname or IP of your auth server(s), the path where
+# WiFiDog-auth resides in and the port it listens on.
+#AuthServer {
+#   Hostname                 (Mandatory; Default: NONE)
+#   SSLAvailable             (Optional; Default: no; Possible values: yes, no)
+#   SSLPort                  (Optional; Default: 443)
+#   HTTPPort                 (Optional; Default: 80)
+#   Path                     (Optional; Default: /wifidog/ Note:  The path must be both prefixed and suffixed by /.  Use a single / for server root.)
+#   LoginScriptPathFragment  (Optional; Default: login/? Note:  This is the script the user will be sent to for login.)
+#   PortalScriptPathFragment (Optional; Default: portal/? Note:  This is the script the user will be sent to after a successfull login.)
+#   MsgScriptPathFragment    (Optional; Default: gw_message.php? Note:  This is the script the user will be sent to upon error to read a readable message.)
+#   PingScriptPathFragment    (Optional; Default: ping/? Note:  This is the wifidog-ping protocol. See http://dev.wifidog.org/wiki/doc/developer/WiFiDogProtocol_V1)
+#   AuthScriptPathFragment    (Optional; Default: auth/? Note:  This is the wifidog-auth protocol. See http://dev.wifidog.org/wiki/doc/developer/WiFiDogProtocol_V1)
+#}
+# If SSLAvailable is set, then the client will be redirected to the
+# auth daemon on its HTTPS port. If Wifidog is compiled with SSL support,
+# then Wifidog will also use HTTPS to talk to the auth server instead of
+# plain HTTP.
+#
+
+AuthServer {
+    Hostname 192.168.43.1
+    HTTPPort 8080
+    SSLAvailable no
+    Path /
+    LoginScriptPathFragment         /
+    PortalScriptPathFragment /
+    MsgScriptPathFragment /
+    PingScriptPathFragment /
+    AuthScriptPathFragment /
+
+}
+
+#AuthServer {
+#    Hostname auth2.ilesansfil.org
+#    SSLAvailable yes
+#    Path /
+#}
+
+# Parameter: DeltaTraffic
+# Default: no
+# Optional
+#
+# Set this to true if you want to reset each user's traffic (Outgoing and Incoming) value after each Auth operation.
+# If this is enabled, Wifidog will add two new parameters to the AuthScriptPathFragment: Incoming_Delta, Outgoing_delta. 
+# DeltaTraffic no
+
+# Parameter: Daemon
+# Default: 1
+# Optional
+#
+# Set this to true if you want to run as a daemon
+# Daemon 1
+
+# Parameter: GatewayPort
+# Default: 2060
+# Optional
+#
+# Listen on this port
+# GatewayPort 2060
+
+# Parameter: ProxyPort
+# Default: 0 (disable)
+# Optional
+#
+# Redirect http traffic of knowns &amp;amp; probations users
+# to a local transparent proxy listening on ProxyPort port
+# ProxyPort 0
+
+# Parameter: HTTPDName
+# Default: WiFiDog
+# Optional
+#
+# Define what name the HTTPD server will respond
+# HTTPDName WiFiDog
+
+# Parameter: HTTPDMaxConn
+# Default: 10
+# Optional
+#
+# How many sockets to listen to
+# HTTPDMaxConn 10
+
+# Parameter: HTTPDRealm
+# Default: WiFiDog
+# Optional
+#
+# The name of the HTTP authentication realm. This only used when a user
+# tries to access a protected WiFiDog internal page. See HTTPUserName.
+# HTTPDRealm WiFiDog
+
+# Parameter: HTTPDUserName / HTTPDPassword
+# Default: unset
+# Optional
+#
+# The gateway exposes some information such as the status page through its web
+# interface. This information can be protected with a username and password,
+# which can be set through the HTTPDUserName and HTTPDPassword parameters.
+# HTTPDUserName admin
+# HTTPDPassword secret
+
+# Parameter: CheckInterval
+# Default: 60
+# Optional
+#
+# How many seconds should we wait between timeout checks.  This is also
+# how often the gateway will ping the auth server and how often it will
+# update the traffic counters on the auth server.  Setting this too low
+# wastes bandwidth, setting this too high will cause the gateway to take 
+# a long time to switch to it's backup auth server(s).
+
+# CheckInterval 60
+
+# Parameter: ClientTimeout
+# Default: 5
+# Optional
+#
+# Set this to the desired of number of CheckInterval of inactivity before a client is logged out
+# The timeout will be INTERVAL * TIMEOUT
+ClientTimeout 5
+
+# Parameter: SSLPeerVerification
+# Default: yes
+# Optional
+#
+# Enable peer certificate verification when talking to the auth
+# server over SSL/TLS. Disabling this setting is mainly useful if
+# you do not want  to install ca-certificates.
+#
+# If this setting is set to yes, then the certificates in
+# the directory indicated by SSLCertPath will be used to
+# verify the auth server.
+#
+# This setting requires that WifiDog is compiled with SSL support.
+# It will be ignored otherwise.
+#
+# To disable SSL completely for testing purposes, set SSLAvailable
+# to False for the auth server in question. Note that this will disable
+# HTTPS when redirecting clients to your auth server.
+#
+# SSLPeerVerification yes
+
+# Parameter: SSLCertPath
+# Default: /etc/ssl/certs/
+# Optional
+#
+# Where to look for SSL certificates to verify the auth servers
+# certificate. Note that these will only be used if the auth server
+# in question is configured with SSLAvailable yes.
+#
+# The certificates in this directory must be named by their hash
+# value. For OpenWRT, you need a ca-certificates package newer
+# than what is shipped in Barrier Breaker (see 
+# https://dev.openwrt.org/ticket/16537).
+#
+# This setting requires that WifiDog is compiled with SSL support.
+# It will be ignored otherwise.
+#
+# SSLCertPath /etc/ssl/certs/ 
+
+# Parameter: SSLAllowedCipherList
+# Default: all ciphers supported
+# Optional
+#
+# Which cipher suite to allow. Note that CyaSSL will ignore cipher
+# suites that use algorithms that aren't compiled in or cipher
+# suites *WITH ERRORS IN THEIR NAMES*.
+#
+# Please see CyaSSL documentation for allowed values, format is a
+# string where the ciphers are separated by colons (:) with no
+# spaces. Ciphers are ordered from most desirable to least desirable.
+#
+# SSLAllowedCipherList ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES256-SHA:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-SHA256:DHE-RSA-AES256-SHA256:ECDH-ECDSA-AES128-GCM-SHA256:ECDH-ECDSA-AES256-GCM-SHA384:ECDH-RSA-AES128-GCM-SHA256:ECDH-RSA-AES256-GCM-SHA384:AES128-GCM-SHA256:AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:ECDH-ECDSA-AES128-SHA:ECDH-ECDSA-AES256-SHA:ECDH-RSA-AES128-SHA:ECDH-RSA-AES256-SHA:AES128-SHA:AES256-SHA
+
+# Parameter: SSLUseSNI
+# Default: no
+# Optional
+#
+# Enable SNI (Server Name Indication) TLS extension.
+# Enabling this setting is mainly useful if the auth server is hosted
+# multiple secure (HTTPS) websites. The WifiDog should indicate which hostname
+# it is attempting to connect to at the start of the handshaking process.
+#
+# This setting requires that WifiDog is compiled with SSL support.
+# It will be ignored otherwise.
+#
+# SSLUseSNI no
+
+# Parameter: TrustedMACList
+# Default: none
+# Optional
+#
+
+# Check DNS health by querying IPs of these hosts
+PopularServers kernel.org,ieee.org
+
+# Comma separated list of MAC addresses who are allowed to pass
+# through without authentication.
+# N.B.: weak security, since MAC addresses are easy to spoof.
+#
+#TrustedMACList 00:00:DE:AD:BE:AF,00:00:C0:1D:F0:0D
+
+# Parameter: FirewallRuleSet
+# Default: none
+# Mandatory
+#
+# Groups a number of FirewallRule statements together.
+
+# Parameter: FirewallRule
+# Default: none
+# 
+# Define one firewall rule in a rule set.
+
+# Rule Set: global
+# 
+# Used for rules to be applied to all other rulesets except locked.
+FirewallRuleSet global {
+
+    # FirewallRule syntax:
+    # FirewallRule (block|drop|allow|log|ulog) [(tcp|udp|icmp) [port X or port-range X:Y]] [to IP/CIDR]
+
+    ## To block SMTP out, as it's a tech support nightmare, and a legal liability
+    #FirewallRule block tcp port 25
+    
+    ## Use the following if you don't want clients to be able to access machines on 
+    ## the private LAN that gives internet access to wifidog.  Note that this is not
+    ## client isolation;  The laptops will still be able to talk to one another, as
+    ## well as to any machine bridged to the wifi of the router.
+    # FirewallRule block to 192.168.0.0/16
+    # FirewallRule block to 172.16.0.0/12
+    # FirewallRule block to 10.0.0.0/8
+    
+    ## This is an example ruleset for the Teliphone service.
+    #FirewallRule allow udp to 69.90.89.192/27
+    #FirewallRule allow udp to 69.90.85.0/27
+    #FirewallRule allow tcp port 80 to 69.90.89.205
+
+    ## This is an example ruleset for example.com
+    ## example.com means example.com and *.example.com
+    #FirewallRule allow tcp to example.com
+
+    ## Use the following if you are having problems with Apple iOS 7 clients.
+    ## See #7 and #14 at https://github.com/wifidog/wifidog-gateway/issues/
+    #FirewallRule allow tcp to apple.com
+    #FirewallRule allow tcp to icloud.com
+
+    ## Use the following to log or ulog the traffic you want to allow or block.
+    # For OPENWRT: use of these feature requires modules ipt_LOG or ipt_ULOG present in dependencies
+    # iptables-mod-extra and iptables-mod-ulog (to adapt it to the linux distribution). 
+    # Note: the log or ulog rule must be passed before, the rule you want to match.
+    # for openwrt: use of these feature requires modules ipt_LOG or ipt_ULOG present in dependencies
+    # iptables-mod-extra and iptables-mod-ulog
+    # For example, you want to log (ulog works the same way) the traffic allowed on port 80 to the ip 69.90.89.205:
+    #FirewallRule log tcp port 80 to 69.90.89.205
+    #FirewallRule allow tcp port 80 to 69.90.89.205
+    # And you want to know, who matche your block rule:
+    #FirewallRule log to 0.0.0.0/0
+    #FirewallRule block to 0.0.0.0/0
+}
+
+# Rule Set: validating-users
+#
+# Used for new users validating their account
+FirewallRuleSet validating-users {
+    FirewallRule allow to 0.0.0.0/0
+}
+
+# Rule Set: known-users
+#
+# Used for normal validated users.
+FirewallRuleSet known-users {
+    FirewallRule allow to 0.0.0.0/0
+}
+
+# Rule Set: auth-is-down
+#
+# Does nothing when not configured.
+#
+# Used when auth server is down
+#FirewallRuleSet auth-is-down {
+#  FirewallRule allow to 0.0.0.0/0
+#}
+
+# Rule Set: unknown-users
+#
+# Used for unvalidated users, this is the ruleset that gets redirected.
+#
+# XXX The redirect code adds the Default DROP clause.
+FirewallRuleSet unknown-users {
+    # Use to-ipset to block or allow externally specified hosts.
+    # Ipsets are created with the ipset utility. This is useful to
+    # block or allow hosts at runtime externally.
+    # For example, if your auth server requires users to log in
+    # via Facebook, use the ipset feature built into dnsmasq to
+    # to populate a list of various IPs used by the Facebook networks.
+    #FirewallRule allow to-ipset fb
+    FirewallRule allow udp port 53
+    FirewallRule allow tcp port 53
+    FirewallRule allow udp port 67
+    FirewallRule allow tcp port 67
+}
+
+# Rule Set: locked-users
+#
+# Not currently used
+FirewallRuleSet locked-users {
+    FirewallRule block to 0.0.0.0/0
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;7.在安卓平台源码中增加文件拷贝项，在编译时将此配置文件复制至/system/etc目录中。不同平台路径不完全一样，此处就不写我的路径了，具体方式可参考各平台的说明&lt;/p&gt;
+&lt;p&gt;8.修改启动脚本，在wifidog目录下找到scripts目录下的init.d文件夹，修改init.d文件夹中的wifidog文件内容&lt;/p&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;删除第一行的：#!/bin/sh
+
+将以下两行内容修改:
+IPT=/usr/sbin/iptables
+WD_DIR=/usr/bin
+
+为
+
+IPT=/system/bin/iptables
+WD_DIR=/system/bin
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;修改完成后的脚本内容为：&lt;/p&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;#
+# Could be better, but it's working as expected
+#
+# 
+#
+# chkconfig: 345 65 35
+#
+# description: Startup/shutdown script for Wifidog captive portal
+# processname: wifidog
+
+# Date    : 2004-08-25
+# Version : 1.0
+
+IPT=/system/bin/iptables
+WD_DIR=/system/bin
+OPTIONS=&quot;&quot;
+
+case &quot;$1&quot; in
+  start)
+    echo &quot;Starting Wifidog ... &quot;
+    if $WD_DIR/wdctl status 2&amp;gt; /dev/null
+    then
+    echo &quot;FAILED:  Wifidog already running&quot;
+    else
+        $0 test-module
+    if $WD_DIR/wifidog $OPTIONS
+    then
+        echo &quot;OK&quot;
+    else
+        echo &quot;FAILED:  Wifidog exited with non 0 status&quot;
+    fi
+    fi
+    ;;
+  restart)
+    $0 stop
+    sleep 2
+    $0 start
+    ;;
+  reload)
+    $0 stop
+    sleep 2
+    $0 start
+    ;;
+  stop)
+    echo &quot;Stopping Wifidog ... &quot;
+    if $WD_DIR/wdctl status 2&amp;gt; /dev/null
+    then
+        if $WD_DIR/wdctl stop
+    then
+        echo &quot;OK&quot;
+    else
+        echo &quot;FAILED:  wdctl stop exited with non 0 status&quot;
+    fi
+       
+    else
+       echo &quot;FAILED:  Wifidog was not running&quot;
+    fi
+    ;;
+  status)
+    $WD_DIR/wdctl status
+    ;;
+  debug|test-module)
+
+    ### Test ipt_mark with iptables
+    test_ipt_mark () {
+      IPTABLES_OK=$($IPT -A FORWARD -m mark --mark 2 -j ACCEPT 2&amp;gt;&amp;amp;1 | grep &quot;No chain.target.match&quot;)
+      if [ -z &quot;$IPTABLES_OK&quot; ]; then
+        $IPT -D FORWARD -m mark --mark 2 -j ACCEPT 2&amp;gt;&amp;amp;1
+        echo 1
+      else
+        echo 0
+      fi
+    }
+    ### Test ipt_mac with iptables
+    test_ipt_mac () {
+      IPTABLES_OK=$($IPT -A INPUT -m mac --mac-source 00:00:00:00:00:00 -j ACCEPT 2&amp;gt;&amp;amp;1 | grep &quot;No chain.target.match&quot;)
+      if [ -z &quot;$IPTABLES_OK&quot; ]; then
+        $IPT -D INPUT -m mac --mac-source 00:00:00:00:00:00 -j ACCEPT 2&amp;gt;&amp;amp;1
+        echo 1
+      else
+        echo 0
+      fi
+    }
+
+    ### Test ipt_REDIRECT with iptables
+    test_ipt_REDIRECT () {
+      IPTABLES_OK=$($IPT -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 2060 2&amp;gt;&amp;amp;1 | grep &quot;No chain.target.match&quot;)
+      if [ -z &quot;$IPTABLES_OK&quot; ]; then
+        $IPT -t nat -D PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 2060 2&amp;gt;&amp;amp;1
+        echo 1
+      else
+        echo 0
+      fi
+    }
+
+    ### Find a module on disk
+    module_exists () {
+    echo &quot; Looking for a module on disk&quot;
+      EXIST=$(find /lib/modules/`uname -r` -name $1.*o 2&amp;gt;/dev/null)
+      if [ -n &quot;$EXIST&quot; ]; then
+        echo 1
+      else
+        echo 0
+      fi
+    }
+
+    ### Test if a module is in memory
+    module_in_memory () {
+      MODULE=$(lsmod | grep $1 | awk '{print $1}')
+      if [ &quot;$MODULE&quot; = &quot;$1&quot; ]; then
+        echo 1
+      else
+        echo 0
+      fi
+    }
+
+    echo &quot;Testing for iptables modules&quot;
+
+    echo &quot;  Testing ipt_mac&quot;
+    TEST_IPT_MAC=$(test_ipt_mac)
+    if [ &quot;$TEST_IPT_MAC&quot; = &quot;0&quot; ]; then
+      echo &quot;   iptables is not working with ipt_mac&quot;
+      echo &quot;   Scanning disk for ipt_mac module&quot;
+      TEST_IPT_MAC_MODULE_EXISTS=$(module_exists &quot;ipt_mac&quot;)
+      if [ &quot;$TEST_IPT_MAC_MODULE_EXISTS&quot; = &quot;0&quot; ]; then
+        echo &quot;   ipt_mac module is missing, please install it (kernel or module)&quot;
+        exit
+      else
+        echo &quot;   ipt_mac module exists, trying to load&quot;
+        insmod ipt_mac &amp;gt; /dev/null
+        TEST_IPT_MAC_MODULE_MEMORY=$(module_in_memory &quot;ipt_mac&quot;)
+        if [ &quot;$TEST_IPT_MAC_MODULE_MEMORY&quot; = &quot;0&quot; ]; then
+          echo &quot;  Error: ipt_mac not loaded&quot;
+          exit
+        else
+          echo &quot;  ipt_mac loaded sucessfully&quot;
+        fi
+      fi
+    else
+      echo &quot;   ipt_mac  module is working&quot;
+    fi
+
+    echo &quot;  Testing ipt_mark&quot;
+    TEST_IPT_MARK=$(test_ipt_mark)
+    if [ &quot;$TEST_IPT_MARK&quot; = &quot;0&quot; ]; then
+      echo &quot;   iptables is not working with ipt_mark&quot;
+      echo &quot;   Scanning disk for ipt_mark module&quot;
+      TEST_IPT_MARK_MODULE_EXISTS=$(module_exists &quot;ipt_mark&quot;)
+      if [ &quot;$TEST_IPT_MARK_MODULE_EXISTS&quot; = &quot;0&quot; ]; then
+        echo &quot;   iptables ipt_mark module missing, please install it (kernel or module)&quot;
+        exit
+      else
+        echo &quot;   ipt_mark module exists, trying to load&quot;
+        insmod ipt_mark
+        TEST_IPT_MARK_MODULE_MEMORY=$(module_in_memory &quot;ipt_mark&quot;)
+        if [ &quot;$TEST_IPT_MARK_MODULE_MEMORY&quot; = &quot;0&quot; ]; then
+          echo &quot;   Error: ipt_mark not loaded&quot;
+          exit
+        else
+          echo &quot;   ipt_mark loaded sucessfully&quot;
+        fi
+      fi
+      else
+    echo &quot;   ipt_mark module is working&quot;
+    fi
+
+##TODO:  This will not test if required iptables userspace (iptables-mod-nat on Kamikaze) is installed
+    echo &quot;  Testing ipt_REDIRECT&quot;
+    TEST_IPT_MAC=$(test_ipt_REDIRECT)
+    if [ &quot;$TEST_IPT_MAC&quot; = &quot;0&quot; ]; then
+      echo &quot;   iptables is not working with ipt_REDIRECT&quot;
+      echo &quot;   Scanning disk for ipt_REDIRECT module&quot;
+      TEST_IPT_MAC_MODULE_EXISTS=$(module_exists &quot;ipt_REDIRECT&quot;)
+      if [ &quot;$TEST_IPT_MAC_MODULE_EXISTS&quot; = &quot;0&quot; ]; then
+        echo &quot;   ipt_REDIRECT module is missing, please install it (kernel or module)&quot;
+        exit
+      else
+        echo &quot;   ipt_REDIRECT module exists, trying to load&quot;
+        insmod ipt_REDIRECT &amp;gt; /dev/null
+        TEST_IPT_MAC_MODULE_MEMORY=$(module_in_memory &quot;ipt_REDIRECT&quot;)
+        if [ &quot;$TEST_IPT_MAC_MODULE_MEMORY&quot; = &quot;0&quot; ]; then
+          echo &quot;  Error: ipt_REDIRECT not loaded&quot;
+          exit
+        else
+          echo &quot;  ipt_REDIRECT loaded sucessfully&quot;
+        fi
+      fi
+    else
+      echo &quot;   ipt_REDIRECT  module is working&quot;
+    fi
+
+    ;;
+
+  *)
+   echo &quot;Usage: $0 {start|stop|restart|reload|status|test-module}&quot;
+   exit 1
+   ;;
+esac
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;9.在安卓平台源码中增加文件拷贝项，在编译时将init.d目录连同底下的wifidog启动脚本复制至/system/etc目录中。不同平台路径不完全一样，此处就不写我的路径了，具体方式可参考各平台的说明&lt;/p&gt;
+&lt;p&gt;10.增加开机自启动wifidog的功能，修改安卓平台的init脚本 增加以下内容&lt;/p&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;on post-fs-data节点下增加：
+chmod 0777 /etc/init.d/wifidog    #为了给启动脚本增加执行权限
+
+增加服务启动：
+service wifiDog /system/etc/init.d/wifidog start
+    class late_start
+    user root
+    group root
+    oneshot&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;p&gt;10.移植完成，开始愉快的编译安卓源码吧。&lt;/p&gt;
+</description>
+        <pubDate>Wed, 19 Jul 2017 14:35:14 +0800</pubDate>
+        <link>http://0.0.0.0:4000/2017/07/19/%E7%A7%BB%E6%A4%8Dwifidog%E8%87%B3android5.1%E5%B9%B3%E5%8F%B0/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2017/07/19/%E7%A7%BB%E6%A4%8Dwifidog%E8%87%B3android5.1%E5%B9%B3%E5%8F%B0/</guid>
+        
+        <category>安卓</category>
+        
+        <category>wifidog</category>
+        
+        
+        <category>HelloWorld</category>
+        
+        <category>安卓</category>
+        
+      </item>
+    
+      <item>
+        <title>使用Python编写apk批量安装工具</title>
+        <description>&lt;h2&gt;git地址：https://github.com/huijizyf/python-apkInstaller.git&lt;/h2&gt;
+&lt;h2 id=&quot;toc_0&quot;&gt;背景&lt;/h2&gt;
+&lt;p&gt;公司项目安卓系统内置应用数量较多，系统编译完成刷入系统时UserData数量太大，导致部分应用未自动安装，因此使用新的安装方式。&lt;/p&gt;
+&lt;h2 id=&quot;toc_1&quot;&gt;实现方式&lt;/h2&gt;
+&lt;p&gt;使用pyhton实现，可在多平台运行，使用tkiner编写图形界面，简单快捷&lt;/p&gt;
+&lt;h2 id=&quot;toc_2&quot;&gt;代码&lt;/h2&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;#-*- coding: UTF-8 -*- 
+from Tkinter import *
+import os
+import commands
+import tkMessageBox
+
+class Application(Frame):
+    apk_list=list()
+    listbox=''
+    logbox=''
+    def __init__(self, master=None):
+        self.init_apk_list()
+        Frame.__init__(self, master,height=80,width=80)
+        self.listbox  = Listbox(self,width=50,selectmode=MULTIPLE) 
+        self.logbox=Listbox(self,width=50,height=20)
+        self.pack()
+        self.init_ui()
+
+    def init_apk_list(self):
+        pathDir =  os.listdir(&quot;./apk&quot;)
+        for sub_file in pathDir:
+            print sub_file
+            if(sub_file.endswith('.apk')):
+                self.apk_list.append(sub_file)
+    
+    def init_ui(self):
+        for apk_name in self.apk_list:
+            self.listbox.insert(END,apk_name)
+        self.listbox.pack()
+        selectAllBtn=Button(self,text=&quot;全部选中&quot;,command=self.selectAll)
+        selectAllBtn.pack()
+        install_btn=Button(self,text=&quot;开始安装&quot;,command=self.start_install_apk)
+        install_btn.pack()
+        self.logbox.pack()
+
+    def selectAll(self):
+        self.listbox.selection_set(0,self.listbox.size())
+
+
+    def start_install_apk(self):
+        successed=0
+        failed=0
+        selected=self.listbox.curselection()
+        self.logbox.insert(END,&quot;准备安装apk&quot;)
+        self.logbox.insert(END,&quot;共有&quot;+str(self.listbox.size())+&quot;个应用，将有&quot;+str(len(selected))+&quot;个应用被安装&quot;)
+        self.logbox.insert(END,&quot;&quot;)
+        self.logbox.insert(END,&quot;--------------------------------------------&quot;)
+        self.logbox.insert(END,&quot;&quot;)
+        for index in selected:
+            apk=self.apk_list[index]
+            self.logbox.insert(END,&quot;准备安装: &quot;+apk)
+            (status, output) = commands.getstatusoutput('adb install -r ./apk/'+apk)
+            print status,output
+            if status==0 and (&quot;Success&quot; in output):
+                self.logbox.insert(END,&quot;安装成功: &quot;+apk)
+                successed=successed+1
+            else:
+                self.logbox.insert(END,&quot;安装失败: &quot;+apk)
+                self.logbox.insert(END,&quot;失败信息:&quot;+output)
+                failed=failed+1
+            self.logbox.insert(END,&quot;&quot;)
+            self.update_idletasks()
+        self.logbox.insert(END,&quot;--------------------------------------------&quot;)
+        self.logbox.insert(END,&quot;应用安装结束！！&quot;)
+        self.logbox.insert(END,&quot;--------------------------------------------&quot;)
+        self.logbox.insert(END,&quot;安装成功：&quot;+str(successed)+&quot;个,安装失败：&quot;+str(failed)+&quot;个，请查看上方日志&quot;)
+            
+
+
+app = Application()
+app.master.title('APK安装器')
+app.mainloop()&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+</description>
+        <pubDate>Fri, 09 Jun 2017 18:29:42 +0800</pubDate>
+        <link>http://0.0.0.0:4000/2017/06/09/%E4%BD%BF%E7%94%A8Python%E7%BC%96%E5%86%99apk%E6%89%B9%E9%87%8F%E5%AE%89%E8%A3%85%E5%B7%A5%E5%85%B7/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2017/06/09/%E4%BD%BF%E7%94%A8Python%E7%BC%96%E5%86%99apk%E6%89%B9%E9%87%8F%E5%AE%89%E8%A3%85%E5%B7%A5%E5%85%B7/</guid>
+        
+        <category>Python</category>
+        
+        
+        <category>HelloWorld</category>
+        
+        <category>python</category>
+        
+      </item>
+    
+      <item>
+        <title>使用AZTEC压缩心跳数据，并绘图</title>
+        <description>&lt;h2&gt;&lt;img class=&quot;alignnone size-full wp-image-255&quot; src=&quot;http://donute.com/wp-content/uploads/2017/05/device-2017-05-23-085449.png&quot; alt=&quot;device-2017-05-23-085449&quot; width=&quot;720&quot; height=&quot;1280&quot; /&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;toc_0&quot;&gt;什么是AZTEC&lt;/h2&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;AZTEC把原始ECG数据处理成短的直线和斜线。AZTEC算法可以由水平线产生，斜线产生，用抛物线拟合的曲线平滑化几个部分组成。
+
+压缩
+1，初始化：
+    一个阈值。  数据波动超过这个值得直线认为结束，进入斜线模式
+    一个长度限制，  长度超过这个值的线，认为结束，重新计算
+    一个最短判断限制，  长度小于这个值的最大值，最小值相差，大于阈值，认为是斜线
+2，直线计算
+    1，获取第一个点的高程，
+    2，在往后加入的点的高程中计算出MAX 和MIN
+    3，判断当前点的高程和MAX或者MIN的差是否大于阈值
+    4，结束直线计算
+    5，存储格式为，T，V   （T是一个正数，表示这段线有多长，V是一个值，表示这段线的高程是多少）
+3，斜线计算
+    1，获取第一个点的高程
+    2，判断接下来小于 长度限制LEN的点的MAX和MIN相差是否大于阈值，
+    3，大于阈值判断为斜线，不大于判断为直线
+    4，判断当前点V0 的高程和前一个点的相差是否小于规定值，认为斜线结束
+    ps，这样的好处是不用判断是正斜线，还是反斜线，
+    5，存储格式为 -T ,V
+    
+解压缩
+1，初始化当前高程是 0
+2，读取一个点的数据，取得高程V
+3，平均划分到每个点的值，即 V/T 是每个点的高程，余数加到最后一个点上
+4，读取下一个点的数据，取得其高程V ， 
+5，画每个点的公式是  h= ((V-V0)/T)*i    i == T -1 ? h + (V-V0)%T : h
+6，i是当前点的下标，根据T 从0开始，V是当前点的高程，V0是前一个点的高程&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;h2 id=&quot;toc_1&quot;&gt;JAVA从文件中读取并数据解压代码&lt;/h2&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;public class DecodeFileUtil {
+    private String fileName;
+
+    public DecodeFileUtil(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public List&amp;lt;Float&amp;gt; read() {
+        List&amp;lt;Float&amp;gt; decodePoints = new ArrayList&amp;lt;&amp;gt;();
+        List&amp;lt;Map&amp;lt;Integer, Integer&amp;gt;&amp;gt; points = new ArrayList&amp;lt;&amp;gt;();
+
+        List&amp;lt;Integer&amp;gt; first = new ArrayList&amp;lt;&amp;gt;();
+        List&amp;lt;Integer&amp;gt; second = new ArrayList&amp;lt;&amp;gt;();
+        File file = new File(fileName);
+        try {
+            FileReader reader = new FileReader(file);
+            BufferedReader bReader = new BufferedReader(reader);
+            String s;
+            int i = 0;
+            while ((s = bReader.readLine()) != null) {
+                if (i % 2 == 0) {
+                    first.add((int) Float.parseFloat(s));
+                } else {
+                    second.add((int) (Float.parseFloat(s)*1000));
+                }
+                i++;
+            }
+            for (int j = 0; j &amp;lt; first.size(); j++) {
+                Map&amp;lt;Integer, Integer&amp;gt; map = new HashMap&amp;lt;&amp;gt;();
+                map.put(first.get(j), second.get(j));
+                points.add(map);
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        for (Map&amp;lt;Integer, Integer&amp;gt; map : points) {
+            int index = points.indexOf(map);
+            Map&amp;lt;Integer, Integer&amp;gt; lastMap;
+            int lastKey = 0;
+            int lastValue = 0;
+            if (index &amp;gt; 0) {
+                lastMap = points.get(index - 1);
+                lastKey = (int) lastMap.keySet().toArray()[0];
+                lastValue = lastMap.get(lastKey);
+            }
+            int key = (int) map.keySet().toArray()[0];
+            int value = map.get(key);
+            if (key &amp;gt; 0) {
+                for (int i = 0; i &amp;lt; key; i++) {
+                    decodePoints.add(value / 1000f);
+                }
+            } else if (key &amp;lt; 0) {
+                key=Math.abs(key);
+                int average ;
+                int remainder ;
+
+                int result = value - lastValue;
+                average = result / key;
+                remainder = result % key;
+                for (int i = 0; i &amp;lt; key; i++) {
+                    if (i != key - 1) {
+                        decodePoints.add((lastKey + (i + 1) * average) / 1000f);
+                    } else {
+                        decodePoints.add((lastKey + (i + 1) * average + remainder) / 1000f);
+                    }
+                }
+            }
+        }
+        return decodePoints;
+    }
+}&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+</description>
+        <pubDate>Tue, 23 May 2017 08:58:03 +0800</pubDate>
+        <link>http://0.0.0.0:4000/2017/05/23/%E4%BD%BF%E7%94%A8AZTEC%E5%8E%8B%E7%BC%A9%E5%BF%83%E8%B7%B3%E6%95%B0%E6%8D%AE-%E5%B9%B6%E7%BB%98%E5%9B%BE/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2017/05/23/%E4%BD%BF%E7%94%A8AZTEC%E5%8E%8B%E7%BC%A9%E5%BF%83%E8%B7%B3%E6%95%B0%E6%8D%AE-%E5%B9%B6%E7%BB%98%E5%9B%BE/</guid>
+        
+        <category>安卓</category>
+        
+        <category>AZTEC</category>
+        
+        
+        <category>安卓</category>
+        
+      </item>
+    
+      <item>
+        <title>AndroidThings初探</title>
+        <description>&lt;h2&gt;AndroidThings&lt;/h2&gt;
+&lt;p&gt;搭梯子访问：https://developer.android.com/things/index.html&lt;/p&gt;
+&lt;p&gt;为了抢攻智能家电市场，Google 14 日推出全新物联网平台“Android Things”的开发者预&lt;br /&gt;
+览版本。未来不只是手机，Android 可能将透过喇叭、监视器和路由器等家电，占据家中每个&lt;br /&gt;
+角落。&lt;br /&gt;
+可用于打印机、门锁、烤箱、灯泡、插座等&lt;br /&gt;
+Android Things 的前身为在 2015 年 5 月发布的物联网平台 Brillo，不过至今并未受&lt;br /&gt;
+到开发者大量采用。Google 强调，新推出的 Android Things 除了承袭 Brillo 的功&lt;br /&gt;
+能，还加入 Android 开发者熟悉的工具，包含 Android Studio、Android SDK、&lt;br /&gt;
+Google Play 服务和 Google 云端平台，提供整套打造 Android 智能联网设备所需工具，&lt;br /&gt;
+让任何 Android 开发者都能轻松打造物联网服务。&lt;br /&gt;
+只要你有能力打造出 App，你就能打造出一个设备。──Google&lt;/p&gt;
+&lt;h2&gt;硬件&lt;/h2&gt;
+&lt;p&gt;&lt;img class=&quot;alignnone size-full wp-image-233&quot; src=&quot;http://donute.com/wp-content/uploads/2017/01/20161229102102_407.jpg&quot; alt=&quot;20161229102102_407&quot; width=&quot;1280&quot; height=&quot;708&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;现在支持以下3款硬件：&lt;/p&gt;
+&lt;p&gt;1）Intel Edison&lt;br /&gt;
+2）NXP Pico&lt;br /&gt;
+3）Raspberry Pi 3&lt;br /&gt;
+我使用的是树莓派3，拿到板子首先需要在安卓开发者网站下载预览版镜像。地址为：https://developer.android.com/things/preview/download.html&lt;br /&gt;
+接下来将8G内存以上的高速TF卡放入读卡器，插入电脑，我使用的是OS X系统，给树莓派刷入&lt;br /&gt;
+系统的步骤与Linux类似使用终端运行以下命令：&lt;br /&gt;
+dd bs=4m if=iot&lt;em&gt;rpi3.img of=/dev/disk2&lt;br /&gt;
+其中iot&lt;/em&gt;rpi3.img 表示系统镜像所在的目录，我的就在当前目录所以就直接写文件名就OK&lt;br /&gt;
+接着/dev/disk2是TF在文件系统上的位置。&lt;br /&gt;
+稍等5分钟左右，系统写入完成，拔下读卡器，将TF卡放入树莓派上电开机。&lt;/p&gt;
+&lt;h2&gt;第一印象&lt;/h2&gt;
+&lt;p&gt;&lt;img class=&quot;alignnone size-full wp-image-235&quot; src=&quot;http://donute.com/wp-content/uploads/2017/01/WechatIMG24.jpeg&quot; alt=&quot;WechatIMG24&quot; width=&quot;1280&quot; height=&quot;960&quot; /&gt;&lt;br /&gt;
+接入显示器开机,开机画面后并没有看到我们熟悉的安卓系统界面。而是在一个AndroidThings&lt;br /&gt;
+的背景图后显示了已经获取的IP地址。对于AndroidThings来说显示屏不是必须的，无显示器&lt;br /&gt;
+一样可以工作，使用鼠标试用了一下，界面不是很流畅。&lt;br /&gt;
+值得一提的是系统开机后虽然并没有可供操作的选项，但是当你编写的带UI的程序运行到系统后&lt;br /&gt;
+是有界面的，与普通app运行基本没有差别。&lt;/p&gt;
+&lt;h2&gt;使用IIC驱动12864OLED屏幕&lt;/h2&gt;
+&lt;p&gt;&lt;img class=&quot;alignnone size-full wp-image-236&quot; src=&quot;http://donute.com/wp-content/uploads/2017/01/WechatIMG25.jpeg&quot; alt=&quot;WechatIMG25&quot; width=&quot;720&quot; height=&quot;1280&quot; /&gt;&lt;br /&gt;
+拿到板子不久又购买了一块12864的OLED屏幕和一个DHT11温湿度传感器，然后对OLED屏幕开&lt;br /&gt;
+始折腾。&lt;br /&gt;
+要操作点阵显示屏，也就是写数据和写命令！让屏幕休眠、让屏幕滚动之类的操作，就要向屏幕&lt;br /&gt;
+写命令；要让屏幕显示内容，就要写数据。 怎样让屏幕知道你发送的东西是数据还是命令？有&lt;br /&gt;
+的屏幕有类似D/C(Data/Command)这样的引脚，说明是通过高低电平来区分，有的屏幕是向屏&lt;br /&gt;
+幕写入特定的值来区分。 点阵屏内部都有一个驱动芯片，这个驱动芯片就负责按照程序的要&lt;br /&gt;
+求，在某一个点来进行操作。所谓的初始化就是这个驱动芯片的初始化，初始化中注意两个地&lt;br /&gt;
+方：&lt;br /&gt;
+一个是复位！这个非常重要，如果没有完全复位，可能导致屏幕不稳定、显示乱码等畸形问题！&lt;br /&gt;
+另一个就是初始化代码！这个初始化代码一般都是一些16进制数，可以在显示屏的规格书之类的文档里面找到，可以通过“写命令”的方式能够把初始化代码发送给显示屏。&lt;br /&gt;
+完成了这些步骤，就可以让它显示你想要的东西了！&lt;/p&gt;
+&lt;h2&gt;上代码&lt;/h2&gt;
+&lt;p&gt;//以下代码中不包括字码，因为我的屏幕本身不带字库，所以需要用软件提码得到，具体购买屏幕时一般会附带提码软件&lt;/p&gt;
+&lt;pre class=&quot;pure-highlightjs&quot;&gt;&lt;code class=&quot;&quot;&gt;package com.donute.iot_android.utils;
+
+import com.google.android.things.pio.I2cDevice;
+
+import java.io.IOException;
+
+/**
+ * Created by zhouyufei on 2017/1/16.
+ */
+
+public class OledUtil {
+    private I2cDevice device;
+    private static final int Brightness=0xCF;
+
+    public OledUtil(I2cDevice device) {
+        this.device = device;
+        initOled();
+        clearScreen();
+    }
+    public void initOled(){
+        oledCmd((byte)0xae);//--turn off oled panel
+        oledCmd((byte)0x00);//---set low column address
+        oledCmd((byte)0x10);//---set high column address
+        oledCmd((byte)0x40);//--set start line address  Set Mapping RAM Display Start Line ((byte)0x00~(byte)0x3F)
+        oledCmd((byte)0x81);//--set contrast control register
+        oledCmd((byte) Brightness); // Set SEG Output Current Brightness
+        oledCmd((byte)0xa1);//--Set SEG/Column Mapping     (byte)0xa0×óÓÒ·´ÖÃ (byte)0xa1Õý³£
+        oledCmd((byte)0xc8);//Set COM/Row Scan Direction   (byte)0xc0ÉÏÏÂ·´ÖÃ (byte)0xc8Õý³£
+        oledCmd((byte)0xa6);//--set normal display
+        oledCmd((byte)0xa8);//--set multiplex ratio(1 to 64)
+        oledCmd((byte)0x3f);//--1/64 duty
+        oledCmd((byte)0xd3);//-set display offset   Shift Mapping RAM Counter ((byte)0x00~(byte)0x3F)
+        oledCmd((byte)0x00);//-not offset
+        oledCmd((byte)0xd5);//--set display clock divide ratio/oscillator frequency
+        oledCmd((byte)0x80);//--set divide ratio, Set Clock as 100 Frames/Sec
+        oledCmd((byte)0xd9);//--set pre-charge period
+        oledCmd((byte)0xf1);//Set Pre-Charge as 15 Clocks &amp;amp; Discharge as 1 Clock
+        oledCmd((byte)0xda);//--set com pins hardware configuration
+        oledCmd((byte)0x12);
+        oledCmd((byte)0xdb);//--set vcomh
+        oledCmd((byte)0x40);//Set VCOM Deselect Level
+        oledCmd((byte)0x20);//-Set Page Addressing Mode ((byte)0x00/(byte)0x01/(byte)0x02)
+        oledCmd((byte)0x02);//
+        oledCmd((byte)0x8d);//--set Charge Pump enable/disable
+        oledCmd((byte)0x14);//--set((byte)0x10) disable
+        oledCmd((byte)0xa4);// Disable Entire Display On ((byte)0xa4/(byte)0xa5)
+        oledCmd((byte)0xa6);// Disable Inverse Display On ((byte)0xa6/a7)
+        oledCmd((byte)0xaf);//--turn on oled panel
+    }
+    private void oledCmd(int i) {
+        try {
+            device.writeRegByte(0x00,(byte)i);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public void oledData(int data) {
+        try {
+            device.writeRegByte(0x40,(byte)(data));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public void oledData(int[] data) {
+        try {
+            for (int i=0;i&amp;lt;data.length;i++){
+                device.writeRegByte(0x40,(byte)(data[i]));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /***************功能描述：显示6*8一组标准ASCII字符串  显示的坐标（x,y），y为页范围0～7****************/
+    public void oled6x8(int x,int y,char ch[])
+    {
+        int c=0,i=0,j=0;
+        for (int k=0;k&amp;lt;ch.length;k++){
+            c =ch[j]-32;
+            if(x&amp;gt;126){
+                x=0;
+                y++;
+            }
+            OLED_Set_Pos(x,y);
+            for(i=0;i&amp;lt;6;i++)
+                oledData(CodeTab.F6x8[c][i]);
+            x+=6;
+            j++;
+        }
+    }
+    /*******************功能描述：显示8*16一组标准ASCII字符串  显示的坐标（x,y），y为页范围0～7****************/
+    public void oled8x16(int x,int y,char ch[])
+    {
+        int c=0,i=0,j=0;
+        for (int k=0;k&amp;lt;ch.length;k++){
+            c =ch[j]-32;
+            if(x&amp;gt;120){
+                x=0;
+                y++;
+            }
+            OLED_Set_Pos(x,y);
+            for(i=0;i&amp;lt;8;i++)
+                oledData(CodeTab.F8X16[c*16+i]);
+            OLED_Set_Pos(x,y+1);
+            for(i=0;i&amp;lt;8;i++)
+                oledData(CodeTab.F8X16[c*16+i+8]);
+            x+=8;
+            j++;
+        }
+    }
+    /*****************功能描述：显示16*16点阵  显示的坐标（x,y），y为页范围0～7****************************/
+    public void oled16x16(int x,int y,int N,int[] codeTab)
+    {
+        char wm=0;
+        int adder=32*N;
+        OLED_Set_Pos(x , y);
+        for(wm = 0;wm &amp;lt; 16;wm++)
+        {
+            oledData(codeTab[adder]);
+            adder += 1;
+        }
+        OLED_Set_Pos(x,y + 1);
+        for(wm = 0;wm &amp;lt; 16;wm++)
+        {
+            oledData(codeTab[adder]);
+            adder += 1;
+        }
+    }
+    /***********功能描述：显示显示BMP图片128×64起始点坐标(x,y),x的范围0～127，y为页的范围0～7*****************/
+    public void drawBmp(int x0,int y0,int x1,int y1,char BMP[])
+    {
+         int j=0;
+         int x,y;
+        if(y1%8==0)
+            y=y1/8;
+        else
+            y=y1/8+1;
+        for(y=y0;y&amp;lt;y1;y++)
+        {
+            OLED_Set_Pos(x0,y);
+            for(x=x0;x&amp;lt;x1;x++)
+            {
+                oledData(BMP[j++]);
+            }
+        }
+    }
+
+    /*********************OLED 设置坐标************************************/
+    public void OLED_Set_Pos(int x, int y)
+    {
+        oledCmd(0xb0+y);
+        oledCmd(((x&amp;amp;0xf0)&amp;gt;&amp;gt;4)|0x10);
+        oledCmd((x&amp;amp;0x0f)|0x01);
+    }
+
+    /*****************************清除屏幕显示内容************************************/
+    public void clearScreen(){
+        int y,x;
+        for(y=0;y&amp;lt;8;y++)
+        {
+            oledCmd((byte) (0xb0+y));
+            oledCmd((byte) 0x01);
+            oledCmd((byte) 0x10);
+            for(x=0;x&amp;lt;128;x++){
+                int[] b={0};
+                oledData(b);
+            }
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h2&gt;使用GPIO驱动DHT11&lt;/h2&gt;
+&lt;p&gt;&lt;img class=&quot;alignnone size-full wp-image-237&quot; src=&quot;http://donute.com/wp-content/uploads/2017/01/3339137648818780077.jpg&quot; alt=&quot;3339137648818780077&quot; width=&quot;750&quot; height=&quot;247&quot; /&gt;&lt;br /&gt;
+因为之前有使用GPIO驱动继电器工作的经历，继电器接在3.3V正常工作，接在5V下无法驱动。&lt;br /&gt;
+在尝试了驱动DHT11的时候很久一直没有成功，起初以为跟最开始驱动继电器的时候一样，电压问题，然后后来仔细核对代码，查看时序图，发现在AndroidThings系统下读取一次GPIO值耗时就在270us左右，而dht11的时序图中电平转换时间都是在100us以下，所以在java下使用GPIO不能捕捉到如此短时间内的电平变化，无法获取到温湿度值。&lt;br /&gt;
+以下是代码：&lt;/p&gt;
+&lt;pre class=&quot;pure-highlightjs&quot;&gt;&lt;code class=&quot;&quot;&gt;package com.donute.iot_android.utils;
+
+
+import android.util.Log;
+
+import com.google.android.things.pio.Gpio;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by zhouyufei on 2017/1/5.
+ */
+
+public class TemperatureUtil {
+    private Gpio gpio;
+    private LoopThread thread;
+    private float temp=0.0f;
+    private float humi=0.0f;
+    private static TemperatureUtil temperatureUtil;
+
+    private TemperatureUtil(Gpio gpio) {
+        this.gpio = gpio;
+        thread=new LoopThread();
+        thread.start();
+    }
+    public static TemperatureUtil init(Gpio gpio){
+        if (temperatureUtil==null){
+            temperatureUtil=new TemperatureUtil(gpio);
+        }
+        return temperatureUtil;
+    }
+    public void destory(){
+        if (thread!=null){
+            thread.interrupt();
+            thread=null;
+        }
+    }
+    private void calculate(List&amp;lt;Integer&amp;gt; integers){
+        Log.d(&quot;tem&quot;,&quot;长度：&quot;+integers.size()+&quot;    &quot;+integers+&quot;&quot;);
+    }
+    public float getTemp(){
+        return temp;
+    }
+    public float getHumi(){
+        return humi;
+    }
+    class LoopThread extends Thread{
+        @Override
+        public void run() {
+            super.run();
+            while (!isInterrupted()){
+                List&amp;lt;Integer&amp;gt; list=new ArrayList&amp;lt;&amp;gt;();
+                try {
+                    gpio.setDirection(Gpio.DIRECTION_OUT_INITIALLY_HIGH);
+                    gpio.setActiveType(Gpio.ACTIVE_HIGH);
+                    Thread.sleep(10);
+                    gpio.setValue(false);
+                    Thread.sleep(2);
+                    gpio.setValue(true);
+                    gpio.setDirection(Gpio.DIRECTION_IN);
+                    gpio.setActiveType(Gpio.ACTIVE_HIGH);
+                    while (!gpio.getValue()){
+                        Log.d(&quot;gpio&quot;,&quot;low&quot;);
+                        continue;
+                    }
+                    while (gpio.getValue()){
+                        Log.d(&quot;gpio&quot;,&quot;high&quot;);
+                        continue;
+                    }
+                    long l3=System.nanoTime();
+
+                    while (list.size()&amp;lt;40){
+                        int j=0;
+                        while (!gpio.getValue()){
+                            Log.d(&quot;gpio&quot;,&quot;low&quot;);
+                            continue;
+                        }
+                        while (gpio.getValue()){
+                            Log.d(&quot;gpio&quot;,&quot;high&quot;);
+                            j=j+1;
+                            if (j&amp;gt;100)
+                                break;
+                        }
+                        Log.e(&quot;value of j&quot;,j+&quot;&quot;);
+                        if (j&amp;lt;8)
+                            list.add(0);
+                        else
+                            list.add(1);
+                    }
+                    calculate(list);
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+</description>
+        <pubDate>Tue, 17 Jan 2017 18:30:51 +0800</pubDate>
+        <link>http://0.0.0.0:4000/2017/01/17/AndroidThings%E5%88%9D%E6%8E%A2/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2017/01/17/AndroidThings%E5%88%9D%E6%8E%A2/</guid>
+        
+        <category>安卓</category>
+        
+        <category>AndroidThings</category>
+        
+        
+        <category>安卓</category>
+        
+      </item>
+    
+      <item>
+        <title>OrangePi通过sysfs控制GPIO接口</title>
+        <description>&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h2 id=&quot;toc_0&quot;&gt;OrangePi通过sysfs控制GPIO接口&lt;/h2&gt;
+&lt;h3 id=&quot;toc_1&quot;&gt;什么是sysfs&lt;/h3&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;Sysfs 是 Linux 2.6 所提供的一种虚拟文件系统。这个文件系统不仅可以把设备
+（devices）和驱动程序(drivers) 的信息从内核输出到 用户空间，也可以用来对设备和驱
+动程序做设置。
+sysfs 的目的是把一些原本在 procfs 中的，关于设备的部份，独立出来，以‘设备层次结构
+架构’（device tree）的形式呈现。这个文件系统由 Patrick Mochel 所写，稍后 
+Maneesh Soni 撰写 &quot;sysfs backing store path&quot;，以降低在大型系统中对存储器的需
+求量。&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;h3 id=&quot;toc_2&quot;&gt;使用的硬件&lt;/h3&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;这里使用的是Orange Pi One，有40Pin的扩展接口，类似树莓派，使用方法也类似。
+系统是使用的安卓4.4
+导出Gpio接口：
+echo XX &amp;gt; /sys/class/gpio/export（其中XX为你要导出的GPIO引脚编号，后面会说到引脚编号计算方法）
+如果成功的话，这一步会在/sys/class/gpio目录下生成 /sys/class/gpio/gpioXX
+设定IO方向：
+echo &quot;out&quot; &amp;gt; /sys/class/gpio/gpioXX/direction（输出）
+echo &quot;in&quot; &amp;gt; /sys/class/gpio/gpioXX/direction（输入）
+
+设定输出值：
+echo 1 &amp;gt; /sys/class/gpio/gpioXX/value
+echo 0 &amp;gt; /sys/class/gpio/gpioXX/value
+
+或者：
+echo &quot;high&quot; &amp;gt; /sys/class/gpio/gpioXX/direction（输出，同时置高）
+echo &quot;low&quot; &amp;gt; /sys/class/gpio/gpioXX/direction（输出，同时置低）
+
+取消导出：
+echo XX &amp;gt; /sys/class/gpio/unexport&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;h3 id=&quot;toc_3&quot;&gt;引脚映射计算&lt;/h3&gt;
+&lt;div&gt;
+&lt;pre&gt;&lt;code class=&quot;language-none&quot;&gt;Orange Pi One 外设的GPIO如下：
+&lt;img class=&quot;alignnone size-full wp-image-228&quot; src=&quot;http://donute.com/wp-content/uploads/2017/01/20151019002607_51900.jpg&quot; alt=&quot;20151019002607_51900&quot; width=&quot;2299&quot; height=&quot;1139&quot; /&gt;
+计算公式：
+
+(P后面的字母在字母表中的位置 - 1) * 32 + 后面的数字
+例如：
+PA0计算得到：0    ------&amp;gt;(1-1)*32+0
+PA1计算得到：1       -------&amp;gt;(1-1)*32+1
+PA15计算得到：15   -------&amp;gt;(1-1)*32+15
+PD14计算得到：110  -------&amp;gt;(4-1)*32+14
+PC1计算得到：65   -------&amp;gt;(3-1)*32+1&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+&lt;h3 id=&quot;toc_4&quot;&gt;在Java层控制&lt;/h3&gt;
+&lt;pre class=&quot;pure-highlightjs&quot;&gt;&lt;code class=&quot;&quot;&gt;package com.donute.robot.entities;
+
+import com.donute.robot.utils.ShellUtils;
+
+/**
+ * Created by zhouyufei on 2017/1/4.
+ */
+
+public class Gpio {
+    public static final int HIGH=1;
+    public static final int LOW=0;
+    public static final String IN=&quot;in&quot;;
+    public static final String OUT=&quot;out&quot;;
+    public static final String DISABLE=&quot;disable&quot;;
+    private String path;
+    private String direction=DISABLE;
+    private int number;
+
+    public Gpio(int number) {
+        this.number = number;
+        ShellUtils.execCommand(&quot;echo &quot;+number+&quot; &amp;gt; /sys/class/gpio/export&quot;,true);
+        path=&quot;/sys/class/gpio/gpio&quot;+number;
+    }
+    public Gpio openAsOut(){
+        direction=OUT;
+        ShellUtils.execCommand(&quot;echo &quot;+direction+&quot; &amp;gt; &quot;+path+&quot;/direction&quot;,true);
+        return this;
+    }
+    public Gpio openAsIn(){
+        direction=IN;
+        ShellUtils.execCommand(&quot;echo &quot;+direction+&quot; &amp;gt; &quot;+path+&quot;/direction&quot;,true);
+        return this;
+    }
+    public Gpio close(){
+        direction=DISABLE;
+        ShellUtils.execCommand(&quot;echo &quot;+number+&quot; &amp;gt; /sys/class/gpio/unexport&quot;,true);
+        return this;
+    }
+    public void write(int value){
+        ShellUtils.execCommand(&quot;echo &quot;+value+&quot; &amp;gt; &quot;+path+&quot;/value&quot;,true);
+    }
+    public int read(){
+        ShellUtils.CommandResult result=ShellUtils.execCommand(&quot;cat &quot;+path+&quot;/value&quot;,true,true);
+        if (result.result==0){
+            try{
+                return Integer.parseInt(result.successMsg);
+            }catch (Exception e){
+                return -1;
+            }
+        }else {
+            return -1;
+        }
+    }
+
+    public String getDirection() {
+        return direction;
+    }
+
+    public int getNumber() {
+        return number;
+    }
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;h3 id=&quot;toc_5&quot;&gt;ShellUtil代码&lt;/h3&gt;
+&lt;pre class=&quot;pure-highlightjs&quot;&gt;&lt;code class=&quot;&quot;&gt;package com.donute.robot.utils;
+
+/**
+ * Created by zhouyufei on 16/7/31.
+ */
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.List;
+
+/**
+ * ShellUtils
+ * &amp;lt;ul&amp;gt;
+ * &amp;lt;strong&amp;gt;Check root&amp;lt;/strong&amp;gt;
+ * &amp;lt;li&amp;gt;{@link ShellUtils#checkRootPermission()}&amp;lt;/li&amp;gt;
+ * &amp;lt;/ul&amp;gt;
+ * &amp;lt;ul&amp;gt;
+ * &amp;lt;strong&amp;gt;Execte command&amp;lt;/strong&amp;gt;
+ * &amp;lt;li&amp;gt;{@link ShellUtils#execCommand(String, boolean)}&amp;lt;/li&amp;gt;
+ * &amp;lt;li&amp;gt;{@link ShellUtils#execCommand(String, boolean, boolean)}&amp;lt;/li&amp;gt;
+ * &amp;lt;li&amp;gt;{@link ShellUtils#execCommand(List, boolean)}&amp;lt;/li&amp;gt;
+ * &amp;lt;li&amp;gt;{@link ShellUtils#execCommand(List, boolean, boolean)}&amp;lt;/li&amp;gt;
+ * &amp;lt;li&amp;gt;{@link ShellUtils#execCommand(String[], boolean)}&amp;lt;/li&amp;gt;
+ * &amp;lt;li&amp;gt;{@link ShellUtils#execCommand(String[], boolean, boolean)}&amp;lt;/li&amp;gt;
+ * &amp;lt;/ul&amp;gt;
+ *
+ * @author &amp;lt;a href=&quot;http://www.trinea.cn&quot; target=&quot;_blank&quot;&amp;gt;Trinea&amp;lt;/a&amp;gt; 2013-5-16
+ */
+public class ShellUtils {
+
+    public static final String COMMAND_SU       = &quot;su&quot;;
+    public static final String COMMAND_SH       = &quot;sh&quot;;
+    public static final String COMMAND_EXIT     = &quot;exit\n&quot;;
+    public static final String COMMAND_LINE_END = &quot;\n&quot;;
+
+    private ShellUtils() {
+        throw new AssertionError();
+    }
+
+    /**
+     * check whether has root permission
+     *
+     * @return
+     */
+    public static boolean checkRootPermission() {
+        return execCommand(&quot;echo root&quot;, true, false).result == 0;
+    }
+
+    /**
+     * execute shell command, default return result msg
+     *
+     * @param command command
+     * @param isRoot whether need to run with root
+     * @return
+     * @see ShellUtils#execCommand(String[], boolean, boolean)
+     */
+    public static CommandResult execCommand(String command, boolean isRoot) {
+        return execCommand(new String[] {command}, isRoot, true);
+    }
+
+    /**
+     * execute shell commands, default return result msg
+     *
+     * @param commands command list
+     * @param isRoot whether need to run with root
+     * @return
+     * @see ShellUtils#execCommand(String[], boolean, boolean)
+     */
+    public static CommandResult execCommand(List&amp;lt;String&amp;gt; commands, boolean isRoot) {
+        return execCommand(commands == null ? null : commands.toArray(new String[] {}), isRoot, true);
+    }
+
+    /**
+     * execute shell commands, default return result msg
+     *
+     * @param commands command array
+     * @param isRoot whether need to run with root
+     * @return
+     * @see ShellUtils#execCommand(String[], boolean, boolean)
+     */
+    public static CommandResult execCommand(String[] commands, boolean isRoot) {
+        return execCommand(commands, isRoot, true);
+    }
+
+    /**
+     * execute shell command
+     *
+     * @param command command
+     * @param isRoot whether need to run with root
+     * @param isNeedResultMsg whether need result msg
+     * @return
+     * @see ShellUtils#execCommand(String[], boolean, boolean)
+     */
+    public static CommandResult execCommand(String command, boolean isRoot, boolean isNeedResultMsg) {
+        return execCommand(new String[] {command}, isRoot, isNeedResultMsg);
+    }
+
+    /**
+     * execute shell commands
+     *
+     * @param commands command list
+     * @param isRoot whether need to run with root
+     * @param isNeedResultMsg whether need result msg
+     * @return
+     * @see ShellUtils#execCommand(String[], boolean, boolean)
+     */
+    public static CommandResult execCommand(List&amp;lt;String&amp;gt; commands, boolean isRoot, boolean isNeedResultMsg) {
+        return execCommand(commands == null ? null : commands.toArray(new String[] {}), isRoot, isNeedResultMsg);
+    }
+
+    /**
+     * execute shell commands
+     *
+     * @param commands command array
+     * @param isRoot whether need to run with root
+     * @param isNeedResultMsg whether need result msg
+     * @return &amp;lt;ul&amp;gt;
+     *         &amp;lt;li&amp;gt;if isNeedResultMsg is false, {@link CommandResult#successMsg} is null and
+     *         {@link CommandResult#errorMsg} is null.&amp;lt;/li&amp;gt;
+     *         &amp;lt;li&amp;gt;if {@link CommandResult#result} is -1, there maybe some excepiton.&amp;lt;/li&amp;gt;
+     *         &amp;lt;/ul&amp;gt;
+     */
+    public static CommandResult execCommand(String[] commands, boolean isRoot, boolean isNeedResultMsg) {
+        int result = -1;
+        if (commands == null || commands.length == 0) {
+            return new CommandResult(result, null, null);
+        }
+
+        Process process = null;
+        BufferedReader successResult = null;
+        BufferedReader errorResult = null;
+        StringBuilder successMsg = null;
+        StringBuilder errorMsg = null;
+
+        DataOutputStream os = null;
+        try {
+            process = Runtime.getRuntime().exec(isRoot ? COMMAND_SU : COMMAND_SH);
+            os = new DataOutputStream(process.getOutputStream());
+            for (String command : commands) {
+                if (command == null) {
+                    continue;
+                }
+
+                // donnot use os.writeBytes(commmand), avoid chinese charset error
+                os.write(command.getBytes());
+                os.writeBytes(COMMAND_LINE_END);
+                os.flush();
+            }
+            os.writeBytes(COMMAND_EXIT);
+            os.flush();
+
+            result = process.waitFor();
+            // get command result
+            if (isNeedResultMsg) {
+                successMsg = new StringBuilder();
+                errorMsg = new StringBuilder();
+                successResult = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                errorResult = new BufferedReader(new InputStreamReader(process.getErrorStream()));
+                String s;
+                while ((s = successResult.readLine()) != null) {
+                    successMsg.append(s);
+                }
+                while ((s = errorResult.readLine()) != null) {
+                    errorMsg.append(s);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (os != null) {
+                    os.close();
+                }
+                if (successResult != null) {
+                    successResult.close();
+                }
+                if (errorResult != null) {
+                    errorResult.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (process != null) {
+                process.destroy();
+            }
+        }
+        return new CommandResult(result, successMsg == null ? null : successMsg.toString(), errorMsg == null ? null
+                : errorMsg.toString());
+    }
+
+    /**
+     * result of command
+     * &amp;lt;ul&amp;gt;
+     * &amp;lt;li&amp;gt;{@link CommandResult#result} means result of command, 0 means normal, else means error, same to excute in
+     * linux shell&amp;lt;/li&amp;gt;
+     * &amp;lt;li&amp;gt;{@link CommandResult#successMsg} means success message of command result&amp;lt;/li&amp;gt;
+     * &amp;lt;li&amp;gt;{@link CommandResult#errorMsg} means error message of command result&amp;lt;/li&amp;gt;
+     * &amp;lt;/ul&amp;gt;
+     *
+     * @author &amp;lt;a href=&quot;http://www.trinea.cn&quot; target=&quot;_blank&quot;&amp;gt;Trinea&amp;lt;/a&amp;gt; 2013-5-16
+     */
+    public static class CommandResult {
+
+        /** result of command **/
+        public int    result;
+        /** success message of command result **/
+        public String successMsg;
+        /** error message of command result **/
+        public String errorMsg;
+
+        public CommandResult(int result) {
+            this.result = result;
+        }
+
+        public CommandResult(int result, String successMsg, String errorMsg) {
+            this.result = result;
+            this.successMsg = successMsg;
+            this.errorMsg = errorMsg;
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+&lt;p&gt;&amp;nbsp;&lt;/p&gt;
+</description>
+        <pubDate>Mon, 09 Jan 2017 12:50:15 +0800</pubDate>
+        <link>http://0.0.0.0:4000/2017/01/09/OrangePi%E9%80%9A%E8%BF%87sysfs%E6%8E%A7%E5%88%B6GPIO%E6%8E%A5%E5%8F%A3/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2017/01/09/OrangePi%E9%80%9A%E8%BF%87sysfs%E6%8E%A7%E5%88%B6GPIO%E6%8E%A5%E5%8F%A3/</guid>
+        
+        <category>安卓</category>
+        
+        <category>OrangePi</category>
+        
+        <category>sysfs</category>
+        
+        
+        <category>安卓</category>
+        
+      </item>
+    
+      <item>
+        <title>安卓蓝牙通信</title>
+        <description>&lt;h3&gt;开始&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;最近整理了一下在安卓系统下使用蓝牙收发数据的代码。蓝牙的操作，类似于网络socket的
+使用。
+首先我们需要获取蓝牙适配器，也就是BluetoothAdapter,通过BluetoothAdapter对蓝牙
+进行操作。
+流程如下：
+获取BluetoothAdapter-----&gt;打开蓝牙-------&gt;搜索蓝牙设备------&gt;绑定------&gt;建立连接----
+---&gt;收发数据（通信）-----&gt;断开连接------&gt;关闭蓝牙
+
+完整代码地址
+https://github.com/huijizyf/bluetoothchat.git
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;界面效果&lt;/h3&gt;
+&lt;pre&gt;&lt;img src=&quot;http://donute.com/wp-content/uploads/2016/12/screenshot.jpg&quot; alt=&quot;screenshot&quot; width=&quot;720&quot; height=&quot;1280&quot; class=&quot;alignnone size-full wp-image-212&quot; /&gt;
+&lt;/pre&gt;
+&lt;h3&gt;关键代码&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;package com.donute.bluetoothchat;
+
+import android.app.ProgressDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothSocket;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.text.method.ScrollingMovementMethod;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TextView;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
+    /**
+     * ******************************************控件定义******************************************
+     */
+    @Bind(R.id.btn_open_bluetooth_intent)
+    Button btnOpenBluetoothIntent;
+    @Bind(R.id.btn_open_bluetooth_silence)
+    Button getBtnOpenBluetoothSilence;
+    @Bind(R.id.lv_blue_devices_list)
+    ListView lvDevicesList;
+    @Bind(R.id.tv_data_received)
+    TextView tvDataReceived;
+    @Bind(R.id.et_data_to_send)
+    EditText etDataToSend;
+    @Bind(R.id.btn_send_data)
+    Button btnSendData;
+    @Bind(R.id.btn_close_bluetooth)
+    Button btnCloseBluetooth;
+    @Bind(R.id.btn_search_devices)
+    Button btnSearchDevices;
+    @Bind(R.id.btn_open_bluetooth_service)
+    Button btnOpenService;
+    @Bind(R.id.btn_bluetooth_disconnect)
+    Button btnDisconnect;
+
+    /**
+     ******************************************变量声明*********************************************
+     */
+    private BluetoothAdapter mAdapter;               //蓝牙适配器
+    private static final int REQUEST_CODE=1001;      //请求码，自定义整数即可
+    private BluetoothServerSocket serverSocket;       //服务端连接套接字
+    private BluetoothSocket clienSocket;               //客户端套接字
+    private List&amp;amp;lt;BluetoothDevice&amp;amp;gt; deviceList;       //扫描接收到的蓝牙设备
+    private DeviceViewAdapter viewAdapter;           //ListView的数据适配器
+    private BluetoothSocket socket;                 //服务端套接字
+    private static final UUID uuid=UUID.fromString(&amp;amp;quot;00001101-0000-1000-8000-00805F9B34FB&amp;amp;quot;);
+    private int type=0;               //当前连接类型   1为服务端    2为客户端
+    private DateFormat format;
+    private ProgressDialog progressDialog;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
+        init();
+    }
+
+    /**
+     * 初始化
+     */
+    private void init() {
+        //设置TextView允许滚动
+        tvDataReceived.setMovementMethod(ScrollingMovementMethod.getInstance());
+        //获取蓝牙适配器
+        mAdapter= BluetoothAdapter.getDefaultAdapter();
+        if (mAdapter==null){
+            TipManager.showDialog(this,&amp;amp;quot;提示&amp;amp;quot;,&amp;amp;quot;当前设备不支持蓝牙&amp;amp;quot;);
+        }
+        //日期字符串格式化
+        format=new SimpleDateFormat(&amp;amp;quot;yyyy-MM-dd HH:mm:ss&amp;amp;quot;);
+        //将已经绑定的设备加入列表中
+        deviceList=new ArrayList&amp;amp;lt;&amp;amp;gt;(mAdapter.getBondedDevices());
+        viewAdapter=new DeviceViewAdapter(this,deviceList);
+        //给ListView设置数据适配器
+        lvDevicesList.setAdapter(viewAdapter);
+        //设置ListView点击事件处理
+        lvDevicesList.setOnItemClickListener(this);
+
+        //注册广播接收，会接收到开始扫描，扫描到设备，介绍扫描 三个事件，事件交由mReceiver处理
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        registerReceiver(mReceiver, filter);
+
+        //等待进度Dialog
+        progressDialog=new ProgressDialog(this);
+        progressDialog.setTitle(&amp;amp;quot;请稍等&amp;amp;quot;);
+        progressDialog.setMessage(&amp;amp;quot;正在扫描蓝牙设备，请稍等...&amp;amp;quot;);
+        progressDialog.setCancelable(false);
+
+        //设置点击事件处理
+        btnOpenBluetoothIntent.setOnClickListener(this);
+        getBtnOpenBluetoothSilence.setOnClickListener(this);
+        btnSendData.setOnClickListener(this);
+        btnCloseBluetooth.setOnClickListener(this);
+        btnSearchDevices.setOnClickListener(this);
+        btnOpenService.setOnClickListener(this);
+        btnDisconnect.setOnClickListener(this);
+    }
+
+    /**
+     * 点击事件处理
+     * @param v
+     */
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.btn_open_bluetooth_intent:
+                Intent enabler = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enabler, REQUEST_CODE);      //调用系统弹框开启蓝牙
+                break;
+            case R.id.btn_open_bluetooth_silence:
+                mAdapter.enable();//静默方式开启蓝牙
+                break;
+            case R.id.btn_send_data:
+                sendData();     //发送数据
+                break;
+            case R.id.btn_close_bluetooth:
+                mAdapter.disable(); //关闭蓝牙
+                break;
+            case R.id.btn_search_devices:
+                if (mAdapter.isDiscovering()){  //开始扫描蓝牙，如果已经正在扫描了，则不继续执行
+                    return;
+                }
+                deviceList.clear();
+                mAdapter.startDiscovery();
+                break;
+            case R.id.btn_open_bluetooth_service:
+                startServer(&amp;amp;quot;my-service&amp;amp;quot;);      //开启服务端
+                break;
+            case R.id.btn_bluetooth_disconnect:
+                disconnect();                   //断开连接
+                break;
+        }
+    }
+
+    private void disconnect() {
+        //根据当前类型断开连接
+        switch (type){
+            case 1:     //作为服务端
+                try {
+                    if (socket.isConnected())
+                        socket.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+            case 2:     //作为客户端
+                try {
+                    if (clienSocket.isConnected())
+                        clienSocket.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                break;
+        }
+    }
+
+    /**
+     * 发送数据
+     */
+    private void sendData(){
+        Thread sendThread=new Thread(){
+            @Override
+            public void run() {
+                super.run();
+                final String msg=etDataToSend.getText().toString();
+                if (TextUtils.isEmpty(msg)){
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            TipManager.showDialog(MainActivity.this,&amp;amp;quot;提示&amp;amp;quot;,&amp;amp;quot;内容为空，不能发送数据&amp;amp;quot;);
+                        }
+                    });
+                    return;
+                }
+                OutputStream os = null;
+                try {
+                    switch (type){
+                        case 1:
+                            if (socket!=null)
+                                os=socket.getOutputStream();
+                            break;
+                        case 2:
+                            if (clienSocket!=null)
+                                 os=clienSocket.getOutputStream();
+                            break;
+                        default:
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    TipManager.showDialog(MainActivity.this,&amp;amp;quot;提示&amp;amp;quot;,&amp;amp;quot;还未建立连接，或者连接错误，不能发送数据&amp;amp;quot;);
+                                }
+                            });
+                            break;
+                    }
+                    if (os != null) {
+                        //向输出流写入数据
+                        os.write(msg.getBytes(&amp;amp;quot;utf-8&amp;amp;quot;));
+                        tvDataReceived.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                //在UI线程操作界面，将发送的消息显示到界面，同时清空消息输入框
+                                String m=tvDataReceived.getText().toString();
+                                m=m+format.format(new Date())+&amp;amp;quot;\t&amp;amp;quot;+&amp;amp;quot;发送：&amp;amp;quot;+msg+&amp;amp;quot;\n&amp;amp;quot;;
+                                tvDataReceived.setText(m);
+                                etDataToSend.setText(&amp;amp;quot;&amp;amp;quot;);
+                            }
+                        });
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        sendThread.start();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //界面销毁时解除广播接收器的注册
+        unregisterReceiver(mReceiver);
+    }
+
+    //定义广播接收器，接收与蓝牙相关的系统广播
+    BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            //找到设备
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                if (device.getBondState()==BluetoothDevice.BOND_NONE){
+                    deviceList.add(device);
+                    progressDialog.setMessage(&amp;amp;quot;正在扫描，已经扫描到设备数量：&amp;amp;quot;+deviceList.size());
+                    viewAdapter.notifyDataSetChanged();
+                }
+            }
+            //扫描完成
+            else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+                progressDialog.dismiss();
+                TipManager.showDialog(MainActivity.this,&amp;amp;quot;提示&amp;amp;quot;,&amp;amp;quot;蓝牙设备扫描完成，总共扫描到蓝牙设备数量：&amp;amp;quot;+deviceList.size());
+                //开始扫描
+            }else if (BluetoothAdapter.ACTION_DISCOVERY_STARTED.equals(action)){
+                TipManager.showToast(MainActivity.this,&amp;amp;quot;开始扫描设备&amp;amp;quot;);
+                progressDialog.show();
+            }
+        }
+    };
+
+    /**
+     * 开启服务端
+     */
+    private void startServer(final String name){
+        Thread serverThread=new Thread(){
+            @Override
+            public void run() {
+                super.run();
+                try {
+                    type=1;
+                    serverSocket = mAdapter. listenUsingRfcommWithServiceRecord(name,uuid);
+                    socket=serverSocket.accept();      //等待服务端连接，accept函数为阻塞函数，会等待到有客户端连接成功后才会继续执行
+                    InputStream is = socket.getInputStream();//客户端连接成功，获取输入流
+                    while(true) {           //从输入流读取数据
+                        byte[] buffer =new byte[1024];
+                        int count = is.read(buffer);
+                        final String s= new String(buffer, 0, count, &amp;amp;quot;utf-8&amp;amp;quot;);
+                        tvDataReceived.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                //在UI线程操作界面，将接收到的消息显示到界面
+                                String msg=tvDataReceived.getText().toString();
+                                msg=msg+format.format(new Date())+&amp;amp;quot;\t&amp;amp;quot;+&amp;amp;quot;接收：&amp;amp;quot;+s+&amp;amp;quot;\n&amp;amp;quot;;
+                                tvDataReceived.setText(msg);
+                            }
+                        });
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        serverThread.start();
+    }
+    /**
+     * 连接到服务端
+     */
+    private void connectServer(final BluetoothDevice device){
+        final ProgressDialog dialog=new ProgressDialog(this);
+        dialog.setTitle(&amp;amp;quot;请稍等&amp;amp;quot;);
+        dialog.setMessage(&amp;amp;quot;正在连接&amp;amp;quot;);
+        Thread connectThread=new Thread(){
+            public void run(){
+                super.run();
+                try {
+                    type=2;
+                    clienSocket=device.createRfcommSocketToServiceRecord(uuid);
+                    clienSocket.connect();
+                    lvDevicesList.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            dialog.dismiss();
+                            TipManager.showDialog(MainActivity.this,&amp;amp;quot;提示&amp;amp;quot;,&amp;amp;quot;连接成功，现在可以发送数据了&amp;amp;quot;);
+                            startReceive();//连接到服务端成功，开启接收线程
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        dialog.show();
+        connectThread.start();
+    }
+    private void startReceive(){
+        Thread receiveThread=new Thread(){
+            @Override
+            public void run() {
+                super.run();
+                try {
+                    InputStream is=clienSocket.getInputStream();
+                    if (is!=null){
+                        while(true) {
+                            byte[] buffer =new byte[1024];
+                            int count = is.read(buffer);
+                            final String s= new String(buffer, 0, count, &amp;amp;quot;utf-8&amp;amp;quot;);
+                            tvDataReceived.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    //在UI线程操作界面，将接收到的消息显示到界面
+                                    String msg=tvDataReceived.getText().toString();
+                                    msg=msg+format.format(new Date())+&amp;amp;quot;\t&amp;amp;quot;+&amp;amp;quot;接收：&amp;amp;quot;+s+&amp;amp;quot;\n&amp;amp;quot;;
+                                    tvDataReceived.setText(msg);
+                                }
+                            });
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        receiveThread.start();
+    }
+
+    @Override
+    public void onItemClick(AdapterView&amp;amp;lt;?&amp;amp;gt; parent, View view, int position, long id) {
+        BluetoothDevice device= (BluetoothDevice) viewAdapter.getItem(position);
+        connectServer(device);
+    }
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        <pubDate>Tue, 27 Dec 2016 11:12:29 +0800</pubDate>
+        <link>http://0.0.0.0:4000/2016/12/27/%E5%AE%89%E5%8D%93%E8%93%9D%E7%89%99%E9%80%9A%E4%BF%A1/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2016/12/27/%E5%AE%89%E5%8D%93%E8%93%9D%E7%89%99%E9%80%9A%E4%BF%A1/</guid>
+        
+        <category>安卓</category>
+        
+        <category>蓝牙</category>
+        
+        
+        <category>安卓</category>
+        
+      </item>
+    
+      <item>
+        <title>安卓远程日志收集</title>
+        <description>&lt;h3&gt;开始&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;最近在公司的项目中需要收集安卓的运行日志，最开始的时候我把日志写入到设备本地文件中存
+储，使用Bmob的文件管理功能定时上传到服务器，在使用过程中有些地方不太方便，第一就是文
+件上传过程中不能写入日志，不然会因为文件上传完成后的校验不通过，导致上传失败进而引发
+程序崩溃。另外一个就是如果单纯的只为了收集日志的话引入Bmob的sdk有点过于浪费，Bmob
+的SDK体积也并不小。
+然后就开始自己动手解决这个问题。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;服务端实现&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;既然是远程收集日志，我们需要一个服务端程序，服务端的主要作用就是接受客户端传来的数
+据，写入到文件中。我们选择了Python+web.py来实现。
+
+import json
+import web
+import time
+import sys
+reload(sys)
+sys.setdefaultencoding(&amp;amp;#039;UTF-8&amp;amp;#039;)     #设置字符编码
+
+web.config.debug = True             #调试模式打开
+
+urls = (
+        &amp;amp;#039;/&amp;amp;#039;,&amp;amp;#039;index&amp;amp;#039;
+    )
+
+localLogs = &amp;amp;quot;&amp;amp;quot;
+
+
+class index:
+
+    def GET(self):                  #以网页形式返回日志数据
+
+        htmlFormat = &amp;amp;quot;&amp;amp;lt;html&amp;amp;gt;&amp;amp;lt;head&amp;amp;gt;&amp;amp;lt;title&amp;amp;gt;&amp;amp;lt;/title&amp;amp;gt;&amp;amp;lt;/head&amp;amp;gt;&amp;amp;lt;body&amp;amp;gt;%s   &amp;amp;lt;script type=&lt;pre wp-pre-tag-1&gt;&lt;/pre&gt;amp;quot;text/javascript&lt;pre wp-pre-tag-1&gt;&lt;/pre&gt;amp;quot;&amp;amp;gt;function myrefresh(){window.location.reload();window.scrollTo(0,document.body.scrollHeight);}setTimeout(&amp;amp;#039;myrefresh()&amp;amp;#039;,1000); &amp;amp;lt;/script&amp;amp;gt;&amp;amp;lt;/body&amp;amp;gt;&amp;amp;lt;/html&amp;amp;gt;&amp;amp;quot;
+        global localLogs
+        # localLogs = localLogs.encode(&amp;amp;#039;gbk&amp;amp;#039;)
+        return htmlFormat % localLogs
+
+    def POST(self):                 #接收请求保存日志到文件
+
+        inputs=web.input()
+        content = web.data()        #接收到日志数据
+
+        if content.startswith(&amp;amp;#039;{&amp;amp;#039;) and content.endswith(&amp;amp;#039;}&amp;amp;#039;):
+            content = &amp;amp;#039;[&amp;amp;#039; + content + &amp;amp;#039;]&amp;amp;#039;           #以Json数组格式处理
+
+        print content
+        logs = json.loads(content)
+
+        for log in logs:                            #处理数组中的log元素
+            if &amp;amp;#039;stack&amp;amp;#039; not in log:
+                log[&amp;amp;#039;stack&amp;amp;#039;] = &amp;amp;quot; &amp;amp;quot;
+
+            color = &amp;amp;#039;#808080&amp;amp;#039;                       #根据日志级别不同，以不同颜色显示到网页
+            if log[&amp;amp;#039;level&amp;amp;#039;] == &amp;amp;#039;INFO&amp;amp;#039;:
+                color = &amp;amp;#039;#008000&amp;amp;#039;
+            elif log[&amp;amp;#039;level&amp;amp;#039;] == &amp;amp;#039;WARNING&amp;amp;#039;:
+                color = &amp;amp;#039;#FFA500&amp;amp;#039;
+            elif log[&amp;amp;#039;level&amp;amp;#039;] == &amp;amp;#039;ERROR&amp;amp;#039;:
+                color = &amp;amp;#039;#FF0000&amp;amp;#039;
+
+            strLog = &amp;amp;#039;&amp;amp;lt;div style=&amp;amp;quot;color:%s&amp;amp;quot;&amp;amp;gt;%s  %s: [%s] %s &amp;amp;lt;/div&amp;amp;gt;&amp;amp;#039; % (color, log[&amp;amp;#039;time&amp;amp;#039;],log[&amp;amp;#039;level&amp;amp;#039;], log[&amp;amp;#039;tag&amp;amp;#039;], log[&amp;amp;#039;msg&amp;amp;#039;])#日志内容
+
+            stacks = log[&amp;amp;#039;stack&amp;amp;#039;].split(&amp;amp;#039;\n&amp;amp;#039;)
+            strLog = strLog + (&amp;amp;#039;&amp;amp;lt;div color=&amp;amp;quot;%s&amp;amp;quot;&amp;amp;gt;&amp;amp;#039; % color)
+            for s in stacks:
+                strLog = strLog + (&amp;amp;#039;&amp;amp;lt;div&amp;amp;gt;%s&amp;amp;lt;/div&amp;amp;gt;&amp;amp;#039; % (s.strip()))
+
+            strLog = strLog + &amp;amp;#039;&amp;amp;lt;/div&amp;amp;gt;&amp;amp;#039;
+
+            fileName=&amp;amp;quot;logs/&amp;amp;quot;+log[&amp;amp;#039;boxId&amp;amp;#039;]+&amp;amp;quot;_&amp;amp;quot;+time.strftime(&amp;amp;#039;%Y-%m-%d&amp;amp;#039;)+&amp;amp;quot;.html&amp;amp;quot;
+            f=open(fileName,&amp;amp;#039;a&amp;amp;#039;)                        #以追加方式写文件
+            f.write(strLog+&amp;amp;quot;\n&amp;amp;quot;)
+            f.close()
+            global localLogs
+            localLogs = localLogs + strLog
+
+        return &amp;amp;quot;&amp;amp;quot;
+
+
+if __name__ == &amp;amp;#039;__main__&amp;amp;#039;:
+    app = web.application(urls, globals())
+    app.run()
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;安卓端实现&lt;/h3&gt;
+&lt;h4&gt;首先定义一个日志接口&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;public interface ILog {
+
+    public void d(String tag, String msg);
+    public void i(String tag, String msg);
+    public void w(String tag, String msg);
+    public void w(String tag, String msg, Throwable e);
+    public void e(String tag, String msg);
+    public void e(String tag, String msg, Throwable e);
+
+    public void destory();
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4&gt;远程日志实现接口&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;public class URemoteLog implements ILog{
+
+
+    private URemoteLogPrinter printer;
+
+    public URemoteLog(int interval){
+        printer = new URemoteLogPrinter(interval);
+    }
+
+    @Override
+    public void d(String tag, String msg) {
+        printer.print(new ULog(ULog.L_DEBUG, tag, msg));
+    }
+
+    @Override
+    public void i(String tag, String msg) {
+        printer.print(new ULog(ULog.L_INFO, tag, msg));
+    }
+
+    @Override
+    public void w(String tag, String msg) {
+        printer.print(new ULog(ULog.L_WARN, tag, msg));
+    }
+
+    @Override
+    public void w(String tag, String msg, Throwable e) {
+        printer.print(new ULog(ULog.L_WARN, tag, msg));
+    }
+
+    @Override
+    public void e(String tag, String msg) {
+        printer.print(new ULog(ULog.L_ERROR, tag, msg));
+    }
+
+    @Override
+    public void e(String tag, String msg, Throwable e) {
+        printer.print(new ULog(ULog.L_ERROR, tag, msg));
+    }
+
+    @Override
+    public void destory() {
+        printer.stop();
+    }
+
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4&gt;日志打印类，主要将日志写入远程&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;public class URemoteLogPrinter {
+
+    private List&amp;amp;lt;ULog&amp;amp;gt; logs;
+    private int interval = 1000; //单位 毫秒
+
+    private Timer timer;
+    private boolean running;
+
+    public URemoteLogPrinter(){
+    }
+
+    public URemoteLogPrinter(int interval){
+        this.logs = Collections.synchronizedList(new ArrayList&amp;amp;lt;ULog&amp;amp;gt;());
+        this.interval = interval;
+    }
+
+    public void print(ULog log){
+        start();
+        synchronized (logs) {
+            logs.add(log);
+        }
+    }
+
+    public void printImmediate(String log){
+        HttpService.reportLog(log, new HttpCallback&amp;amp;lt;String&amp;amp;gt;() {
+            @Override
+            public void onSuccess(String data) {
+
+            }
+            @Override
+            public void onFailure(int statusCode, Error error) {
+
+            }
+        });
+    }
+
+    public List&amp;amp;lt;ULog&amp;amp;gt; getAndClear(){
+        synchronized (logs) {
+            List&amp;amp;lt;ULog&amp;amp;gt; all = new ArrayList&amp;amp;lt;ULog&amp;amp;gt;(logs);
+            logs.clear();
+            return all;
+        }
+    }
+
+    public void start(){
+        if(running){
+            return;
+        }
+
+        running = true;
+        TimerTask task = new LogPrintTask();
+        timer = new Timer(true);
+        timer.scheduleAtFixedRate(task, 100, interval);
+    }
+
+    public void stop(){
+        if(timer != null){
+            timer.cancel();
+        }
+        running = false;
+    }
+
+    class LogPrintTask extends TimerTask{
+        @Override
+        public void run() {
+            try{
+                List&amp;amp;lt;ULog&amp;amp;gt; logs = getAndClear();
+                if(logs.size() &amp;amp;gt; 0){
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(&amp;amp;quot;[&amp;amp;quot;);
+                    for(ULog log : logs){
+                        sb.append(log.toJson()).append(&amp;amp;quot;,&amp;amp;quot;);
+                    }
+                    sb.deleteCharAt(sb.length()-1).append(&amp;amp;quot;]&amp;amp;quot;);
+                    HttpService.reportLog(sb.toString(), new HttpCallback&amp;amp;lt;String&amp;amp;gt;() {
+                        @Override
+                        public void onSuccess(String data) {
+
+                        }
+                        @Override
+                        public void onFailure(int statusCode, Error error) {
+
+                        }
+                    });
+                }
+            }catch(Exception e){
+                e.printStackTrace();
+                stop();
+            }
+        }
+
+    }
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h4&gt;日志实体类&lt;/h4&gt;
+&lt;pre&gt;&lt;code&gt;public class ULog {
+    public static final String L_DEBUG=&amp;amp;quot;L_DEBUG&amp;amp;quot;;
+    public static final String L_INFO=&amp;amp;quot;L_INFO&amp;amp;quot;;
+    public static final String L_WARN=&amp;amp;quot;L_WARN&amp;amp;quot;;
+    public static final String L_ERROR=&amp;amp;quot;L_ERROR&amp;amp;quot;;
+
+    private String boxId;
+    private String level;
+    private String msg;
+    private String tag;
+    private String time;
+
+    public ULog(String level,String tag,String msg) {
+        this.boxId = MainApplication.getBoxId();
+        this.level = level;
+        this.msg = msg;
+        this.tag = tag;
+        Date date=new Date();
+        SimpleDateFormat format=new SimpleDateFormat(&amp;amp;quot;yyyy-MM-dd HH:mm:ss&amp;amp;quot;);
+        String time=format.format(date);
+        this.time = time;
+    }
+    public String toJson(){
+        Gson gson=new Gson();
+        return gson.toJson(this);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        <pubDate>Fri, 23 Dec 2016 10:15:23 +0800</pubDate>
+        <link>http://0.0.0.0:4000/2016/12/23/%E5%AE%89%E5%8D%93%E8%BF%9C%E7%A8%8B%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2016/12/23/%E5%AE%89%E5%8D%93%E8%BF%9C%E7%A8%8B%E6%97%A5%E5%BF%97%E6%94%B6%E9%9B%86/</guid>
+        
+        <category>安卓</category>
+        
+        <category>日志</category>
+        
+        
+        <category>HelloWorld</category>
+        
+        <category>安卓</category>
+        
+        <category>python</category>
+        
+      </item>
+    
+      <item>
+        <title>Android开发中一些被冷落但却很有用的类和方法</title>
+        <description>&lt;p&gt;MediaMetadataRetriever&lt;br /&gt;
+顾名思义，就是用来获取媒体文件一些相关信息的类。包括一首歌的标题，作者，专辑封面和名称，时长，比特率等等。如果是视频的话，可以获取视频的长宽，预览图。&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/media/MediaMetadataRetriever.html&lt;/p&gt;
+&lt;p&gt;TouchDelegate&lt;br /&gt;
+用于更改View的触摸区域。场景：比如在RecyclerView的ItemView里包含了CheckBox组件, 然后想实现点击ItemView的时候，也可以触发CheckBox，就可以使用此类。&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/training/gestures/viewgroup.html#delegate&lt;/p&gt;
+&lt;p&gt;ArgbEvaluator&lt;br /&gt;
+用于计算不同颜色值之间的插值，配合ValueAnimator.ofObject或者ViewPager.PageTransformer使用，可以实现不同颜色之间的平滑过渡。&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/animation/ArgbEvaluator.html&lt;/p&gt;
+&lt;p&gt;Palette&lt;br /&gt;
+用于提取一张图片的颜色。&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/support/v7/graphics/Palette.html&lt;/p&gt;
+&lt;p&gt;ViewDragHelper&lt;br /&gt;
+做过自定义ViewGroup的童鞋都应该知道这个东西吧，用来处理触摸事件的神器，妈妈再也不用担心我自定义控件了。&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/support/v4/widget/ViewDragHelper.html&lt;/p&gt;
+&lt;p&gt;http://www.cnblogs.com/lqstayreal/p/4500219.html&lt;/p&gt;
+&lt;p&gt;PageTransformer&lt;br /&gt;
+用于定义ViewPager页面切换时的动画效果（淡入淡出，放大缩小神马的…）官方有例子，直接看吧。&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/training/animation/screen-slide.html&lt;/p&gt;
+&lt;p&gt;ViewFlipper&lt;br /&gt;
+可以实现简单轮播效果的一个组件。&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/widget/ViewFlipper.html&lt;/p&gt;
+&lt;p&gt;LocalBroadcastManager&lt;br /&gt;
+用于在APP内部使用的，效率和安全性更好的广播工具类。&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/support/v4/content/LocalBroadcastManager.html&lt;/p&gt;
+&lt;p&gt;Messenger&lt;br /&gt;
+进程间通信的一个工具类。内部也是由AIDL实现的，但是用起来超级方便。&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/os/Messenger.html&lt;/p&gt;
+&lt;p&gt;http://blog.csdn.net/lmj623565791/article/details/47017485&lt;/p&gt;
+&lt;p&gt;Formatter.formatFileSize&lt;br /&gt;
+根据文件大小自动转为以KB, MB, GB为单位的工具类。想想以前都是自己计算的…&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/text/format/Formatter.html&lt;/p&gt;
+&lt;p&gt;Activity.recreate&lt;br /&gt;
+重新创建Activity。有什么用呢？可以在程序更换主题后，立马刷新当前Activity，而不会有明显的重启Activity的动画。&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/app/Activity.html#recreate%28%29&lt;/p&gt;
+&lt;p&gt;View.getContext&lt;br /&gt;
+顾名思义，就不用解释了吧…以前在写RecyclerView的Adapter的时候，为了使用LayoutInflater，经常傻乎乎地在构造函数中传入一个外部的context….是不是只有我不知道而已（笑cry脸）&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/view/View.html#getContext()&lt;/p&gt;
+&lt;p&gt;View.post&lt;br /&gt;
+方便在非UI线程对界面进行修改，与Handler的作用类似。并且由于post的Runnable会保证在该View绘制完成的前提下才调用，所以一般也可以用于获取View的宽高。&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/view/View.html#post(java.lang.Runnable)&lt;/p&gt;
+&lt;p&gt;Activity.runOnUiThread&lt;br /&gt;
+与View.post类似，方便在非UI线程中对界面进行修改。&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/app/Activity.html#runOnUiThread(java.lang.Runnable)&lt;/p&gt;
+&lt;p&gt;Fragment.setUserVisibleHint&lt;br /&gt;
+Fragment可以重写此方法，然后根据参数的布尔值（true的话表示当前Fragment对用户可见），来执行一些逻辑。&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/support/v4/app/Fragment.html#setUserVisibleHint(boolean)&lt;/p&gt;
+&lt;p&gt;android:animateLayoutChanges&lt;br /&gt;
+这是一个非常酷炫的属性。在父布局加上android:animateLayoutChanges=&quot;true&quot;后，如果触发了layout方法（比如它的子View设置为GONE），系统就会自动帮你加上布局改变时的动画特效！！&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/training/animation/layout.html&lt;/p&gt;
+&lt;p&gt;android:clipToPadding&lt;br /&gt;
+设置父view是否允许其子view在它的padding（这里指的是父View的padding）中绘制。是不是有点绕？举个实际场景吧：假如有个ListView，我们想要在初始位置时，第一项Item离顶部有10dp的距离，就可以在ListView的布局中加入android:clipToPadding=&quot;false&quot;android:paddingTop=&quot;10dp&quot;即可。是不是很方便呢？&lt;/p&gt;
+&lt;p&gt;http://developer.android.com/intl/zh-cn/reference/android/view/ViewGroup.html#attr_android:clipToPadding&lt;/p&gt;
+</description>
+        <pubDate>Fri, 16 Dec 2016 14:10:14 +0800</pubDate>
+        <link>http://0.0.0.0:4000/2016/12/16/Android%E5%BC%80%E5%8F%91%E4%B8%AD%E4%B8%80%E4%BA%9B%E8%A2%AB%E5%86%B7%E8%90%BD%E4%BD%86%E5%8D%B4%E5%BE%88%E6%9C%89%E7%94%A8%E7%9A%84%E7%B1%BB%E5%92%8C%E6%96%B9%E6%B3%95/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2016/12/16/Android%E5%BC%80%E5%8F%91%E4%B8%AD%E4%B8%80%E4%BA%9B%E8%A2%AB%E5%86%B7%E8%90%BD%E4%BD%86%E5%8D%B4%E5%BE%88%E6%9C%89%E7%94%A8%E7%9A%84%E7%B1%BB%E5%92%8C%E6%96%B9%E6%B3%95/</guid>
+        
+        <category>安卓</category>
+        
+        
+        <category>安卓</category>
+        
+      </item>
+    
+      <item>
+        <title>java实现获取文件MD5值</title>
+        <description>&lt;h3&gt;什么是MD5&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;Message Digest Algorithm MD5（中文名为消息摘要算法第五版）为计算机安全领域广泛
+使用的一种散列函数，用以提供消息的完整性保护。该算法的文件号为RFC 
+1321（R.Rivest,MIT Laboratory for Computer Science and RSA Data 
+Security Inc. April 1992）。
+MD5即Message-Digest Algorithm 5（信息-摘要算法5），用于确保信息传输完整一致。
+是计算机广泛使用的杂凑算法之一（又译摘要算法、哈希算法），主流编程语言普遍已有MD5实
+现。将数据（如汉字）运算为另一固定长度值，是杂凑算法的基础原理，MD5的前身有MD2、MD3和MD4。
+
+MD5算法具有以下特点：
+1、压缩性：任意长度的数据，算出的MD5值长度都是固定的。
+2、容易计算：从原数据计算出MD5值很容易。
+3、抗修改性：对原数据进行任何改动，哪怕只修改1个字节，所得到的MD5值都有很大区别。
+4、强抗碰撞：已知原数据和其MD5值，想找到一个具有相同MD5值的数据（即伪造数据）是非常困难的。
+MD5的作用是让大容量信息在用数字签名软件签署私人密钥前被&amp;amp;quot;压缩&amp;amp;quot;成一种保密的格式（就是
+把一个任意长度的字节串变换成一定长的十六进制数字串）。除了MD5以外，其中比较有名的还
+有sha-1、RIPEMD以及Haval等。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;发展历史&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;MD2
+Rivest在1989年开发出MD2算法。在这个算法中，首先对信息进行数据补位，使信息的字节长度是16的倍数。然后，以一个16位的检验和追加到信息末尾，并且根据这个新产生的信息计算出散列值。后来，Rogier和Chauvaud发现如果忽略了检验将和MD2产生冲突。MD2算法加密后结果是唯一的（即不同信息加密后的结果不同）。
+MD4
+为了加强算法的安全性，Rivest在1990年又开发出MD4算法。MD4算法同样需要填补信息以确
+保信息的比特位长度减去448后能被512整除（信息比特位长度mod 512 = 448）。然后，一个
+以64位二进制表示的信息的最初长度被添加进来。信息被处理成512位damg?rd/merkle迭代结
+构的区块，而且每个区块要通过三个不同步骤的处理。Den boer和Bosselaers以及其他人很
+快的发现了攻击MD4版本中第一步和第三步的漏洞。Dobbertin向大家演示了如何利用一部普通
+的个人电脑在几分钟内找到MD4完整版本中的冲突（这个冲突实际上是一种漏洞，它将导致对不
+同的内容进行加密却可能得到相同的加密后结果）。毫无疑问，MD4就此被淘汰掉了。
+尽管MD4算法在安全上有个这么大的漏洞，但它对在其后才被开发出来的好几种信息安全加密算
+法的出现却有着不可忽视的引导作用。
+MD5
+1991年，Rivest开发出技术上更为趋近成熟的md5算法。它在MD4的基础上增加了&amp;amp;quot;安全-带
+子&amp;amp;quot;（safety-belts）的概念。虽然MD5比MD4复杂度大一些，但却更为安全。这个算法很明显
+的由四个和MD4设计有少许不同的步骤组成。在MD5算法中，信息-摘要的大小和填充的必要条件
+与MD4完全相同。Den boer和Bosselaers曾发现MD5算法中的假冲突（pseudo-
+collisions），但除此之外就没有其他被发现的加密后结果了。
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3&gt;使用java语言获取文件MD5&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;/**
+ * MD5验证工具 
+ *
+ */
+public class MD5Util {
+
+    /**
+     * 默认的密码字符串组合，用来将字节转换成 16 进制表示的字符,apache校验下载的文件的正确性用的就是默认的这个组合 
+     */
+    protected static char hexDigits[] = {&amp;amp;#039;0&amp;amp;#039;,&amp;amp;#039;1&amp;amp;#039;,&amp;amp;#039;2&amp;amp;#039;,&amp;amp;#039;3&amp;amp;#039;,&amp;amp;#039;4&amp;amp;#039;,&amp;amp;#039;5&amp;amp;#039;,&amp;amp;#039;6&amp;amp;#039;,&amp;amp;#039;7&amp;amp;#039;,&amp;amp;#039;8&amp;amp;#039;,&amp;amp;#039;9&amp;amp;#039;,&amp;amp;#039;a&amp;amp;#039;,&amp;amp;#039;b&amp;amp;#039;,&amp;amp;#039;c&amp;amp;#039;,&amp;amp;#039;d&amp;amp;#039;,&amp;amp;#039;e&amp;amp;#039;,&amp;amp;#039;f&amp;amp;#039;};
+    protected static MessageDigest messagedigest = null;
+    static {
+        try {
+            messagedigest = MessageDigest.getInstance(&amp;amp;quot;MD5&amp;amp;quot;);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String getFileMD5String(File file) throws IOException {
+        InputStream fis;
+        fis = new FileInputStream(file);
+        byte[] buffer = new byte[1024];
+        int numRead = 0;
+        while ((numRead = fis.read(buffer)) &amp;amp;gt; 0) {
+            messagedigest.update(buffer, 0, numRead);
+        }
+        fis.close();
+        return bufferToHex(messagedigest.digest());
+    }
+
+    private static String bufferToHex(byte bytes[]) {
+        return bufferToHex(bytes, 0, bytes.length);
+    }
+
+    private static String bufferToHex(byte bytes[], int m, int n) {
+        StringBuffer stringbuffer = new StringBuffer(2 * n);
+        int k = m + n;
+        for (int l = m; l &amp;amp;lt; k; l++) {
+            appendHexPair(bytes[l], stringbuffer);
+        }
+        return stringbuffer.toString();
+    }
+
+    private static void appendHexPair(byte bt, StringBuffer stringbuffer) {
+        char c0 = hexDigits[(bt &amp;amp;amp; 0xf0) &amp;amp;gt;&amp;amp;gt; 4];// 取字节中高 4 位的数字转换  
+        // 为逻辑右移，将符号位一起右移,此处未发现两种符号有何不同  
+        char c1 = hexDigits[bt &amp;amp;amp; 0xf];// 取字节中低 4 位的数字转换  
+        stringbuffer.append(c0);
+        stringbuffer.append(c1);
+    }
+}  
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        <pubDate>Mon, 12 Dec 2016 18:21:43 +0800</pubDate>
+        <link>http://0.0.0.0:4000/2016/12/12/java%E5%AE%9E%E7%8E%B0%E8%8E%B7%E5%8F%96%E6%96%87%E4%BB%B6MD5/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2016/12/12/java%E5%AE%9E%E7%8E%B0%E8%8E%B7%E5%8F%96%E6%96%87%E4%BB%B6MD5/</guid>
+        
+        <category>Java</category>
+        
+        <category>Md5</category>
+        
+        
+        <category>安卓</category>
+        
+      </item>
+    
+      <item>
+        <title>如何在Linux中查找一个文件</title>
+        <description>&lt;p&gt;在Linux中查找文件有两种方法。一种是使用 find 命令，另外一种是使用 locate 命令。我们先看第一种。&lt;br /&gt;
+find命令使用 Linux find命令可以用不同的搜索标准如名字、类型、所属人、大小等来搜索目录树。基本语法如下：&lt;/p&gt;
+&lt;h1&gt;find path expression search-term&lt;/h1&gt;
+&lt;p&gt;下面是使用find命令根据文件名来查找特定文件的一个例子：&lt;/p&gt;
+&lt;h1&gt;find -name test.file&lt;/h1&gt;
+&lt;p&gt;命令会搜索整个目录树来查找名为 test.file 的文件，并且会提供其存放位置。你可以使用你Linux上一个存在的文件名来尝试一下。&lt;br /&gt;
+find命令有时会花费几分钟来查找整个目录树，尤其是如果系统中有很多文件和目录的话。要显著减少时间，你可以指定搜索的目录。比如，如果你知道 /var 中存在 test.file，那就没有必要搜索其它目录。这样，你可以使用下面的命令：&lt;/p&gt;
+&lt;h1&gt;find /var -name test.file&lt;/h1&gt;
+&lt;p&gt;find还可以根据时间、大小、所属人、权限等选项搜索文件。要了解更多关于这些选项的信息，你可以使用查看** Linux find命令**的手册。&lt;/p&gt;
+&lt;h1&gt;man find&lt;/h1&gt;
+&lt;p&gt;locate命令&lt;br /&gt;
+要在Linux中使用locate命令，首先需要安装它。&lt;br /&gt;
+如果你正在使用Ubuntu，运行下面的命令来安装locate：&lt;/p&gt;
+&lt;h1&gt;apt-get update&lt;/h1&gt;
+&lt;h1&gt;apt-get install mlocate&lt;/h1&gt;
+&lt;p&gt;如果你使用的是CentOS，运行下面的命令来安装locate：&lt;/p&gt;
+&lt;h1&gt;yum install mlocate&lt;/h1&gt;
+&lt;p&gt;locate是一种比find更快的方式，因为它在数据库中查找文件。要更新搜索数据库，运行下面的命令：&lt;/p&gt;
+&lt;h1&gt;updatedb&lt;/h1&gt;
+&lt;p&gt;使用locate查找文件的语法：&lt;/p&gt;
+&lt;h1&gt;locate test.file&lt;/h1&gt;
+&lt;p&gt;就像find命令一样，locate也有很多选项来过滤输出。要了解更多你可以查看Linux Locate命令的手册。&lt;/p&gt;
+&lt;h1&gt;man locate&lt;/h1&gt;
+</description>
+        <pubDate>Wed, 07 Dec 2016 21:27:29 +0800</pubDate>
+        <link>http://0.0.0.0:4000/2016/12/07/%E5%A6%82%E4%BD%95%E5%9C%A8Linux%E4%B8%AD%E6%9F%A5%E6%89%BE%E4%B8%80%E4%B8%AA%E6%96%87%E4%BB%B6/</link>
+        <guid isPermaLink="true">http://0.0.0.0:4000/2016/12/07/%E5%A6%82%E4%BD%95%E5%9C%A8Linux%E4%B8%AD%E6%9F%A5%E6%89%BE%E4%B8%80%E4%B8%AA%E6%96%87%E4%BB%B6/</guid>
+        
+        <category>Linux</category>
+        
+        <category>grep</category>
+        
+        
+        <category>随记</category>
+        
+      </item>
+    
+  </channel>
+</rss>

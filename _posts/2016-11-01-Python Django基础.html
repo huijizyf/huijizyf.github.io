@@ -1,0 +1,151 @@
+---
+layout: post
+status: publish
+published: true
+title: Python Django基础
+author:
+ yufei.zhou
+
+wordpress_id: 72
+wordpress_url: http://donute.com/?p=72
+date: '2016-11-01 15:46:26 +0800'
+date_gmt: '2016-11-01 07:46:26 +0800'
+categories:
+- python
+tags: [python,django]
+comments: []
+---
+<div><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="Python &lt;wbr&gt;Django基础" src="/images/002o3oc9gy6UaiLBaTSb8.jpeg" alt="Python &lt;wbr&gt;Django基础" /></p>
+</div>
+<p>1、使用django-admin.py startproject djproject创建项目</p>
+<div>
+<p>上面这个命令会创建一个 djproject 目录，其中包含了运行 Django 项目所需要的基本配置文件：__init__.py manage.py settings.py urls.py <wbr /></p>
+<p>2.使用命令：<span style="color: #222222; font-family: Arial, sans-serif;">python manage.py startapp myapp</span>创建一个应用程序骨架</p>
+<p>myapp<span style="color: #222222;">应用程序目录中的内容 __init__.py models.py views.py</span> <wbr />  <wbr /></p>
+<p>3.编写models，并使用manage.py syncdb命令同步数据库</p>
+<p><span style="color: #222222;">from django.db import models</span></p>
+<p><span style="color: #222222;">#公交线路</span></p>
+<p><span style="color: #222222;">class BusRoadLine(models.Model):</span></p>
+<p><span style="color: #222222;">roadNo=models.IntegerField()</span></p>
+<p><span style="color: #222222;">busStartTime=models.DateTimeField()</span></p>
+<p><span style="color: #222222;">busEndTime=models.DateTimeField()</span></p>
+<p><span style="color: #222222;">busLine=models.TextField()</span></p>
+<p><wbr /></p>
+<p><span style="color: #222222;">#员工资料</span></p>
+<p><span style="color: #222222;">class Employee(models.Model):</span></p>
+<p><span style="color: #222222;">eid=models.IntegerField()</span></p>
+<p><span style="color: #222222;">name=models.TextField()</span></p>
+<p><span style="color: #222222;">age=models.IntegerField()</span></p>
+<p><span style="color: #222222;">sex=models.TextField()</span></p>
+<p><span style="color: #222222;">phone=models.IntegerField()</span></p>
+<p><span style="color: #222222;">#员工上下班管理</span></p>
+<p><span style="color: #222222;">class WorkRecord(models.Model):</span></p>
+<p><span style="color: #222222;">eid=models.IntegerField()</span></p>
+<p><span style="color: #222222;">workDay=models.DateField()</span></p>
+<p><span style="color: #222222;">startTime=models.DateTimeField()</span></p>
+<p><span style="color: #222222;">endTime=models.DateTimeField()</span></p>
+<p><span style="color: #222222;">#车辆管理</span></p>
+<p><span style="color: #222222;">class BusManage(models.Model):</span></p>
+<p><span style="color: #222222;">busId=models.IntegerField()</span></p>
+<p><span style="color: #222222;">busIsUsing=models.BooleanField()</span></p>
+<p><span style="color: #222222;">busSeatNum=models.IntegerField()</span></p>
+<p><span style="color: #222222;">#车辆调度</span></p>
+<p><span style="color: #222222;">class BusMapRoadLine(models.Model):</span></p>
+<p><span style="color: #222222;">busId=models.IntegerField()</span></p>
+<p><span style="color: #222222;">roadNo=models.IntegerField()</span></p>
+<p><wbr /></p>
+<p><span style="color: #222222;">#盈利</span></p>
+<p><span style="color: #222222;">class Profit(models.Model):</span></p>
+<p><span style="color: #222222;">roadNo=models.IntegerField()</span></p>
+<p><span style="color: #222222;">profit=models.IntegerField()</span></p>
+<p><wbr /></p>
+<p><span style="color: #222222;">dayTime=models.DateField()</span></p>
+<p>4、创建模板</p>
+<p>在myapp目录下新建<span style="color: #222222;">templates文件夹</span></p>
+<p><span style="color: #222222;">在目录下新建一个模板文件（模板文件中使用python标签）：</span></p>
+<p><wbr /></p>
+<p><wbr /></p>
+<p><wbr /></p>
+<p><span style="color: #222222;"> <wbr />  <wbr /></span></p>
+<p><wbr /></p>
+<p><wbr /></p>
+<p><span style="color: #222222;"><span style="font-family: 幼园;">公交线路浏览</span></span></p>
+<p><span style="color: #222222;">{% for obj in linelist %}</span></p>
+<p><span style="color: #222222;">{{ obj.roadNo }}路公交<br />
+<wbr /> <wbr /> <wbr />开始时间：{{ obj.busStartTime }}  <wbr /> <wbr />结束时间：{{ obj.busEndTime }}<br />
+<wbr /> <wbr /> <wbr />线路：{{obj.busLine}}<br />
+</span></p>
+<p><span style="color: #222222;">{% endfor %}</span></p>
+<p><span style="color: #222222;"><span style="font-family: 幼园;">员工资料浏览</span></span></p>
+<p><span style="color: #222222;">{% for obj in employeelist %}</span></p>
+<p><span style="color: #222222;">员工编号：{{ obj.eid }} <wbr /> <wbr /> <wbr />员工姓名：{{ obj.name }}  <wbr /> <wbr />员工年龄：{{ obj.age}} <wbr /> <wbr /> <wbr />员工性别：{{obj.sex}} <wbr /> <wbr />员工电话：{{ obj.phone}}<br />
+</span></p>
+<p><span style="color: #222222;">{% endfor %}</span></p>
+<p><span style="color: #222222;"><span style="font-family: 幼园;">员工上下班情况浏览</span></span></p>
+<p><span style="color: #222222;">{% for obj in workrecordlist %}</span></p>
+<p><span style="color: #222222;">员工编号：{{ obj.eid }} <wbr /> <wbr /> <wbr />上班日期：{{ obj.workDay }}  <wbr /> <wbr />上班时间：{{ obj.startTime}} <wbr /> <wbr /> <wbr />下班时间：{{obj.endTime}}<br />
+</span></p>
+<p><span style="color: #222222;">{% endfor %}</span></p>
+<p><span style="color: #222222;"><span style="font-family: 幼园;">车辆浏览</span></span></p>
+<p><span style="color: #222222;">{% for obj in busmanagelist %}</span></p>
+<p><span style="color: #222222;">车辆编号：{{ obj.busId }} <wbr /> <wbr /> <wbr />是否在使用中：{{ obj.busIsUsing }}  <wbr /> <wbr />车辆座位数：{{ obj.busSeatNum }}<br />
+</span></p>
+<p><span style="color: #222222;">{% endfor %}</span></p>
+<p><span style="color: #222222;"><span style="font-family: 幼园;">车辆使用情况浏览</span></span></p>
+<p><span style="color: #222222;">{% for obj in busmaproadlinelist %}</span></p>
+<p><span style="color: #222222;">车辆编号：{{ obj.busId }} <wbr /> <wbr /> <wbr />行驶线路：{{ obj.roadNo }}<br />
+</span></p>
+<p><span style="color: #222222;">{% endfor %}</span></p>
+<p><span style="color: #222222;"><span style="font-family: 幼园;">盈利情况浏览</span></span></p>
+<p><span style="color: #222222;">{% for obj in profitlist %}</span></p>
+<p><span style="color: #222222;">路线编号：{{ obj.roadNo }} <wbr /> <wbr /> <wbr />计算日期：{{ obj.dayTime }}  <wbr /> <wbr />当日利润：{{ obj.profit }}<br />
+</span></p>
+<p><span style="color: #222222;">{% endfor %}</span></p>
+<p><wbr /></p>
+<p><wbr /></p>
+<p>5、编写View</p>
+<p>from django.shortcuts import render</p>
+<p>from django.http import HttpResponse</p>
+<p>from road_manage.models import BusRoadLine</p>
+<p>from .models import Employee</p>
+<p>from .models import WorkRecord</p>
+<p>from .models import BusManage</p>
+<p>from .models import BusMapRoadLine</p>
+<p>from .models import Profit</p>
+<p>def showBusRoadLine(request):</p>
+<p>list=BusRoadLine.objects.all();</p>
+<p>employeelist=Employee.objects.all();</p>
+<p>workrecordlist=WorkRecord.objects.all();</p>
+<p>busmanagelist=BusManage.objects.all();</p>
+<p>busmaproadlinelist=BusMapRoadLine.objects.all();</p>
+<p>profitlist=Profit.objects.all();</p>
+<p>return render(request,'busroadline.html',{'linelist':list,'employeelist':employeelist,'workrecordlist':workrecordlist,'busmanagelist':busmanagelist,'busmaproadlinelist':busmaproadlinelist,'profitlist':profitlist})</p>
+<div>6、编写url</div>
+<div>
+<div>from django.conf.urls import include, url</div>
+<div>from django.contrib import admin</div>
+<div></div>
+<div>urlpatterns = [</div>
+<div> <wbr />  <wbr /> url(r'^admin/', include(admin.site.urls)),</div>
+<div> <wbr />  <wbr /> url(r'^$', 'road_manage.views.showBusRoadLine'),</div>
+<div>]</div>
+</div>
+<div>7、增加网站后台管理功能（在admin.py文件中注册相应的model）</div>
+<div>from django.contrib import admin</div>
+<div>from .models import BusRoadLine</div>
+<div>from .models import Employee</div>
+<div>from .models import WorkRecord</div>
+<div>from .models import BusManage</div>
+<div>from .models import BusMapRoadLine</div>
+<div>from .models import Profit</div>
+<div></div>
+<div>admin.site.register(BusRoadLine)</div>
+<div>admin.site.register(Employee)</div>
+<div>admin.site.register(WorkRecord)</div>
+<div>admin.site.register(BusManage)</div>
+<div>admin.site.register(BusMapRoadLine)</div>
+<div>admin.site.register(Profit)</div>
+<div>8、使用命令manage.py runserver 8080开启开发测试用服务器</div>
+<div>9、打开浏览器访问127.0.0.1:8080</div>
+<div>看到界面标示成功</div>
+</div>

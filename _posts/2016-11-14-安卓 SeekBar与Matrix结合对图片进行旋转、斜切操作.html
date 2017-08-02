@@ -1,0 +1,36 @@
+---
+layout: post
+status: publish
+published: true
+title: 安卓 SeekBar与Matrix结合对图片进行旋转、斜切操作
+author:
+ yufei.zhou
+
+wordpress_id: 118
+wordpress_url: http://donute.com/?p=118
+date: '2016-11-14 09:58:00 +0800'
+date_gmt: '2016-11-14 01:58:00 +0800'
+categories:
+- 安卓
+tags: [安卓]
+comments: []
+---
+<p><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="安卓 &lt;wbr&gt;SeekBar与Matrix结合对图片进行旋转、斜切操作" src="h/images/002o3oc9gy6Rgeu9SoM30.png" alt="安卓 &lt;wbr&gt;SeekBar与Matrix结合对图片进行旋转、斜切操作" width="690" height="333" name="image_operate_90951428230593972" /><br />
+关键代码：</p>
+<div>
+<pre>Matrix matrix = new Matrix();
+switch (seekBar.getId())
+{
+case R.id.x_seekBar:
+matrix.reset();
+matrix.postRotate(seekBar.getProgress()); //设置旋转
+break;
+case R.id.y_seekBar:
+matrix.reset();
+matrix.setSkew((float) (seekBar.getProgress() / 100), (float) (seekBar.getProgress() / 100)); //设置斜切
+break;
+}
+System.gc();
+bp=Bitmap.createBitmap(bitmap,0,0,w,h,matrix,true);
+iv.setImageBitmap(bp);</pre>
+</div>

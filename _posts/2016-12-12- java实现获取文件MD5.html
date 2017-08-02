@@ -1,0 +1,109 @@
+---
+layout: post
+status: publish
+published: true
+title: java实现获取文件MD5值
+author:
+ yufei.zhou
+
+wordpress_id: 190
+wordpress_url: http://donute.com/?p=190
+date: '2016-12-12 18:21:43 +0800'
+date_gmt: '2016-12-12 10:21:43 +0800'
+categories:
+- 安卓
+tags: [Java,Md5]
+comments: []
+---
+<h3>什么是MD5</h3>
+<pre><code>Message Digest Algorithm MD5（中文名为消息摘要算法第五版）为计算机安全领域广泛
+使用的一种散列函数，用以提供消息的完整性保护。该算法的文件号为RFC 
+1321（R.Rivest,MIT Laboratory for Computer Science and RSA Data 
+Security Inc. April 1992）。
+MD5即Message-Digest Algorithm 5（信息-摘要算法5），用于确保信息传输完整一致。
+是计算机广泛使用的杂凑算法之一（又译摘要算法、哈希算法），主流编程语言普遍已有MD5实
+现。将数据（如汉字）运算为另一固定长度值，是杂凑算法的基础原理，MD5的前身有MD2、MD3和MD4。
+
+MD5算法具有以下特点：
+1、压缩性：任意长度的数据，算出的MD5值长度都是固定的。
+2、容易计算：从原数据计算出MD5值很容易。
+3、抗修改性：对原数据进行任何改动，哪怕只修改1个字节，所得到的MD5值都有很大区别。
+4、强抗碰撞：已知原数据和其MD5值，想找到一个具有相同MD5值的数据（即伪造数据）是非常困难的。
+MD5的作用是让大容量信息在用数字签名软件签署私人密钥前被&amp;quot;压缩&amp;quot;成一种保密的格式（就是
+把一个任意长度的字节串变换成一定长的十六进制数字串）。除了MD5以外，其中比较有名的还
+有sha-1、RIPEMD以及Haval等。
+</code></pre>
+<h3>发展历史</h3>
+<pre><code>MD2
+Rivest在1989年开发出MD2算法。在这个算法中，首先对信息进行数据补位，使信息的字节长度是16的倍数。然后，以一个16位的检验和追加到信息末尾，并且根据这个新产生的信息计算出散列值。后来，Rogier和Chauvaud发现如果忽略了检验将和MD2产生冲突。MD2算法加密后结果是唯一的（即不同信息加密后的结果不同）。
+MD4
+为了加强算法的安全性，Rivest在1990年又开发出MD4算法。MD4算法同样需要填补信息以确
+保信息的比特位长度减去448后能被512整除（信息比特位长度mod 512 = 448）。然后，一个
+以64位二进制表示的信息的最初长度被添加进来。信息被处理成512位damg?rd/merkle迭代结
+构的区块，而且每个区块要通过三个不同步骤的处理。Den boer和Bosselaers以及其他人很
+快的发现了攻击MD4版本中第一步和第三步的漏洞。Dobbertin向大家演示了如何利用一部普通
+的个人电脑在几分钟内找到MD4完整版本中的冲突（这个冲突实际上是一种漏洞，它将导致对不
+同的内容进行加密却可能得到相同的加密后结果）。毫无疑问，MD4就此被淘汰掉了。
+尽管MD4算法在安全上有个这么大的漏洞，但它对在其后才被开发出来的好几种信息安全加密算
+法的出现却有着不可忽视的引导作用。
+MD5
+1991年，Rivest开发出技术上更为趋近成熟的md5算法。它在MD4的基础上增加了&amp;quot;安全-带
+子&amp;quot;（safety-belts）的概念。虽然MD5比MD4复杂度大一些，但却更为安全。这个算法很明显
+的由四个和MD4设计有少许不同的步骤组成。在MD5算法中，信息-摘要的大小和填充的必要条件
+与MD4完全相同。Den boer和Bosselaers曾发现MD5算法中的假冲突（pseudo-
+collisions），但除此之外就没有其他被发现的加密后结果了。
+</code></pre>
+<h3>使用java语言获取文件MD5</h3>
+<pre><code>/**
+ * MD5验证工具 
+ *
+ */
+public class MD5Util {
+
+    /**
+     * 默认的密码字符串组合，用来将字节转换成 16 进制表示的字符,apache校验下载的文件的正确性用的就是默认的这个组合 
+     */
+    protected static char hexDigits[] = {&amp;#039;0&amp;#039;,&amp;#039;1&amp;#039;,&amp;#039;2&amp;#039;,&amp;#039;3&amp;#039;,&amp;#039;4&amp;#039;,&amp;#039;5&amp;#039;,&amp;#039;6&amp;#039;,&amp;#039;7&amp;#039;,&amp;#039;8&amp;#039;,&amp;#039;9&amp;#039;,&amp;#039;a&amp;#039;,&amp;#039;b&amp;#039;,&amp;#039;c&amp;#039;,&amp;#039;d&amp;#039;,&amp;#039;e&amp;#039;,&amp;#039;f&amp;#039;};
+    protected static MessageDigest messagedigest = null;
+    static {
+        try {
+            messagedigest = MessageDigest.getInstance(&amp;quot;MD5&amp;quot;);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String getFileMD5String(File file) throws IOException {
+        InputStream fis;
+        fis = new FileInputStream(file);
+        byte[] buffer = new byte[1024];
+        int numRead = 0;
+        while ((numRead = fis.read(buffer)) &amp;gt; 0) {
+            messagedigest.update(buffer, 0, numRead);
+        }
+        fis.close();
+        return bufferToHex(messagedigest.digest());
+    }
+
+    private static String bufferToHex(byte bytes[]) {
+        return bufferToHex(bytes, 0, bytes.length);
+    }
+
+    private static String bufferToHex(byte bytes[], int m, int n) {
+        StringBuffer stringbuffer = new StringBuffer(2 * n);
+        int k = m + n;
+        for (int l = m; l &amp;lt; k; l++) {
+            appendHexPair(bytes[l], stringbuffer);
+        }
+        return stringbuffer.toString();
+    }
+
+    private static void appendHexPair(byte bt, StringBuffer stringbuffer) {
+        char c0 = hexDigits[(bt &amp;amp; 0xf0) &amp;gt;&amp;gt; 4];// 取字节中高 4 位的数字转换  
+        // 为逻辑右移，将符号位一起右移,此处未发现两种符号有何不同  
+        char c1 = hexDigits[bt &amp;amp; 0xf];// 取字节中低 4 位的数字转换  
+        stringbuffer.append(c0);
+        stringbuffer.append(c1);
+    }
+}  
+</code></pre>

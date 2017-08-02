@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="UTF-8">
+  <title>Modbus4J在安卓系统下的使用</title>
+  <meta name="viewport" content="width=device-width">
+
+  <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="/assets/css/style.css" rel="stylesheet" />
+  <link href="/assets/css/colors-dark.css" rel="stylesheet" />
+
+</head>
+
+<body>
+
+
+
+  <header id="header">
+    <h1><a href="/"><i class="icon-sun"></i> Solar Theme</a></h1>
+    <p>A stylish blog using the Solarized color palette</p>
+  </header>
+
+
+
+  <div id="page">
+
+
+
+    <div id="sidebar">
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/archives">Archive</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="http://twitter.com/redwall_hp">Twitter</a></li>
+          <li><a href="/feed.xml">RSS Feed</a></li>
+        </ul>
+      </nav>
+    </div>
+
+
+
+    <div id="content">
+      <article class="post">
+
+	
+		<h1><a href="/2016/11/15/Modbus4J%E5%9C%A8%E5%AE%89%E5%8D%93%E7%B3%BB%E7%BB%9F%E4%B8%8B%E7%9A%84%E4%BD%BF%E7%94%A8/">Modbus4J在安卓系统下的使用</a></h1>
+	
+
+	<div class="post-content"><h3>一.Modbus协议</h3>
+<pre><code>1.Modbus是由Modicon（现为施耐德电气公司的一个品牌）在1979年发明的，是全球第一个真正用于工业现场的总线协议。
+ModBus网络是一个工业通信系统，由带智能终端的可编程序控制器和计算机通过公用线路或局部专用线路连接而成。其系统结构既包括硬件、亦包括软件。它可应用于各种数据采集和过程监控。
+ModBus网络只有一个主机，所有通信都由他发出。网络可支持247个之多的远程从属控制器，但实际所支持的从机数要由所用通信设备决定。采用这个系统，各PC可以和中心主机交换信息而不影响各PC执行本身的控制任务。
+
+2.Modbus具有以下几个特点：
+（1）标准、开放，用户可以免费、放心地使用Modbus协议，不需要交纳许可证费，也不会侵犯知识产权。目前，支持Modbus的厂家超过400家，支持Modbus的产品超过600种。
+（2）Modbus可以支持多种电气接口，如RS-232、RS-485等，还可以在各种介质上传送，如双绞线、光纤、无线等。
+（3）Modbus的帧格式简单、紧凑，通俗易懂。用户使用容易，厂商开发简单。
+
+3.ModBus功能码
+01  READ COIL STATUS
+02  READ INPUT STATUS
+03  READ HOLDING REGISTER
+04  READ INPUT REGISTER
+05  WRITE SINGLE COIL
+06  WRITE SINGLE REGISTER
+15  WRITE MULTIPLE COIL
+16  WRITE MULTIPLE REGISTER
+</code></pre>
+<h3>二.Modbus4J简介</h3>
+<pre><code>[Git](https://github.com/infiniteautomation/modbus4j)
+以下是Git上Modbus4J的简介：
+modbus4j
+========
+A high-performance and ease-of-use implementation of the Modbus protocol written in Java by Infinite Automation Systems and Serotonin Software. Supports ASCII, RTU, TCP, and UDP transports as slave or master, automatic request partitioning and response data type parsing.
+Commercial licenses are available from www.InfiniteAutomation.com
+
+Modbus4J是一个由英菲尼迪自动化系统和Serotonin软件一起推出的高性能且易于使用的基于java语言的Modbus协议的实现。支持主/从站，ASCII，RTU，TCP和UDP传输方式，具有自动化的请求分割与响应数据解析的功能。
+</code></pre>
+<h3>三.在安卓下使用Modbus4J</h3>
+<pre><code>    /**
+     * 初始化Modbus主站
+     */
+    public static void initModbusMaster() {
+        String plcIpAddress= AppSP.getStringValue(AppSP.PLC_IP_ADDRESS,&amp;quot;&amp;quot;);
+        String plcPort= AppSP.getStringValue(AppSP.PLC_PORT,&amp;quot;502&amp;quot;);//PLC端口号默认502
+        plcNO=Integer.parseInt(AppSP.getStringValue(AppSP.PLC_NO,&amp;quot;1&amp;quot;));//默认PLC站号为1
+        if(plcIpAddress.equals(&amp;quot;&amp;quot;)||plcPort.equals(&amp;quot;&amp;quot;)){
+            return;
+        }
+
+        IpParameters ipParameters=new IpParameters();
+        ipParameters.setHost(plcIpAddress);
+        ipParameters.setPort(Integer.parseInt(plcPort));
+        if(master!=null){
+            if (master.isInitialized()){
+                master.destroy();
+            }
+        }
+
+        ModbusFactory modbusFactory = new ModbusFactory();
+        master = modbusFactory.createTcpMaster(ipParameters,true);
+        new Thread(){
+            @Override
+            public void run() {
+                super.run();
+                try {
+                    master.init();
+                } catch (ModbusInitException e) {
+                    e.printStackTrace();
+                }finally {
+                    master.destroy();
+                }
+            }
+        }.start();
+    }
+
+
+    在安卓上使用Modbus4J，Modbus可以使用串口或者以太网通信，这里我们使用的是以太网通信方式：
+public class ModbusBridge {
+    /**
+     * 读保持寄存器上的内容
+     * @param master 主站
+     * @param slaveId 从站地址
+     * @param start 起始地址的偏移量
+     * @param len 待读寄存器的个数
+     * @param listener 回调监听
+     */
+    public static void readHRegs(final ModbusMaster master, final int slaveId, final int start, final int len, final ModbusResponseListener listener) {
+        if(master==null){
+            return;
+        }
+        new AsyncTask&amp;lt;Object[],Long,ModbusResponse&amp;gt;(){
+            @Override
+            protected ModbusResponse doInBackground(Object[]... params) {
+                ReadHoldingRegistersRequest request = null;
+                ReadHoldingRegistersResponse response=null;
+                try {
+                    request = new ReadHoldingRegistersRequest(slaveId, start, len);
+                    response = (ReadHoldingRegistersResponse) master.send(request);
+                    return response;
+                } catch (ModbusTransportException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(ModbusResponse response) {
+                super.onPostExecute(response);
+                if(response==null){
+                    onFail(response);
+                    return;
+                }
+                listener.onResponse(response);
+            }
+        }.execute();
+    }
+
+    /**
+     * 批量写数据到保持寄存器
+     * @param master 主站
+     * @param slaveId 从站地址
+     * @param start 起始地址的偏移量
+     * @param values 待写数据
+     * @param listener 回调监听
+     */
+    public static void writeHRegs(final ModbusMaster master, final int slaveId, final int start, final short[] values, final ModbusResponseListener listener) {
+        if(master==null){
+            return;
+        }
+        new AsyncTask&amp;lt;Object[],Long,ModbusResponse&amp;gt;(){
+            @Override
+            protected ModbusResponse doInBackground(Object[]... params) {
+                WriteRegistersRequest request ;
+                WriteRegistersResponse response;
+                try {
+                     request = new WriteRegistersRequest(slaveId, start, values);
+                     response = (WriteRegistersResponse) master.send(request);
+                    return response;
+                }
+                catch (ModbusTransportException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(ModbusResponse response) {
+                super.onPostExecute(response);
+                if(response==null){
+                    onFail(response);
+                    return;
+                }
+                listener.onResponse(response);
+            }
+        }.execute();
+    }
+
+    /**
+     * 同步方式批量写数据到保持寄存器
+     * @param master
+     * @param slaveId
+     * @param start
+     * @param values
+     */
+    public static int writeHRegs(final ModbusMaster master, final int slaveId, final int start, final short[] values){
+        if(master==null){
+            return -1;
+        }
+        try {
+            WriteRegistersRequest request = new WriteRegistersRequest(slaveId, start, values);
+            WriteRegistersResponse response = (WriteRegistersResponse) master.send(request);
+            if(!response.isException()){
+                return 0;
+            }else {
+                return -1;
+            }
+        }
+        catch (ModbusTransportException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    /************************************************************************************************************/
+    /**
+     * 带掩码写数据到保持寄存器
+     * @param master 主站
+     * @param slaveId 从站地址
+     * @param start 起始地址
+     * @param andMask The andMask determines which bits we want to change
+     * @param orMask The orMask determines what value a bit will have after writing
+     * @param listener 回调监听
+     */
+    public static void writeMaskReg(final ModbusMaster master, final int slaveId, final int start, final int andMask, final int orMask, final ModbusResponseListener listener) {
+        if(master==null){
+            return;
+        }
+        readHRegs(master, slaveId, start, 1, new ModbusResponseListener() {
+            @Override
+            public void onResponse(ModbusResponse response) {
+                if(!response.isException()){
+                    short temp=((ReadHoldingRegistersResponse)response).getShortData()[0];
+                    Log.d(&amp;quot;读取数据&amp;quot;,temp+&amp;quot;&amp;quot;);
+                    Log.d(&amp;quot;准备数据1&amp;quot;,(temp&amp;amp;andMask)+&amp;quot;&amp;quot;);
+                    Log.d(&amp;quot;准备数据2&amp;quot;,((temp&amp;amp;andMask)|orMask)+&amp;quot;&amp;quot;);
+                    int result=((temp&amp;amp;andMask)|orMask);
+                    short[] data={(short)result};
+                    writeHRegs(master,slaveId,start,data,listener);
+                }
+            }
+        });
+    }
+    private static void onFail(ModbusResponse response){
+        if(response==null){
+            Toast.makeText(MainApplication.getContext(),&amp;quot;ModbusTransportException&amp;quot;,Toast.LENGTH_LONG).show();
+        }else {
+            Toast.makeText(MainApplication.getContext(),&amp;quot;Fail:&amp;quot;+response.getExceptionMessage(),Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /********************************************************************************************************************/
+
+    /**
+     * 写线圈寄存器
+     * @param master
+     * @param slaveId
+     * @param addr
+     * @param value
+     * @param listener
+     */
+    public static void writeCoilRegister(final ModbusMaster master, final int slaveId, final int addr, final boolean value, final ModbusResponseListener listener){
+        if(master==null){
+            return;
+        }
+        new AsyncTask&amp;lt;Object[],Long,ModbusResponse&amp;gt;(){
+            @Override
+            protected ModbusResponse doInBackground(Object[]... params) {
+                WriteCoilRequest request ;
+                WriteCoilResponse response;
+                try {
+                    request = new WriteCoilRequest(slaveId,addr,value);
+                    response = (WriteCoilResponse) master.send(request);
+                    return response;
+                }
+                catch (ModbusTransportException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(ModbusResponse response) {
+                super.onPostExecute(response);
+                if(response==null){
+                    onFail(response);
+                    return;
+                }
+                listener.onResponse(response);
+            }
+        }.execute();
+    }
+
+    /**
+     * 读线圈寄存器
+     * @param master
+     * @param slaveId
+     * @param addr
+     * @param listener
+     */
+    public static void readCoilRegister(final ModbusMaster master, final int slaveId, final int addr, final ModbusResponseListener listener){
+        if(master==null){
+            return;
+        }
+        new AsyncTask&amp;lt;Object[],Long,ModbusResponse&amp;gt;(){
+            @Override
+            protected ModbusResponse doInBackground(Object[]... params) {
+                ReadCoilsRequest request = null;
+                ReadCoilsResponse response=null;
+                try {
+                    request = new ReadCoilsRequest(slaveId,addr,1);
+                    response = (ReadCoilsResponse) master.send(request);
+                    return response;
+                } catch (ModbusTransportException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(ModbusResponse response) {
+                super.onPostExecute(response);
+                if(response==null){
+                    onFail(response);
+                    return;
+                }
+                listener.onResponse(response);
+            }
+        }.execute();
+    }
+
+    /**
+     * 同步写线圈寄存器
+     * @param master
+     * @param slaveId
+     * @param addr
+     * @param value
+     */
+    public static int writeCoilRegister(final ModbusMaster master,int slaveId,int addr,boolean value){
+        if(master==null){
+            return -1;
+        }
+        try {
+            WriteCoilRequest request=new WriteCoilRequest(slaveId,addr,value);
+            WriteCoilResponse response= (WriteCoilResponse) master.send(request);
+            if(!response.isException()){
+                return 1;
+            }else {
+                return -1;
+            }
+        } catch (ModbusTransportException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+    /**
+     * 同步读线圈寄存器
+     * @param master
+     * @param slaveId
+     * @param addr
+     */
+    public static boolean readCoilRegister(final ModbusMaster master,int slaveId,int addr){
+        if(master==null){
+            return false;
+        }
+        try {
+            ReadCoilsRequest request=new ReadCoilsRequest(slaveId,addr,1);
+            ReadCoilsResponse response= (ReadCoilsResponse) master.send(request);
+            if(!response.isException()){
+                return response.getBooleanData()[0];
+            }
+            return false;
+        } catch (ModbusTransportException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static void read(final ModbusMaster master,int slaveId,int addr){
+        try {
+            ReadCoilsRequest request2=new ReadCoilsRequest(slaveId,addr,8);
+            ReadCoilsResponse response2= (ReadCoilsResponse) master.send(request2);
+            if(!response2.isException()){
+                Log.e(&amp;quot;ReadInputRegisters&amp;quot;,response2.getFunctionCode()+&amp;quot;   &amp;quot;+Arrays.toString(response2.getBooleanData()));
+            }
+
+        } catch (ModbusTransportException e) {
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+</div>
+
+	<p class="meta">Posted on <span class="postdate">Nov 15, 2016</span></p>
+
+</article>
+    </div>
+
+
+
+  </div>
+
+
+
+  <footer id="footer">
+    <p class="copyright">Copyright &copy; 2017 Solar Theme. Powered by <a href="http://jekyllrb.com">Jekyll</a>, theme by <a href="http://www.webmaster-source.com">Matt Harzewski</a></p>
+  </footer>
+
+
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script src="/assets/js/jquery.mobilemenu.min.js"></script>
+
+  <script>
+    $(document).ready(function(){
+      $('#sidebar nav ul').mobileMenu({'topOptionText': 'Menu', 'prependTo': '#sidebar nav'});
+    });
+  </script>
+
+
+
+</body>
+</html>

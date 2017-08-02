@@ -1,0 +1,33 @@
+---
+layout: post
+status: publish
+published: true
+title: moke-api-server安装步骤
+author:
+ yufei.zhou
+
+wordpress_id: 70
+wordpress_url: http://donute.com/?p=70
+date: '2016-11-01 15:44:11 +0800'
+date_gmt: '2016-11-01 07:44:11 +0800'
+categories:
+- 随记
+tags: [api]
+comments: []
+---
+<div>
+<div>moke-api-server安装步骤</div>
+</div>
+<div>1.安装Python2.7</div>
+<div>2.安装Node.js4.4</div>
+<div>3.安装npm</div>
+<div>4.安装libcurl4-openssl-dev</div>
+<div>5.安装mock-api-server</div>
+<div>通过mock-api-server --port  PORT     可以启动mock-api-server</div>
+<div></div>
+<div>注意：</div>
+<div>    启动mock-api-server时，切换到自建的指定目录，然后按需要建立目录结构</div>
+<div>例：</div>
+<div>在目录~/mock-api下启动server</div>
+<div>目录结构为~/mock-api/test/mock-api/GET/hello.json</div>
+<div>访问http://ip/port/hello时，返回的数据为hello.json文件中的内容</div>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="UTF-8">
+  <title>Node.js通过Restful Api与Bmob后端云交互</title>
+  <meta name="viewport" content="width=device-width">
+
+  <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="/assets/css/style.css" rel="stylesheet" />
+  <link href="/assets/css/colors-dark.css" rel="stylesheet" />
+
+</head>
+
+<body>
+
+
+
+  <header id="header">
+    <h1><a href="/"><i class="icon-sun"></i> Solar Theme</a></h1>
+    <p>A stylish blog using the Solarized color palette</p>
+  </header>
+
+
+
+  <div id="page">
+
+
+
+    <div id="sidebar">
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/archives">Archive</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="http://twitter.com/redwall_hp">Twitter</a></li>
+          <li><a href="/feed.xml">RSS Feed</a></li>
+        </ul>
+      </nav>
+    </div>
+
+
+
+    <div id="content">
+      <article class="post">
+
+	
+		<h1><a href="/2016/11/16/Node.js%E9%80%9A%E8%BF%87Restful-Api%E4%B8%8EBmob%E5%90%8E%E7%AB%AF%E4%BA%91%E4%BA%A4%E4%BA%92/">Node.js通过Restful Api与Bmob后端云交互</a></h1>
+	
+
+	<div class="post-content"><h3>关于Bmob</h3>
+<pre><code>[Bmob](<a href="http://www.bmob.cn">http://www.bmob.cn</a>)
+百度百科：
+Bmob可以开发一个云存储的移动应用软件，给应用软件快速添加一个安全灵活的后台管理系统，方便浏览终端保存的各种信息。
+
+Bmob特点
+对于很多Android/ios/wp个人移动开发者来说，开发一个具有网络功能的应用不是一件
+容易的事，不仅需要购买/租赁服务器，还必须掌握一门诸如Java/.net/php这类的服务
+器开发语言，每开发一款移动应用程序，就必须开发维护对应的服务器程序。这一切对于
+移动开发者来说，都是一个冗长的噩梦。
+如何让移动开发者从繁琐的机械劳动中解脱出来，将更多精力投入到移动应用程序的创意
+研发，从而不断提升产品质量呢？Bmob移动应用云存储平台的诞生就很好地解决了以上难
+题。
+在Bmob平台上，您只需注册一个帐号，成功后申请创建任意多个数据库，获得对应的
+Key，下载对应版本的SDK并将其嵌入到移动应用中，便可以调用存取API，进行数据的任
+意操作。有了Bmob，您在5分钟内就可以学会如何开发一个云存储的移动应用软件，给应
+用软件快速添加一个安全灵活的后台管理系统，方便您浏览终端保存的各种信息。
+</code></pre>
+<h3>开始使用</h3>
+<pre><code>首先按照Bmob的文档申请账号，创建应用：
+<a href="http://docs.bmob.cn/data/Android/a_faststart/doc/index.html">http://docs.bmob.cn/data/Android/a_faststart/doc/index.html</a>
+
+下面代码演示了使用Node.js查询并删除数据：
+ var http = require(&amp;#039;https&amp;#039;);
+var qs = require(&amp;#039;querystring&amp;#039;);
+var deleteOptions = {           //删除请求的options
+    &amp;quot;method&amp;quot;: &amp;quot;DELETE&amp;quot;,
+    &amp;quot;hostname&amp;quot;: &amp;quot;api.bmob.cn&amp;quot;,
+    &amp;quot;headers&amp;quot;: {
+        &amp;quot;x-bmob-application-id&amp;quot;: &amp;quot;这里填写ApplicationId&amp;quot;,
+        &amp;quot;x-bmob-rest-api-key&amp;quot;: &amp;quot;这里填写Rest-Api_key&amp;quot;
+    }
+};
+var queryOptions={              //查询请求的options
+    &amp;quot;method&amp;quot;: &amp;quot;GET&amp;quot;,
+    &amp;quot;hostname&amp;quot;: &amp;quot;api.bmob.cn&amp;quot;,
+    &amp;quot;headers&amp;quot;: {
+        &amp;quot;x-bmob-application-id&amp;quot;: &amp;quot;这里填写ApplicationId&amp;quot;,
+        &amp;quot;x-bmob-rest-api-key&amp;quot;: &amp;quot;这里填写Rest-Api_key&amp;quot;,
+        &amp;quot;content-type&amp;quot;: &amp;quot;application/json&amp;quot;,
+    }
+}
+function query(tableName) {     //查询函数
+    queryOptions.path=&amp;quot;/1/classes/&amp;quot;+tableName   //拼接查询path
+    var req = http.request(queryOptions, function (res) { //发起请求
+        var chunks = [];
+        res.setEncoding(&amp;#039;utf8&amp;#039;);
+        res.on(&amp;#039;data&amp;#039;, function (chunk) {    //数据返回时回调
+            chunks.push(chunk)      
+        });
+        res.on(&amp;#039;end&amp;#039;,function () {        //数据返回结束时回调
+            var body=&amp;quot;&amp;quot;;
+            for(i=0;i&amp;lt;chunks.length;i++){
+                body=body+chunks[i]
+            }
+            var results=JSON.parse(body)
+            var day15=1000*60*60*24*15
+            for(j=0;j&amp;lt;results.results.length;j++){       
+                var obj=results.results[j]
+                var createdTime=new Date(obj.createdAt).getTime();
+                var now=new Date().getTime();
+                var liveTime=now-createdTime;
+                if (liveTime&amp;gt;day15){          //时间检查，删除15天以前的记录
+                    deleteRow(obj.objectId,tableName)
+                }
+            }
+        })
+    });
+    req.on(&amp;#039;error&amp;#039;, function (e) {            //请求错误时回调
+        console.log(&amp;#039;problem with request: &amp;#039; + e.message);
+    });
+    req.end();
+}
+function deleteRow(objectId,tableName){     //删除记录函数
+    deleteOptions.path=&amp;quot;/1/classes/&amp;quot;+tableName+&amp;quot;/&amp;quot;+objectId      //拼接删除path
+    var req = http.request(deleteOptions, function (res) {      //发起DELETE请求
+        var chunks = [];
+        res.setEncoding(&amp;#039;utf8&amp;#039;);
+        res.on(&amp;#039;data&amp;#039;, function (chunk) {
+            chunks.push(chunk)
+        });
+        res.on(&amp;#039;end&amp;#039;,function () {
+            var body=&amp;quot;&amp;quot;;
+            for(i=0;i&amp;lt;chunks.length;i++){
+                body=body+chunks[i]
+            }
+            console.log(tableName+&amp;quot;:&amp;quot;+objectId+&amp;quot;       &amp;quot;+body);
+        })
+    });
+    req.on(&amp;#039;error&amp;#039;, function (e) {
+        console.log(&amp;#039;problem with request: &amp;#039; + e.message);
+    });
+    req.end();
+}
+function start() {          //开始执行
+    var tables=[&amp;quot;TableName1&amp;quot;,&amp;quot;TableName2&amp;quot;,&amp;quot;TableName3&amp;quot;];  //需要删除记录的表名
+    for(i=0;i&amp;lt;tables.length;i++){
+        query(tables[i])
+        console.log(&amp;#039;start query:&amp;#039;+tables[i]);
+    }
+}
+setInterval(start,6000);        //每分钟执行
+</code></pre>
+</div>
+
+	<p class="meta">Posted on <span class="postdate">Nov 16, 2016</span></p>
+
+</article>
+    </div>
+
+
+
+  </div>
+
+
+
+  <footer id="footer">
+    <p class="copyright">Copyright &copy; 2017 Solar Theme. Powered by <a href="http://jekyllrb.com">Jekyll</a>, theme by <a href="http://www.webmaster-source.com">Matt Harzewski</a></p>
+  </footer>
+
+
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script src="/assets/js/jquery.mobilemenu.min.js"></script>
+
+  <script>
+    $(document).ready(function(){
+      $('#sidebar nav ul').mobileMenu({'topOptionText': 'Menu', 'prependTo': '#sidebar nav'});
+    });
+  </script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,80 @@
+---
+layout: post
+status: publish
+published: true
+title: 安卓 Messager类的使用
+author:
+ yufei.zhou
+
+wordpress_id: 77
+wordpress_url: http://donute.com/?p=77
+date: '2016-11-01 15:48:44 +0800'
+date_gmt: '2016-11-01 07:48:44 +0800'
+categories:
+- 安卓
+tags: [安卓]
+comments: []
+---
+<p><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="安卓 &lt;wbr&gt;Messager类的使用" src="/images/002o3oc9gy6U9ZMbaBF8f" alt="安卓 &lt;wbr&gt;Messager类的使用" width="690" height="223" name="image_operate_39701437968139533" /></a><br />
+（可以看到LogCat中已经打印出了从MainActivity发出的信息）</p>
+<p>进行IPC（进程间通信）通信，一般写一个AIDL（安卓接口定义语言）接口，再写一个Service子类，然后实现AIDL接口 当做IBinder返回给Activity界面层。</p>
+<p>单线程中与Service进行通信 Messenger类来处理，消息传递给Service进行通信。</p>
+<p>Service的代码：</p>
+<pre>public class <wbr />MyService <wbr />extends <wbr />Service {
+
+private <wbr />Messenger <wbr />messenger <wbr />= <wbr />null;
+private <wbr />Handler <wbr />handler <wbr />= <wbr />new <wbr />Handler(){
+public void <wbr />handleMessage(android.os.Message msg) {
+Log.d("MyService_Hanler", <wbr />"Msg:" <wbr />+ msg.what <wbr />+ <wbr />";" <wbr />+ msg.obj);
+}
+};
+public <wbr />MyService() {
+}
+@Override
+public void <wbr />onCreate() {
+super.onCreate();
+messenger <wbr />= <wbr />new <wbr />Messenger(handler);//获取Service中的Messager
+}
+@Override
+public <wbr />IBinder <wbr />onBind(Intent arg0) {
+return <wbr />messenger.getBinder();//取得Binder
+}
+
+}</pre>
+<pre>Activity代码：</pre>
+<pre></pre>
+<pre>public class <wbr />MainActivity <wbr />extends <wbr />ActionBarActivity {
+
+private <wbr />Messenger <wbr />messenger;
+private <wbr />ServiceConnection <wbr />conn <wbr />= <wbr />new <wbr />ServiceConnection() {
+@Override
+public void <wbr />onServiceDisconnected(ComponentName cn) {
+Log.d("MainActivity", <wbr />"ServiceDisconnected");
+}
+@Override
+public void <wbr />onServiceConnected(ComponentName cn, <wbr />IBinder ibiner) {
+messenger <wbr />= <wbr />new <wbr />Messenger(ibiner);//��取得Messenger
+Log.d("MainActivity", <wbr />"Connect Success!!");
+}
+};
+@Override
+protected void <wbr />onCreate(Bundle savedInstanceState) {
+super.onCreate(savedInstanceState);
+setContentView(R.layout.activity_main);
+bindService(new <wbr />Intent(this, <wbr />MyService.class), <wbr />conn, <wbr />Context.BIND_AUTO_CREATE);
+}
+
+public void <wbr />sendMsg(View view) {
+if <wbr />(messenger <wbr />== <wbr />null) {
+return;
+}
+Message msg1 = Message.obtain();
+msg1.what <wbr />= <wbr />1;
+msg1.obj <wbr />= <wbr />"I Send A Message I am MainActivity";
+try <wbr />{
+messenger.send(msg1);
+} <wbr />catch <wbr />(RemoteException e) {
+e.printStackTrace();
+}
+}
+}</pre>

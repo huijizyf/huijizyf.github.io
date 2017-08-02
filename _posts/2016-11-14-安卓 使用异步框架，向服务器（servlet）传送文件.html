@@ -1,0 +1,143 @@
+---
+layout: post
+status: publish
+published: true
+title: 安卓 使用异步框架，向服务器（servlet）传送文件
+author:
+ yufei.zhou
+
+wordpress_id: 135
+wordpress_url: http://donute.com/?p=135
+date: '2016-11-14 10:10:36 +0800'
+date_gmt: '2016-11-14 02:10:36 +0800'
+categories:
+- 安卓
+tags: [安卓,异步]
+comments: []
+---
+<p>servlet接收文件后，向数据库写入参数</p>
+<div>效果：</div>
+<div><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="安卓 &lt;wbr&gt;使用异步框架，向服务器（servlet）传送文件" src="/images/002o3oc9zy6NN7ntUvIf6.png" alt="安卓 &lt;wbr&gt;使用异步框架，向服务器（servlet）传送文件" width="690" height="342" name="image_operate_16081416578067480" /><br />
+servlet接收并写数据库代码：</div>
+<div>
+<div>package com.zyf.services;</div>
+<div></div>
+<div>import java.awt.Image;</div>
+<div>import java.io.File;</div>
+<div>import java.io.FileOutputStream;</div>
+<div>import java.io.IOException;</div>
+<div>import java.io.PrintWriter;</div>
+<div>import java.sql.Connection;</div>
+<div>import java.sql.DriverManager;</div>
+<div>import java.sql.SQLException;</div>
+<div>import java.sql.Statement;</div>
+<div>import java.text.SimpleDateFormat;</div>
+<div>import java.util.Date;</div>
+<div>import java.util.List;</div>
+<div></div>
+<div>import javax.servlet.ServletException;</div>
+<div>import javax.servlet.http.HttpServlet;</div>
+<div>import javax.servlet.http.HttpServletRequest;</div>
+<div>import javax.servlet.http.HttpServletResponse;</div>
+<div></div>
+<div>import org.apache.commons.fileupload.FileItem;</div>
+<div>import org.apache.commons.fileupload.FileItemFactory;</div>
+<div>import org.apache.commons.fileupload.disk.DiskFileItemFactory;</div>
+<div>import org.apache.commons.fileupload.servlet.ServletFileUpload;</div>
+<div></div>
+<div>import com.zyf.staticvalues.DbValues;</div>
+<div></div>
+<div>public class ReceiveArticle extends HttpServlet {</div>
+<div>private static final long serialVersionUID = 1L;</div>
+<div>String driver =DbValues.driver;</div>
+<div>String url = DbValues.url;</div>
+<div>String user = DbValues.user;</div>
+<div>String password =DbValues.password;</div>
+<div>int sender;String image;String content;String title;int code;</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /></div>
+<div> <wbr />  <wbr /></div>
+<div> <wbr />  <wbr /> public ReceiveArticle() {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> super();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> // TODO Auto-generated constructor stub</div>
+<div> <wbr />  <wbr /> }</div>
+<div></div>
+<div>protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {</div>
+<div>// TODO Auto-generated method stub</div>
+<div>}</div>
+<div></div>
+<div>protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {</div>
+<div>// TODO Auto-generated method stub</div>
+<div>boolean isMultipart=ServletFileUpload.isMultipartContent(request);</div>
+<div>if(isMultipart)</div>
+<div>{</div>
+<div>String realpath=request.getSession().getServletContext().getRealPath("/files");</div>
+<div>System.out.println(realpath);</div>
+<div>File dir=new File(realpath);</div>
+<div>if(!dir.exists())</div>
+<div>{</div>
+<div>dir.mkdir();</div>
+<div>}</div>
+<div>FileItemFactory factory=new DiskFileItemFactory();</div>
+<div>ServletFileUpload upload=new ServletFileUpload(factory);</div>
+<div>upload.setHeaderEncoding("UTF-8");</div>
+<div>try</div>
+<div>{</div>
+<div>List items=upload.parseRequest(request);</div>
+<div>for(FileItem item : items)</div>
+<div>{</div>
+<div>if(item.isFormField())</div>
+<div>{</div>
+<div>if(item.getFieldName().equals("sender"))</div>
+<div>{</div>
+<div>sender=Integer.parseInt(item.getString("UTF-8"));</div>
+<div>}</div>
+<div>if(item.getFieldName().equals("content"))</div>
+<div>{</div>
+<div>content=item.getString("UTF-8");</div>
+<div>}</div>
+<div>if(item.getFieldName().equals("title"))</div>
+<div>{</div>
+<div>title=item.getString("UTF-8");</div>
+<div>}</div>
+<div>}</div>
+<div>else</div>
+<div>{</div>
+<div>image=System.currentTimeMillis()+item.getName().substring(item.getName().lastIndexOf("."));</div>
+<div>item.write(new File(dir,image));</div>
+<div>}</div>
+<div>}</div>
+<div>writeSql(response);</div>
+<div>}</div>
+<div>catch(Exception e)</div>
+<div>{</div>
+<div>e.printStackTrace();</div>
+<div>}</div>
+<div>}</div>
+<div>else</div>
+<div>{</div>
+<div>doGet(request,response);</div>
+<div>}</div>
+<div>}</div>
+<div>private void writeSql(HttpServletResponse response) throws ClassNotFoundException, SQLException, IOException</div>
+<div>{</div>
+<div>Class.forName(driver);</div>
+<div>Connection conn =DriverManager.getConnection(url, user, password);</div>
+<div>if(!conn.isClosed())</div>
+<div> <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr /> System.out.println("Succeeded connecting to the Database!");</div>
+<div> <wbr />  <wbr /> Statement statement = conn.createStatement();</div>
+<div> <wbr />  <wbr /> Date now = new Date(); <wbr /></div>
+<div> <wbr />  <wbr /> SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");</div>
+<div> <wbr />  <wbr /> String sql = "insert into contenttext(sendtime,sender,pic,content,texttitle) values('"+dateFormat.format(now)+"','"+sender+"','"+image+"','"+content+"','"+title+"')";</div>
+<div> <wbr />  <wbr /> statement.executeUpdate(sql); <wbr /></div>
+<div> <wbr />  <wbr /> System.out.println("写入文章成功");</div>
+<div> <wbr />  <wbr /> PrintWriter out = response.getWriter();</div>
+<div> <wbr />  <wbr /> out.print("success");</div>
+<div> <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> else</div>
+<div> <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr /> System.out.println("失败");</div>
+<div> <wbr />  <wbr /> }</div>
+<div>}</div>
+<div>}</div>
+</div>

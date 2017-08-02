@@ -1,0 +1,43 @@
+---
+layout: post
+status: publish
+published: true
+title: Python 多线程读取文本文件，写入Mongodb
+author:
+ yufei.zhou
+
+wordpress_id: 74
+wordpress_url: http://donute.com/?p=74
+date: '2016-11-01 15:47:08 +0800'
+date_gmt: '2016-11-01 07:47:08 +0800'
+categories:
+- python
+tags: [python]
+comments: []
+---
+<p>安卓MongoDb及MongoDb的使用方法就不说了，网上有很好的教程，可以参考：http://www.cnblogs.com/huangxincheng/archive/2012/02/18/2356595.html</p>
+<div>安装好Python环境，使用pip install pymongo安装连接MongoDb需要的驱动。</div>
+<div>接下来开始编写Python代码：</div>
+<div>
+<div>import pymongo</div>
+<div>import urllib</div>
+<div>import threading</div>
+<div>from urllib import request</div>
+<div>class ReadThread(threading.Thread):</div>
+<div>def __init__(self,num):  <wbr />  <wbr />//线程初始化方法，类似java中的构造方法</div>
+<div>threading.Thread.__init__(self)</div>
+<div>self.num=num</div>
+<div>def __run__(self):  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />//复写__run__方法，也与java类似</div>
+<div>client=pymongo.MongoClient('127.0.0.1',27017)</div>
+<div>db=client.test  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> <wbr />//连接mongoDb数据库</div>
+<div>f = open('SYS_YHMMB.txt', 'r')//打开文本文件</div>
+<div>lists=f.readlines()  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> //读取文件所有行，放入列表中</div>
+<div>for l in lists:  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> <wbr /></div>
+<div>db.person.insert({'text':l}) //遍历列表，放入数据库中</div>
+<div>db.close()  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> //关闭数据库</div>
+<div>r=ReadThread(1)  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />//创建线程</div>
+<div>r.start()  <wbr />//启动线程</div>
+</div>
+<div></div>
+<div>使用db.person.find()可以看到数据已经插入数据库了。</div>
+<div><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="Python &lt;wbr&gt;多线程读取文本文件，写入Mongodb" src="/images/002o3oc9gy6UafBvAg169.png" alt="Python &lt;wbr&gt;多线程读取文本文件，写入Mongodb" width="643" height="271" name="image_operate_40921437981939507" /></a></div>

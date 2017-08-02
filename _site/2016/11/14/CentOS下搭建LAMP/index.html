@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+  <meta charset="UTF-8">
+  <title>CentOS下搭建LAMP</title>
+  <meta name="viewport" content="width=device-width">
+
+  <!--[if lt IE 9]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+
+  <link href="/assets/css/style.css" rel="stylesheet" />
+  <link href="/assets/css/colors-dark.css" rel="stylesheet" />
+
+</head>
+
+<body>
+
+
+
+  <header id="header">
+    <h1><a href="/"><i class="icon-sun"></i> Solar Theme</a></h1>
+    <p>A stylish blog using the Solarized color palette</p>
+  </header>
+
+
+
+  <div id="page">
+
+
+
+    <div id="sidebar">
+      <nav>
+        <ul>
+          <li><a href="/">Home</a></li>
+          <li><a href="/archives">Archive</a></li>
+          <li><a href="/about">About</a></li>
+          <li><a href="http://twitter.com/redwall_hp">Twitter</a></li>
+          <li><a href="/feed.xml">RSS Feed</a></li>
+        </ul>
+      </nav>
+    </div>
+
+
+
+    <div id="content">
+      <article class="post">
+
+	
+		<h1><a href="/2016/11/14/CentOS%E4%B8%8B%E6%90%AD%E5%BB%BALAMP/">CentOS下搭建LAMP</a></h1>
+	
+
+	<div class="post-content"><h2>1、下载CentOS镜像</h2>
+<p>打开网站www.centos.org 下载CentOS 6.5版镜像（即CentOS-6.5-1406-x86_64-DVD.iso），用软碟通软件刻录成系统安装光盘。</p>
+<h2>2、安装CentOS</h2>
+<p>光盘放入服务器光驱，打开电源，服务器从光驱启动，按提示步骤安装CentOS系统。</p>
+<h2>3、安装apache</h2>
+<p>登录系统，打开终端，通过su命令切换到root用户（在centos下默认只有root用户有权限安装软件）输入yum install httpd等命令执行完毕，apache安装成功，可通过命令service httpd restart重启apache服务，在浏览器输入localhost可访问测试页面</p>
+<h2>4、安装mysql</h2>
+<p>进入网站www.mysql.org，下载MySQL-5.6.19-1.linux_glibc2.5.x86_64.rpm-bundle.tar，将文件解压到桌面，使用cd命令切换工作目录到安装包所在的目录，使用命令rpm –ivh * --force，等待7个文件安装完成，使用service mysql start启动mysql服务。在终端输入mysql 发现需要输入密码，但是安装过程中未提示设置密码，这是我们需要通过其他方式找回mysql的root密码</p>
+<pre>找回mysql密码方法：修改改MySQL配置文件：vi /etc/my.cnf</pre>
+<pre>在[mysqld]的段中加上一句：skip-grant-tables</pre>
+<pre>例如：</pre>
+<pre>[mysqld]</pre>
+<pre>datadir=/var/lib/mysql</pre>
+<pre>socket=/var/lib/mysql/mysql.sock</pre>
+<pre>skip-name-resolve</pre>
+<pre>skip-grant-tables</pre>
+<pre>保存并且退出vi。</pre>
+<pre>重新启动mysql，使用命令：service mysql restart。</pre>
+<pre>再输入mysql，发现已经进入mysql了，这时候就可以修改root用户密码了。</pre>
+<pre>输入：use mysql；</pre>
+<pre>再输入：UPDATE user SET Password = password ( ‘new-password’ ) WHERE User = ‘root’ ;</pre>
+<pre>再输入：flush privileges ;</pre>
+<pre>Exit离开数据库，然后将上面修改的mysql配置文件还原。使用service mysql restart重启数据库，使用mysql –u root –p 提示输入密码，此时输入上面设置的密码，即可进入数据库。</pre>
+<h2>5、安装php</h2>
+<pre>打开终端，su命令，切换到root用户。使用命令yum install php.等待命令执行完毕，php安装成功。使用service httpd restart 命令重启apache服务器 是php生效。</pre>
+<pre>到此CentOS下LAMP搭建完成。</pre>
+</div>
+
+	<p class="meta">Posted on <span class="postdate">Nov 14, 2016</span></p>
+
+</article>
+    </div>
+
+
+
+  </div>
+
+
+
+  <footer id="footer">
+    <p class="copyright">Copyright &copy; 2017 Solar Theme. Powered by <a href="http://jekyllrb.com">Jekyll</a>, theme by <a href="http://www.webmaster-source.com">Matt Harzewski</a></p>
+  </footer>
+
+
+
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+  <script src="/assets/js/jquery.mobilemenu.min.js"></script>
+
+  <script>
+    $(document).ready(function(){
+      $('#sidebar nav ul').mobileMenu({'topOptionText': 'Menu', 'prependTo': '#sidebar nav'});
+    });
+  </script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+---
+layout: post
+status: publish
+published: true
+title: 安卓 使用IOIO控制蜂鸣器发声频率
+author:
+ yufei.zhou
+
+wordpress_id: 128
+wordpress_url: http://donute.com/?p=128
+date: '2016-11-14 10:06:26 +0800'
+date_gmt: '2016-11-14 02:06:26 +0800'
+categories:
+- 安卓
+tags: [安卓,IOIO]
+comments: []
+---
+<div>接好供电电路后，将电位调到合适位置（手机显示调试模式已连接，并正在充电），然后将实例程序安装至手机，打开实例程序，即可通过手机控制IOIO板子上的引脚，可作为输出，也可作为输入口</div>
+<p><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="安卓&nbsp;&lt;wbr&gt;使用IOIO控制蜂鸣器发声频率" src="/images/002o3oc9gy6OvhmF9m939&amp.jpeg" alt="安卓&nbsp;&lt;wbr&gt;使用IOIO控制蜂鸣器发声频率" width="690" height="579" name="image_operate_10101418970383589"></p>
+<div>示例程序的代码：</div>
+<div>
+<div>package ioio.examples.simple;</div>
+<div></div>
+<div>import ioio.lib.api.AnalogInput;</div>
+<div>import ioio.lib.api.DigitalOutput;</div>
+<div>import ioio.lib.api.IOIO;</div>
+<div>import ioio.lib.api.PwmOutput;</div>
+<div>import ioio.lib.api.exception.ConnectionLostException;</div>
+<div>import ioio.lib.util.BaseIOIOLooper;</div>
+<div>import ioio.lib.util.IOIOLooper;</div>
+<div>import ioio.lib.util.android.IOIOActivity;</div>
+<div>import android.os.Bundle;</div>
+<div>import android.widget.SeekBar;</div>
+<div>import android.widget.TextView;</div>
+<div>import android.widget.ToggleButton;</div>
+<div></div>
+<div>public class IOIOSimpleApp extends IOIOActivity {</div>
+<div>private TextView textView_;</div>
+<div>private SeekBar seekBar_;</div>
+<div>private ToggleButton toggleButton_;</div>
+<div></div>
+<div>@Override</div>
+<div>public void onCreate(Bundle savedInstanceState) {</div>
+<div>super.onCreate(savedInstanceState);</div>
+<div>setContentView(R.layout.main);</div>
+<div></div>
+<div>textView_ = (TextView) findViewById(R.id.TextView);</div>
+<div>seekBar_ = (SeekBar) findViewById(R.id.SeekBar);</div>
+<div>toggleButton_ = (ToggleButton) findViewById(R.id.ToggleButton);</div>
+<div></div>
+<div>enableUi(false);</div>
+<div>}</div>
+<div></div>
+<div>class Looper extends BaseIOIOLooper {</div>
+<div>private AnalogInput input_;</div>
+<div>private PwmOutput pwmOutput_;</div>
+<div>private DigitalOutput led_;</div>
+<div></div>
+<div>@Override</div>
+<div>public void setup() throws ConnectionLostException {</div>
+<div>led_ = ioio_.openDigitalOutput(IOIO.LED_PIN, true);</div>
+<div>input_ = ioio_.openAnalogInput(40);</div>
+<div>pwmOutput_ = ioio_.openPwmOutput(12, 100);</div>
+<div>enableUi(true);</div>
+<div>}</div>
+<div></div>
+<div>@Override</div>
+<div>public void loop() throws ConnectionLostException, InterruptedException {</div>
+<div>setNumber(input_.read());</div>
+<div>pwmOutput_.setPulseWidth(500 + seekBar_.getProgress() * 2);</div>
+<div>led_.write(!toggleButton_.isChecked());</div>
+<div>Thread.sleep(10);</div>
+<div>}</div>
+<div></div>
+<div>@Override</div>
+<div>public void disconnected() {</div>
+<div>enableUi(false);</div>
+<div>}</div>
+<div>}</div>
+<div></div>
+<div>@Override</div>
+<div>protected IOIOLooper createIOIOLooper() {</div>
+<div>return new Looper();</div>
+<div>}</div>
+<div></div>
+<div>private void enableUi(final boolean enable) {</div>
+<div>runOnUiThread(new Runnable() {</div>
+<div>@Override</div>
+<div>public void run() {</div>
+<div>seekBar_.setEnabled(enable);</div>
+<div>toggleButton_.setEnabled(enable);</div>
+<div>}</div>
+<div>});</div>
+<div>}</div>
+<div></div>
+<div>private void setNumber(float f) {</div>
+<div>final String str = String.format("%.2f", f);</div>
+<div>runOnUiThread(new Runnable() {</div>
+<div>@Override</div>
+<div>public void run() {</div>
+<div>textView_.setText(str);</div>
+<div>}</div>
+<div>});</div>
+<div>}</div>
+<div>}</div>
+</div>

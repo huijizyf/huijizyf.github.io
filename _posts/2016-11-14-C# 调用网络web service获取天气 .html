@@ -1,0 +1,63 @@
+---
+layout: post
+status: publish
+published: true
+title: C# 调用网络web service获取天气
+author:
+ yufei.zhou
+
+wordpress_id: 141
+wordpress_url: http://donute.com/?p=141
+date: '2016-11-14 10:23:10 +0800'
+date_gmt: '2016-11-14 02:23:10 +0800'
+categories:
+- HelloWorld
+tags: [C#,Soap]
+comments: []
+---
+<div>天气web service 接口地址：http://webservice.webxml.com.cn/WebServices/WeatherWS.asmx</div>
+<div><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="C# &lt;wbr&gt;调用网络web &lt;wbr&gt;service获取天气" src="/images/002o3oc9gy6MdOBO6HH6d.jpeg" alt="C# &lt;wbr&gt;调用网络web &lt;wbr&gt;service获取天气" width="462" height="504" name="image_operate_4721411307212634" /></p>
+<p><img style="margin: 0px; padding: 0px; border: 0px; list-style: none;" title="C# &lt;wbr&gt;调用网络web &lt;wbr&gt;service获取天气" src="/images/002o3oc9gy6MdOBRScUa0.jpeg" alt="C# &lt;wbr&gt;调用网络web &lt;wbr&gt;service获取天气" width="497" height="377" name="image_operate_61521411307212998" /></p>
+</div>
+<div>代码：</div>
+<div>using System;</div>
+<div>using System.Collections.Generic;</div>
+<div>using System.ComponentModel;</div>
+<div>using System.Data;</div>
+<div>using System.Drawing;</div>
+<div>using System.Linq;</div>
+<div>using System.Text;</div>
+<div>using System.Windows.Forms;</div>
+<div></div>
+<div>namespace WindowsFormsApplication1<wbr /></div>
+<div>{</div>
+<div> <wbr />  <wbr /> public partial class Form1 : Form</div>
+<div> <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> public Form1()</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> InitializeComponent();</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> private void button1_Click(object sender, EventArgs e)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> Weather.WeatherWebServiceSoapCli<wbr />ent w = new Weather.WeatherWebServiceSoapCli<wbr />ent("WeatherWebServiceSoap");</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> string[] s = new string[32];</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> s = w.getWeatherbyCityName(textBox1.Text);</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> if (s[8] == "")</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> MessageBox.Show("暂时不支持您查询的城市");</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> else</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> richTextBox1.Text="";</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> for (int i = 0; i &lt;= 22; i++)</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> {</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> richTextBox1.Text += s[i];</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div></div>
+<div> <wbr />  <wbr />  <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr />  <wbr />  <wbr /> }</div>
+<div> <wbr />  <wbr /> }</div>
+<div>}</div>

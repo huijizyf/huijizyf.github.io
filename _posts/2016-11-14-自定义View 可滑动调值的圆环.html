@@ -1,0 +1,80 @@
+---
+layout: post
+status: publish
+published: true
+title: 自定义View 可滑动调值的圆环
+author:
+ yufei.zhou
+
+wordpress_id: 122
+wordpress_url: http://donute.com/?p=122
+date: '2016-11-14 10:03:29 +0800'
+date_gmt: '2016-11-14 02:03:29 +0800'
+categories:
+- 安卓
+tags: [安卓,自定义View]
+comments: []
+---
+<div>
+<div><img title="" src="/images/002o3oc9zy6QICyfM1r01.png" alt="" /></div>
+</div>
+<p>前一篇关于滑动圆盘的代码，因为没有在手机上测试，代码有些错误，这次做了修正</p>
+<p>package com.example.administrator.sildecircle;</p>
+<p>import android.content.Context;</p>
+<p>import android.graphics.Canvas;</p>
+<p>import android.graphics.Color;</p>
+<p>import android.graphics.Paint;</p>
+<p>import android.util.AttributeSet;</p>
+<p>import android.util.Log;</p>
+<p>import android.view.MotionEvent;</p>
+<p>import android.view.View;</p>
+<p>public class SildeCircle extends View {</p>
+<p>Canvas canvas;</p>
+<p>Context context;</p>
+<p>float cx;</p>
+<p>float cy;</p>
+<p>float r=205;</p>
+<p>float downx=0;</p>
+<p>float downy=0;</p>
+<p>public SildeCircle(Context context, AttributeSet attrs) {</p>
+<p>super(context, attrs);</p>
+<p>this.context=context;</p>
+<p>}</p>
+<p>public SildeCircle(Context context, AttributeSet attrs, int defStyleAttr) {</p>
+<p>super(context, attrs, defStyleAttr);</p>
+<p>this.context=context;</p>
+<p>}</p>
+<p>public SildeCircle(Context context) {</p>
+<p>super(context);</p>
+<p>this.context=context;</p>
+<p>}</p>
+<p>@Override</p>
+<p>protected void onDraw(Canvas canvas) {</p>
+<p>super.onDraw(canvas);</p>
+<p>this.canvas=canvas;</p>
+<p>int w=getWidth();</p>
+<p>int h=getHeight();</p>
+<p>cx=(float)(w/2+r*(downx-w/2)/(Math.sqrt(Math.pow(h/2-downy,2)+Math.pow(downx-w/2,2))));</p>
+<p>cy=(float)(h/2-r*(h/2-downy)/(Math.sqrt(Math.pow(h/2-downy,2)+Math.pow(downx-w/2,2))));</p>
+<p>Log.d("onDraw",cx+"   "+cy);</p>
+<p>myDrawCircle(canvas,w/2,h/2,250,Color.GREEN);</p>
+<p>myDrawCircle(canvas,w/2,h/2,160,Color.WHITE);</p>
+<p>myDrawCircle(canvas,cx,cy,45,Color.WHITE);</p>
+<p>this.setOnTouchListener(new OnTouchListener() {</p>
+<p>@Override</p>
+<p>public boolean onTouch(View v, MotionEvent event) {</p>
+<p>downx=event.getX();</p>
+<p>downy=event.getY();</p>
+<p>SildeCircle.this.invalidate();</p>
+<p>Log.d("On Touch ",downx+"   "+downy);</p>
+<p>return true;</p>
+<p>}</p>
+<p>});</p>
+<p>}</p>
+<p>private void myDrawCircle(Canvas canvas,float cx,float cy,float radius,int color)</p>
+<p>{</p>
+<p>Paint paint=new Paint();</p>
+<p>paint.setColor(color);</p>
+<p>canvas.drawCircle(cx,cy,radius,paint);</p>
+<p>}</p>
+<p>}</p>

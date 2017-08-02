@@ -1,0 +1,33 @@
+---
+layout: post
+status: publish
+published: true
+title: 安卓安装SSH服务（上）
+author:
+ yufei.zhou
+
+wordpress_id: 53
+wordpress_url: http://donute.com/?p=53
+date: '2016-11-01 14:36:16 +0800'
+date_gmt: '2016-11-01 06:36:16 +0800'
+categories:
+- 安卓
+tags: [安卓]
+comments: []
+---
+<div>Android安装ssh服务</div>
+<div>时间 2014-11-08 15:12:00  <a href="http://www.tuicool.com/sites/Fn2umm">博客园-原创精华区</a></div>
+<div>原文  <a href="http://www.cnblogs.com/whltingyu/p/4083448.html?utm_source=tuicool&amp;utm_medium=referral">http://www.cnblogs.com/whltingyu/p/4083448.html</a></div>
+<div>主题 <a href="http://www.tuicool.com/topics/11200021">SSH</a></div>
+<div>1、安装条件</div>
+<div>需要安装ssh服务的手机需要有root权限，我测试使用的手机是工程样机，adb连接上以后默认有root权限；其他用户需要先root才能进行，可能需要把一些命令放到脚本中，放到手机中运行，并且在运行前切换到root权限。</div>
+<div>2、下载文件</div>
+<div>busybox 下载地址 http://www.busybox.net/downloads/binariesdropbear 下载地址 http://www.cri.ch/sven/lib/exe/fetch.php/blog/dropbear.zip</div>
+<div>3、登录密钥</div>
+<div>客户端使用的是SecureCRT，由于使用私钥登录，首先需要创建密钥对；步骤： “工具”-&gt;“创建公钥...”，密钥类型“DSA”(“RSA”应该也可以)，通行短语就留空（否则登录需要输入密码），密钥长度默认1024位，选择“OpenSSH密钥格式”，选择一个文件夹保存密钥，同时会生成私钥Identity和公钥Identity.pub；</div>
+<div>4、安装busybox</div>
+<div>adb remount adb push busybox /system/xbin/ adb shell adb shell chmod 0755 /system/xbin/busybox adb shell busybox --install -s /system/xbin/</div>
+<div>adb remount :: 将dropbear相关的文件push进手机 adb push dropbear /system/xbin/ adb push dropbearkey /system/xbin/ adb push dropbearconvert /system/xbin/ adb shell chmod 0744 /system/xbin/dropbear* :: 创建dropbear的目录 adb shell mkdir /data/dropbear adb shell mkdir /data/dropbear/.ssh :: 生成服务器密钥 adb shell dropbearkey -t dss -f /data/dropbear/dss_host_key :: 将登陆密钥放置到服务器 adb push Identity.pub /data/dropbear/.ssh/ adb shell mv /data/dropbear/.ssh/Identity.pub /data/dropbear/.ssh/authorized_keys :: 脚本会创建用户相关的配置文件，否则无法登陆 adb push createfiles.sh /data/dropbear adb shell chmod -R 0744 /data/dropbear adb shell /data/dropbear/createfiles.sh :: 启动服务器测试 (实际应用可以去掉-F选项，运行于后台） adb shell dropbear -d /data/dropbear/dss_host_key -F -E -s -v</div>
+<div>echo "root:x:0:0::/root:/system/bin/sh" &gt; /etc/passwd echo "root::14531:0:99999:7:::" &gt; /etc/shadow echo "root:x:0:" &gt; /etc/group echo "root:!::" &gt; /etc/gshadow echo "/system/bin/sh" &gt; /etc/shells echo "PATH=\"/usr/bin:/usr/sbin:/bin:/sbin:/system/sbin:/system/bin:/system/xbin:/data/local/bin\"" &gt; /etc/profile echo "export PATH" &gt;&gt; /etc/profile</div>
+<div>adb remount adb shell rm /system/xbin/dropbear adb shell rm /system/xbin/dropbearkey adb shell rm /system/xbin/dropbearconvert adb shell rm -rf /data/dropbear adb shell rm /etc/passwd adb shell rm /etc/shadow adb shell rm /etc/group adb shell rm /etc/gshadow adb shell rm /etc/shells adb shell rm /etc/profile</div>
+<div>Running dropbear on Android： http://www.cri.ch/sven/doku.php/blog/running-dropbear-on-android</div>

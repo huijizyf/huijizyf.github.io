@@ -28,7 +28,7 @@ Google Play 服务和 Google 云端平台，提供整套打造 Android 智能联
 让任何 Android 开发者都能轻松打造物联网服务。<br />
 只要你有能力打造出 App，你就能打造出一个设备。──Google</p>
 <h2>硬件</h2>
-<p><img class="alignnone size-full wp-image-233" src="http://donute.com/wp-content/uploads/2017/01/20161229102102_407.jpg" alt="20161229102102_407" width="1280" height="708" /></p>
+<p><img class="alignnone size-full wp-image-233" src="/images/uploads/2017/01/20161229102102_407.jpg" alt="20161229102102_407" width="1280" height="708" /></p>
 <p>现在支持以下3款硬件：</p>
 <p>1）Intel Edison<br />
 2）NXP Pico<br />
@@ -41,14 +41,14 @@ dd bs=4m if=iot<em>rpi3.img of=/dev/disk2<br />
 接着/dev/disk2是TF在文件系统上的位置。<br />
 稍等5分钟左右，系统写入完成，拔下读卡器，将TF卡放入树莓派上电开机。</p>
 <h2>第一印象</h2>
-<p><img class="alignnone size-full wp-image-235" src="http://donute.com/wp-content/uploads/2017/01/WechatIMG24.jpeg" alt="WechatIMG24" width="1280" height="960" /><br />
+<p><img class="alignnone size-full wp-image-235" src="/images/uploads/2017/01/WechatIMG24.jpeg" alt="WechatIMG24" width="1280" height="960" /><br />
 接入显示器开机,开机画面后并没有看到我们熟悉的安卓系统界面。而是在一个AndroidThings<br />
 的背景图后显示了已经获取的IP地址。对于AndroidThings来说显示屏不是必须的，无显示器<br />
 一样可以工作，使用鼠标试用了一下，界面不是很流畅。<br />
 值得一提的是系统开机后虽然并没有可供操作的选项，但是当你编写的带UI的程序运行到系统后<br />
 是有界面的，与普通app运行基本没有差别。</p>
 <h2>使用IIC驱动12864OLED屏幕</h2>
-<p><img class="alignnone size-full wp-image-236" src="http://donute.com/wp-content/uploads/2017/01/WechatIMG25.jpeg" alt="WechatIMG25" width="720" height="1280" /><br />
+<p><img class="alignnone size-full wp-image-236" src="/images/uploads/2017/01/WechatIMG25.jpeg" alt="WechatIMG25" width="720" height="1280" /><br />
 拿到板子不久又购买了一块12864的OLED屏幕和一个DHT11温湿度传感器，然后对OLED屏幕开<br />
 始折腾。<br />
 要操作点阵显示屏，也就是写数据和写命令！让屏幕休眠、让屏幕滚动之类的操作，就要向屏幕<br />
@@ -235,7 +235,7 @@ public class OledUtil {
 </code></pre>
 <p>&nbsp;</p>
 <h2>使用GPIO驱动DHT11</h2>
-<p><img class="alignnone size-full wp-image-237" src="http://donute.com/wp-content/uploads/2017/01/3339137648818780077.jpg" alt="3339137648818780077" width="750" height="247" /><br />
+<p><img class="alignnone size-full wp-image-237" src="/images/uploads/2017/01/3339137648818780077.jpg" alt="3339137648818780077" width="750" height="247" /><br />
 因为之前有使用GPIO驱动继电器工作的经历，继电器接在3.3V正常工作，接在5V下无法驱动。<br />
 在尝试了驱动DHT11的时候很久一直没有成功，起初以为跟最开始驱动继电器的时候一样，电压问题，然后后来仔细核对代码，查看时序图，发现在AndroidThings系统下读取一次GPIO值耗时就在270us左右，而dht11的时序图中电平转换时间都是在100us以下，所以在java下使用GPIO不能捕捉到如此短时间内的电平变化，无法获取到温湿度值。<br />
 以下是代码：</p>

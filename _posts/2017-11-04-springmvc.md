@@ -31,12 +31,12 @@ tag: [Spring mvc,web]
 
 <h2>效果图</h2>
 
-![分类管理](/springmvc/classify.png)
+![分类管理](/images/springmvc/classify.png)
 
-![内容统计](/springmvc/overview.png)
+![内容统计](/images/springmvc/overview.png)
 
-![时间线](/springmvc/timeline.png)
+![时间线](/images/springmvc/timeline.png)
 
-![查看内容](/springmvc/viewpost.png)
+![查看内容](/images/springmvc/viewpost.png)
 
-![新建内容](/springmvc/write_post.png)
+![新建内容](/images/springmvc/write_post.png)

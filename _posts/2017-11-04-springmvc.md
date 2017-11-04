@@ -5,8 +5,6 @@ category: Web
 tag: [Spring mvc,web]
 ---
 
-# Spring MVC练手项目
-
 初接触Spring MVC，从零开始学习，第一个练手小项目。作为一个起点吧，再接再厉。
 
 [Spring-mvc 入门学习小项目](https://github.com/huijizyf/start-spring-mvc)

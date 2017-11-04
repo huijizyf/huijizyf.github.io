@@ -6,8 +6,10 @@ tag: [Spring mvc,web]
 ---
 
 # Spring MVC练手项目
-[Spring-mvc 入门学习小项目](https://github.com/huijizyf/start-spring-mvc)
 
+初接触Spring MVC，从零开始学习，第一个练手小项目。作为一个起点吧，再接再厉。
+
+[Spring-mvc 入门学习小项目](https://github.com/huijizyf/start-spring-mvc)
 <h2>知识点</h2>
 
 1. spring mvc 基础知识
@@ -30,12 +32,13 @@ tag: [Spring mvc,web]
 
 
 <h2>效果图</h2>
-![/分类管理](springmvc/classify.png)
 
-![/内容统计](springmvc/overview.png)
+![分类管理](/springmvc/classify.png)
 
-![/时间线](springmvc/timeline.png)
+![内容统计](/springmvc/overview.png)
 
-![/查看内容](springmvc/viewpost.png)
+![时间线](/springmvc/timeline.png)
 
-![/新建内容](springmvc/write_post.png)
+![查看内容](/springmvc/viewpost.png)
+
+![新建内容](/springmvc/write_post.png)

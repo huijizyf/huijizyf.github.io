@@ -6,7 +6,7 @@ tag: [安卓,7.1,源码,树莓派,编译]
 ---
 
 
-<h2>环境</h2>h2>
+<h2>环境</h2>
 1.Host：MacBook Air （13 英寸，2015 年初） 
 
 外置128G硬盘 区分大小写
@@ -19,7 +19,7 @@ Xcode 7.3
 ![](/images/rpi/rpi.png)
 
 
-<h2>步骤</h2>h2>
+<h2>步骤</h2>
 1.下载源码
 	
 	Refer to http://source.android.com/source/downloading.html

@@ -116,7 +116,7 @@ Xcode 7.3
 
 8.树莓派开始启动，在minicom中即可进入树莓派终端，也能看到启动消息
 
-###错误
+<h2>错误及解决办法</h2>
 1.scripts/mod/mk_elfconfig.c:4:10: fatal error: 'elf.h' file not found
 
 解决办法

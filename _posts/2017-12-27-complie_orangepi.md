@@ -118,4 +118,5 @@ tag: [安卓,源码,orange pi,编译]
 	prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.6/lib/gcc/arm-linux-androideabi/4.6.x-google/plugin/include/auto-host.h
 
 	对以上五个文件进行修改
+
 ![](/images/complie_driver/gdwarf.png)
